@@ -10,6 +10,7 @@ import ProductScreen from "./screens/ProductScreen";
 import ProductsScreen from "./screens/ProductsScreen";
 import DesignsCategoriesScreen from "./screens/DesignsCategoriesScreen";
 import DesignCategoryScreen from "./screens/DesignCategoryScreen";
+import DesignerScreen from './screens/DesignerScreen';
 
 function App() {
   return (
@@ -28,6 +29,8 @@ function App() {
 
             <Route path="/designCategories/" element={<DesignsCategoriesScreen />} />
             <Route path="/designCategories/:categoryID/" element={<DesignCategoryScreen />} />
+
+            <Route path="/designer/" element={<DesignerScreen/>}/>
             
           </Routes>
         </Container>

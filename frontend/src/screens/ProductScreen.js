@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Row, Col, Button, Container } from "react-bootstrap";
 import ProductColor from "../components/ProductColor";
@@ -107,7 +107,7 @@ function ProductScreen() {
               </Container>
 
               {product.colors && (
-                <Link>
+                <Link to={'/designer'}>
                 <Button
                   className="start-design-btn"
                   variant="primary"
