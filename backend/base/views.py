@@ -67,7 +67,7 @@ def getProduct(request, pk):
             colors_data[color_name]["images"] = {}
 
             for prod_color_image in color_images_serializer.data:
-                viewName = prod_color_image["designPlace"]
+                viewName = prod_color_image["viewName"]
                 colors_data[color_name]["images"][viewName] = prod_color_image["image"]
 
     data["colors"] = colors_data

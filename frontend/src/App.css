@@ -66,6 +66,7 @@
 
 .navbar-custom {
   background-color: black !important;
+  max-height: 8vh;
 }
 
 .accordion .item {

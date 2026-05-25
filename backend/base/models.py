@@ -65,6 +65,9 @@ class ProductColorSize(models.Model):
 
 class DesignPlace(models.Model):
     viewName = models.CharField(max_length=30, null=True, unique=True)
+    
+    def __str__(self) -> str:
+        return (self.viewName.replace(" ", "-"))
 
 
 class ProductColorImage(models.Model):
@@ -90,9 +93,8 @@ class ProductColorImage(models.Model):
     def __str__(self) -> str:
         return (
             str(self.color).replace(" ", "-")
-            + str(self.product).replace(" ", "-")
             + "_"
-            + self.viewName.replace(" ", "-")
+            + str(self.viewName).replace(" ", "-")
         )
 
 
@@ -199,6 +201,9 @@ class ProdDesign(models.Model):
     orderItem = models.ForeignKey(OrderItem, null=True, on_delete=models.CASCADE)
     design = models.ForeignKey(PickedDesign, null=True, on_delete=models.SET_NULL)
     place = models.ForeignKey(DesignPlace, null=True, on_delete=models.SET_NULL)
+    
+    def __str__(self) -> str:
+        return str(self.orderItem) + str(self.design) + str(self.place)
 
 
 class ShippingAddress(models.Model):

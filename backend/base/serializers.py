@@ -25,7 +25,7 @@ class ProductColorSizeSerializer(serializers.ModelSerializer):
 class ProductColorImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductColorImage
-        fields = ['image', 'designPlace']
+        fields = ['image', 'viewName']
 
 class DesignCategorySerializer(serializers.ModelSerializer):
     class Meta:

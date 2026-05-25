@@ -10,10 +10,7 @@ export const setDesigner = (appliedDesign) => async (dispatch) => {
         type: SET_APPLIED_DEISGN,
         payload: {
             product: appliedDesign.product,
-            product_name: appliedDesign.product_name,
-            product_color: appliedDesign.product_color,
-            image: appliedDesign.image,
-            selected_designs: appliedDesign.selected_designs
+            product_color: appliedDesign.product_color
         }
     })
 

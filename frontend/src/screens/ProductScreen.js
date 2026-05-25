@@ -45,10 +45,7 @@ function ProductScreen() {
                 <ProductImageGallery
                   key={params.color}
                   images={
-                    product.images &&
-                    Object.values(product.colors[color].images).concat(
-                      product.images
-                    )
+                    product.images && Object.values(product.colors[color].images)
                   }
                   colorIndex={true}
                 />
@@ -64,7 +61,7 @@ function ProductScreen() {
 
             <Col md={6}>
               <Container>
-                {product.colors && "Available Colors:"}
+                {product.colors && Object.keys(product.colors).length > 0 && "Available Colors:"}
                 <Row>
                   {product.colors &&
                     Object.keys(product.colors).map((productColor) => (
