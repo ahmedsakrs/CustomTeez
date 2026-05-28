@@ -93,11 +93,13 @@ export default function ProductDesigner() {
   const [isActive, setIsActive] = useState(false);
   const [selectedDesignId, setSelectedDesignId] = useState(null);
   const [rotationAngles, setRotationAngles] = useState({});
+  const [startAngle, setStartAngle] = useState(null);
+  const [initialRotation, setInitialRotation] = useState(null);
   const [isRotating, setIsRotating] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [lockedWrapperPos, setLockedWrapperPos] = useState(null);
-
-
+  const [lockedDesignId, setLockedDesignId] = useState(null);
+  const [designCounter, setDesignCounter] = useState(0);
 
 
   const previewRef = useRef(null);
@@ -198,29 +200,34 @@ function getBoundingBox(w, h, angle) {
   );
 
   const addDesignToActiveView = (newDesign) => {
-    const product = productOptions.find(opt => opt.id === activeProduct?.productType);
-    const region = product?.viewRegions[activePreview];
-    if (!region || !imgRef.current) return;
+  const product = productOptions.find(opt => opt.id === activeProduct?.productType);
+  const region = product?.viewRegions[activePreview];
+  if (!region || !imgRef.current) return;
 
-    const w = imgRef.current.offsetWidth;
-    const h = imgRef.current.offsetHeight;
-    const regionWidth = (region.xEnd - region.xStart) * w;
-    const regionHeight = (region.yEnd - region.yStart) * h;
+  const w = imgRef.current.offsetWidth;
+  const h = imgRef.current.offsetHeight;
+  const regionWidth = (region.xEnd - region.xStart) * w;
+  const regionHeight = (region.yEnd - region.yStart) * h;
 
-    setDesignsByView(prev => ({
-      ...prev,
-      [activePreview]: [
-        ...prev[activePreview],
-        {
-          ...newDesign,
-          x: 0.5,
-          y: 0.5,
-          width: 100,
-          height: 100
-        }
-      ]
-    }));
-  };
+  // Increment counter and assign unique ID
+  setDesignCounter(prev => prev + 1);
+  const uniqueId = `design-${designCounter + 1}`;
+
+  setDesignsByView(prev => ({
+    ...prev,
+    [activePreview]: [
+      ...prev[activePreview],
+      {
+        ...newDesign,
+        id: uniqueId,   // ✅ unique incremental ID
+        x: 0.5,
+        y: 0.5,
+        width: 100,
+        height: 100
+      }
+    ]
+  }));
+};
 
   return (
     <div className="designer-container">
@@ -478,10 +485,10 @@ function getBoundingBox(w, h, angle) {
   key={d.id}
   size={getBoundingBox(d.width, d.height, rotationAngles[d.id] || 0)}
   position={
-    (isRotating || isResizing) && lockedWrapperPos
-      ? lockedWrapperPos
-      : { x: d.x * regionWidth, y: d.y * regionHeight }
-  }
+  (isRotating || isResizing) && lockedWrapperPos && lockedDesignId === d.id
+    ? lockedWrapperPos   // ✅ only lock the active design
+    : { x: d.x * regionWidth, y: d.y * regionHeight }
+}
   bounds="parent"
   disableDragging={isRotating || isResizing}
   onDragStart={(e, data) => {
@@ -562,25 +569,147 @@ function getBoundingBox(w, h, angle) {
         <button
           style={{ position: "absolute", top: "-30px", left: "-30px", zIndex:3000 }}
           onMouseDown={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            setIsRotating(true);
-            setLockedWrapperPos({ x: d.x * regionWidth, y: d.y * regionHeight });
-            const startX = e.clientX;
-            const startY = e.clientY;
-            const handleMove = (moveEvent) => {
-              const angle = Math.atan2(moveEvent.clientY - startY, moveEvent.clientX - startX);
-              setRotationAngles(prev => ({ ...prev, [d.id]: angle }));
-            };
-            const handleUp = () => {
-              setIsRotating(false);
-              setLockedWrapperPos(null);
-              window.removeEventListener("mousemove", handleMove);
-              window.removeEventListener("mouseup", handleUp);
-            };
-            window.addEventListener("mousemove", handleMove);
-            window.addEventListener("mouseup", handleUp);
-          }}
+  e.stopPropagation();
+  e.preventDefault();
+  setIsRotating(true);
+  setLockedDesignId(d.id);
+  setLockedWrapperPos({ x: d.x * regionWidth, y: d.y * regionHeight });
+
+  const rect = e.target.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+
+  const startAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+  const baseline = rotationAngles[d.id] || 0;
+
+  const handleMove = (moveEvent) => {
+  const currentAngle = Math.atan2(moveEvent.clientY - centerY, moveEvent.clientX - centerX);
+  const delta = currentAngle - startAngle;
+  const newAngle = baseline + delta;
+
+  // Compute rotated bounding box
+  let bbox = getBoundingBox(d.width, d.height, newAngle);
+  let posX = d.x * regionWidth;
+  let posY = d.y * regionHeight;
+
+  // Shift inside region
+  if (posX < 0) posX = 0;
+  if (posY < 0) posY = 0;
+  if (posX + bbox.width > regionWidth) posX = regionWidth - bbox.width;
+  if (posY + bbox.height > regionHeight) posY = regionHeight - bbox.height;
+
+  // ✅ Resize if rotated box is larger than region
+  if (bbox.width > regionWidth || bbox.height > regionHeight) {
+    const widthRatio = regionWidth / bbox.width;
+    const heightRatio = regionHeight / bbox.height;
+    const scale = Math.min(widthRatio, heightRatio); // shrink until both fit
+
+    // Apply scale to original design dimensions
+    const newWidth = d.width * scale;
+    const newHeight = d.height * scale;
+
+    bbox = getBoundingBox(newWidth, newHeight, newAngle);
+
+    // Re‑shift after resizing
+    if (posX + bbox.width > regionWidth) posX = regionWidth - bbox.width;
+    if (posY + bbox.height > regionHeight) posY = regionHeight - bbox.height;
+
+    setDesignsByView(prev => ({
+      ...prev,
+      [activePreview]: prev[activePreview].map(item =>
+        item.id === d.id
+          ? {
+              ...item,
+              x: posX / regionWidth,
+              y: posY / regionHeight,
+              width: newWidth,
+              height: newHeight
+            }
+          : item
+      )
+    }));
+  } else {
+    // No resize needed, just update position
+    setDesignsByView(prev => ({
+      ...prev,
+      [activePreview]: prev[activePreview].map(item =>
+        item.id === d.id
+          ? {
+              ...item,
+              x: posX / regionWidth,
+              y: posY / regionHeight
+            }
+          : item
+      )
+    }));
+  }
+
+  setRotationAngles(prev => ({
+    ...prev,
+    [d.id]: newAngle
+  }));
+};
+
+
+
+
+  const handleUp = () => {
+  setIsRotating(false);
+  setLockedDesignId(null);
+  setLockedWrapperPos(null);
+  setSelectedDesignId(d.id);
+
+  // Final clamp before releasing
+  const newAngle = rotationAngles[d.id] || 0;
+  let bbox = getBoundingBox(d.width, d.height, newAngle);
+  let posX = d.x * regionWidth;
+  let posY = d.y * regionHeight;
+
+  if (posX < 0) posX = 0;
+  if (posY < 0) posY = 0;
+  if (posX + bbox.width > regionWidth) posX = regionWidth - bbox.width;
+  if (posY + bbox.height > regionHeight) posY = regionHeight - bbox.height;
+
+  // Resize if still overflowing
+  if (bbox.width > regionWidth || bbox.height > regionHeight) {
+    const widthRatio = regionWidth / bbox.width;
+    const heightRatio = regionHeight / bbox.height;
+    const scale = Math.min(widthRatio, heightRatio);
+
+    const newWidth = d.width * scale;
+    const newHeight = d.height * scale;
+    bbox = getBoundingBox(newWidth, newHeight, newAngle);
+
+    posX = Math.max(0, Math.min(posX, regionWidth - bbox.width));
+    posY = Math.max(0, Math.min(posY, regionHeight - bbox.height));
+
+    setDesignsByView(prev => ({
+      ...prev,
+      [activePreview]: prev[activePreview].map(item =>
+        item.id === d.id
+          ? { ...item, x: posX / regionWidth, y: posY / regionHeight, width: newWidth, height: newHeight }
+          : item
+      )
+    }));
+  } else {
+    setDesignsByView(prev => ({
+      ...prev,
+      [activePreview]: prev[activePreview].map(item =>
+        item.id === d.id
+          ? { ...item, x: posX / regionWidth, y: posY / regionHeight }
+          : item
+      )
+    }));
+  }
+
+  window.removeEventListener("mousemove", handleMove);
+  window.removeEventListener("mouseup", handleUp);
+};
+
+  window.addEventListener("mousemove", handleMove);
+  window.addEventListener("mouseup", handleUp);
+}}
+
         >
           ⟳
         </button>
@@ -588,35 +717,65 @@ function getBoundingBox(w, h, angle) {
         <button
           style={{ position: "absolute", bottom: "-30px", right: "-30px", zIndex:3000 }}
           onMouseDown={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            setIsResizing(true);
-            setLockedWrapperPos({ x: d.x * regionWidth, y: d.y * regionHeight });
-            const startX = e.clientX;
-            const startWidth = d.width;
-            const startHeight = d.height;
-            const aspectRatio = startWidth / startHeight;
+  e.stopPropagation();
+  e.preventDefault();
+  setIsResizing(true);
+  setLockedDesignId(d.id);
+  setLockedWrapperPos({ x: d.x * regionWidth, y: d.y * regionHeight });
 
-            const handleMove = (moveEvent) => {
-              const deltaX = moveEvent.clientX - startX;
-              const newWidth = Math.max(50, startWidth + deltaX);
-              const newHeight = newWidth / aspectRatio;
-              setDesignsByView(prev => ({
-                ...prev,
-                [activePreview]: prev[activePreview].map(item =>
-                  item.id === d.id ? { ...item, width: newWidth, height: newHeight } : item
-                )
-              }));
-            };
-            const handleUp = () => {
-              setIsResizing(false);
-              setLockedWrapperPos(null);
-              window.removeEventListener("mousemove", handleMove);
-              window.removeEventListener("mouseup", handleUp);
-            };
-            window.addEventListener("mousemove", handleMove);
-            window.addEventListener("mouseup", handleUp);
-          }}
+  const startX = e.clientX;
+  const startWidth = d.width;
+  const startHeight = d.height;
+  const aspectRatio = startWidth / startHeight;
+  const currentAngle = rotationAngles[d.id] || 0;
+
+  const handleMove = (moveEvent) => {
+    const deltaX = moveEvent.clientX - startX;
+    let newWidth = Math.max(50, startWidth + deltaX);
+    let newHeight = newWidth / aspectRatio;
+
+    // ✅ Compute rotated bounding box
+    let bbox = getBoundingBox(newWidth, newHeight, currentAngle);
+
+    const posX = d.x * regionWidth;
+    const posY = d.y * regionHeight;
+
+    // ✅ Clamp so rotated bounding box fits inside region
+    if (posX + bbox.width > regionWidth) {
+      const widthRatio = (regionWidth - posX) / bbox.width;
+      newWidth = newWidth * widthRatio;
+      newHeight = newWidth / aspectRatio;
+      bbox = getBoundingBox(newWidth, newHeight, currentAngle);
+    }
+    if (posY + bbox.height > regionHeight) {
+      const heightRatio = (regionHeight - posY) / bbox.height;
+      newHeight = newHeight * heightRatio;
+      newWidth = newHeight * aspectRatio;
+      bbox = getBoundingBox(newWidth, newHeight, currentAngle);
+    }
+
+    setDesignsByView(prev => ({
+      ...prev,
+      [activePreview]: prev[activePreview].map(item =>
+        item.id === d.id ? { ...item, width: newWidth, height: newHeight } : item
+      )
+    }));
+  };
+
+  const handleUp = () => {
+    setIsResizing(false);
+    setLockedDesignId(null);
+    setLockedWrapperPos(null);
+    setSelectedDesignId(d.id);
+    window.removeEventListener("mousemove", handleMove);
+    window.removeEventListener("mouseup", handleUp);
+  };
+
+  window.addEventListener("mousemove", handleMove);
+  window.addEventListener("mouseup", handleUp);
+}}
+
+
         >
           ⇲
         </button>
@@ -649,6 +808,7 @@ function getBoundingBox(w, h, angle) {
                     }
                     alt={`${view} preview`}
                     className="preview-image"
+                    draggable="false"
                   />
                   <div className="option-name">{view}</div>
                 </div>
