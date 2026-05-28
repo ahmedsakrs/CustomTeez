@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Rnd } from "react-rnd";
 import "./ProductDesigner.css"; // responsive styles
 
@@ -47,7 +47,7 @@ const productOptions = [
       }
     },
     viewRegions: {
-      Front: { xStart: 0.25, yStart: 0.3, xEnd: 0.75, yEnd: 0.7 },
+      Front: { xStart: 0, yStart: 0, xEnd: 1, yEnd: 1 },
       Back: { xStart: 0.25, yStart: 0.3, xEnd: 0.75, yEnd: 0.7 },
       "L Sleeve": { xStart: 0.15, yStart: 0.25, xEnd: 0.85, yEnd: 0.75 },
       "R Sleeve": { xStart: 0.15, yStart: 0.25, xEnd: 0.85, yEnd: 0.75 }
@@ -90,11 +90,62 @@ export default function ProductDesigner() {
   const [searchTerm, setSearchTerm] = useState("");
   const [pendingProductType, setPendingProductType] = useState(null);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [isActive, setIsActive] = useState(false);
+  const [selectedDesignId, setSelectedDesignId] = useState(null);
+  const [rotationAngles, setRotationAngles] = useState({});
+  const [isRotating, setIsRotating] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [lockedWrapperPos, setLockedWrapperPos] = useState(null);
 
-  // Ref for preview container to calculate bounds correctly
+
+
+
   const previewRef = useRef(null);
+  const imgRef = useRef(null);
 
   const activeProduct = allProducts.find(p => p.id === activeProductId);
+
+  // ✅ Preserve designs across products by re-rendering relative to new region
+  useEffect(() => {
+    const product = productOptions.find(opt => opt.id === activeProduct?.productType);
+    const region = product?.viewRegions[activePreview];
+    if (!product || !region || !imgRef.current) return;
+
+    const w = imgRef.current.offsetWidth;
+    const h = imgRef.current.offsetHeight;
+    const regionWidth = (region.xEnd - region.xStart) * w;
+    const regionHeight = (region.yEnd - region.yStart) * h;
+
+    setDesignsByView(prev => {
+      const updated = {};
+      for (const view of Object.keys(prev)) {
+        updated[view] = prev[view].map(d => ({
+          ...d,
+          x: d.x, // normalized stays the same
+          y: d.y,
+          width: d.width,
+          height: d.height
+        }));
+      }
+      return updated;
+    });
+  }, [activeProductId, activePreview]);
+
+useEffect(() => {
+  const handleClickOutside = () => setSelectedDesignId(null);
+  window.addEventListener("click", handleClickOutside);
+  return () => window.removeEventListener("click", handleClickOutside);
+}, []);
+
+function getBoundingBox(w, h, angle) {
+  const cos = Math.abs(Math.cos(angle));
+  const sin = Math.abs(Math.sin(angle));
+  return {
+    width: w * cos + h * sin,
+    height: w * sin + h * cos
+  };
+}
+
 
   const addProduct = () => {
     setIsAddingProduct(true);
@@ -108,7 +159,6 @@ export default function ProductDesigner() {
       setActiveProductId(updated[0].id);
     }
   };
-
   const changeProductType = (newType) => {
     setPendingProductType(newType);
     setShowProductModal(false);
@@ -150,27 +200,31 @@ export default function ProductDesigner() {
   const addDesignToActiveView = (newDesign) => {
     const product = productOptions.find(opt => opt.id === activeProduct?.productType);
     const region = product?.viewRegions[activePreview];
-    let initX = 50, initY = 50;
+    if (!region || !imgRef.current) return;
 
-    if (previewRef.current && region) {
-      const w = previewRef.current.offsetWidth;
-      const h = previewRef.current.offsetHeight;
-      initX = region.xStart * w + ((region.xEnd - region.xStart) * w) / 2 - 50;
-      initY = region.yStart * h + ((region.yEnd - region.yStart) * h) / 2 - 50;
-    }
+    const w = imgRef.current.offsetWidth;
+    const h = imgRef.current.offsetHeight;
+    const regionWidth = (region.xEnd - region.xStart) * w;
+    const regionHeight = (region.yEnd - region.yStart) * h;
 
     setDesignsByView(prev => ({
       ...prev,
       [activePreview]: [
         ...prev[activePreview],
-        { ...newDesign, x: initX, y: initY, width: 100, height: 100 }
+        {
+          ...newDesign,
+          x: 0.5,
+          y: 0.5,
+          width: 100,
+          height: 100
+        }
       ]
     }));
   };
 
   return (
     <div className="designer-container">
-      {/* Left tab panel */}
+      {/* Sidebar */}
       <div className="sidebar">
         <h3>Designs</h3>
         <button onClick={() => setShowDesignModal(true)}>➕ Add Design</button>
@@ -213,7 +267,8 @@ export default function ProductDesigner() {
           style={{ width: "100%", padding: "0.5rem" }}
         />
       </div>
-      {/* Right side content */}
+
+      {/* Main content */}
       <div className="main-content">
         {/* Product bar */}
         <div className="header-bar">
@@ -385,85 +440,193 @@ export default function ProductDesigner() {
               <h3>{activePreview} Preview</h3>
               <div className="preview-image-wrapper" ref={previewRef} style={{ position: "relative" }}>
                 <img
+                  ref={imgRef}
                   src={
                     productOptions.find(opt => opt.id === activeProduct?.productType)
                       ?.viewImages[activeProduct?.color][activePreview]
                   }
                   alt={`${activeProduct?.name} ${activePreview}`}
                   className="preview-image"
+                  style={{ display: "block" }}
                 />
 
-                {/* Region overlay for active preview */}
+                {/* Region overlay aligned to the image */}
                 {(() => {
                   const product = productOptions.find(opt => opt.id === activeProduct?.productType);
                   const region = product?.viewRegions[activePreview];
-                  if (!previewRef.current || !region) return null;
+                  if (!imgRef.current || !region) return null;
 
-                  const w = previewRef.current.offsetWidth;
-                  const h = previewRef.current.offsetHeight;
+                  const w = imgRef.current.offsetWidth;
+                  const h = imgRef.current.offsetHeight;
+                  const regionWidth = (region.xEnd - region.xStart) * w;
+                  const regionHeight = (region.yEnd - region.yStart) * h;
+
                   const style = {
                     position: "absolute",
-                    left: region.xStart * w,
-                    top: region.yStart * h,
-                    width: (region.xEnd - region.xStart) * w,
-                    height: (region.yEnd - region.yStart) * h,
-                    overflow: "visible"
+                    left: imgRef.current.offsetLeft + region.xStart * w,
+                    top: imgRef.current.offsetTop + region.yStart * h,
+                    width: regionWidth,
+                    height: regionHeight,
+                    border: isActive ? "2px dashed #333" : "none",
+                    backgroundColor: isActive ? "rgba(0,0,0,0.05)" : "transparent"
                   };
 
                   return (
                     <div style={style}>
                       {designsByView[activePreview].map(d => (
                         <Rnd
-                          key={d.id}
-                          size={{ width: d.width, height: d.height }}
-                          position={{ x: d.x, y: d.y }}
-                          bounds="parent"   // constrained to region overlay
-                          onDragStop={(e, data) => {
-                            setDesignsByView(prev => ({
-                              ...prev,
-                              [activePreview]: prev[activePreview].map(item =>
-                                item.id === d.id ? { ...item, x: data.x, y: data.y } : item
-                              )
-                            }));
-                          }}
-                          onResizeStop={(e, direction, ref, delta, position) => {
-                            setDesignsByView(prev => ({
-                              ...prev,
-                              [activePreview]: prev[activePreview].map(item =>
-                                item.id === d.id
-                                  ? {
-                                      ...item,
-                                      width: ref.offsetWidth,
-                                      height: ref.offsetHeight,
-                                      x: position.x,
-                                      y: position.y
-                                    }
-                                  : item
-                              )
-                            }));
-                          }}
-                        >
-                          <div className="design-wrapper">
-                            {d.src ? (
-                              <img src={d.src} alt={d.name} className="preview-image" />
-                            ) : (
-                              <div style={{ fontSize: "2rem", fontWeight: "bold", color: designColor }}>
-                                {d.text}
-                              </div>
-                            )}
-                            <button
-                              className="delete-btn"
-                              onClick={() => {
-                                setDesignsByView(prev => ({
-                                  ...prev,
-                                  [activePreview]: prev[activePreview].filter(item => item.id !== d.id)
-                                }));
-                              }}
-                            >
-                              ✖
-                            </button>
-                          </div>
-                        </Rnd>
+  key={d.id}
+  size={getBoundingBox(d.width, d.height, rotationAngles[d.id] || 0)}
+  position={
+    (isRotating || isResizing) && lockedWrapperPos
+      ? lockedWrapperPos
+      : { x: d.x * regionWidth, y: d.y * regionHeight }
+  }
+  bounds="parent"
+  disableDragging={isRotating || isResizing}
+  onDragStart={(e, data) => {
+    if (isRotating || isResizing) return;
+    setIsActive(true);
+  }}
+  onDrag={(e, data) => {
+    if (isRotating || isResizing) return;
+    const normX = data.x / regionWidth;
+    const normY = data.y / regionHeight;
+    setDesignsByView(prev => ({
+      ...prev,
+      [activePreview]: prev[activePreview].map(item =>
+        item.id === d.id ? { ...item, x: normX, y: normY } : item
+      )
+    }));
+  }}
+  onDragStop={() => {
+    if (isRotating || isResizing) return;
+    setIsActive(false);
+  }}
+>
+  {/* Outer wrapper (no rotation, border updates with size) */}
+  <div
+    className={`design-container ${selectedDesignId === d.id ? "active" : ""}`}
+    onClick={(e) => {
+      e.stopPropagation();
+      setSelectedDesignId(d.id);
+    }}
+    style={{
+      position: "relative",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: getBoundingBox(d.width, d.height, rotationAngles[d.id] || 0).width,
+      height: getBoundingBox(d.width, d.height, rotationAngles[d.id] || 0).height,
+      border: selectedDesignId === d.id ? "2px solid rgba(0,0,0,0.2)" : "none",
+      backgroundColor: selectedDesignId === d.id ? "rgba(255,255,255,0.05)" : "transparent"
+    }}
+  >
+    {/* Inner design wrapper (rotates and stays centered) */}
+    <div
+      className="design-wrapper"
+      style={{
+        width: d.width,
+        height: d.height,
+        transform: `rotate(${rotationAngles[d.id] || 0}rad)`,
+        transformOrigin: "center center"
+      }}
+    >
+      {d.src ? (
+        <img src={d.src} alt={d.name} className="preview-image" />
+      ) : (
+        <div style={{ fontSize: "2rem", fontWeight: "bold", color: designColor }}>
+          {d.text}
+        </div>
+      )}
+    </div>
+
+    {/* Buttons stay upright */}
+    {selectedDesignId === d.id && (
+      <>
+        <button
+          style={{ position: "absolute", top: "-30px", right: "-30px", zIndex:3000 }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            setDesignsByView(prev => ({
+              ...prev,
+              [activePreview]: prev[activePreview].filter(item => item.id !== d.id)
+            }));
+            setSelectedDesignId(null);
+          }}
+        >
+          ✖
+        </button>
+
+        <button
+          style={{ position: "absolute", top: "-30px", left: "-30px", zIndex:3000 }}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            setIsRotating(true);
+            setLockedWrapperPos({ x: d.x * regionWidth, y: d.y * regionHeight });
+            const startX = e.clientX;
+            const startY = e.clientY;
+            const handleMove = (moveEvent) => {
+              const angle = Math.atan2(moveEvent.clientY - startY, moveEvent.clientX - startX);
+              setRotationAngles(prev => ({ ...prev, [d.id]: angle }));
+            };
+            const handleUp = () => {
+              setIsRotating(false);
+              setLockedWrapperPos(null);
+              window.removeEventListener("mousemove", handleMove);
+              window.removeEventListener("mouseup", handleUp);
+            };
+            window.addEventListener("mousemove", handleMove);
+            window.addEventListener("mouseup", handleUp);
+          }}
+        >
+          ⟳
+        </button>
+
+        <button
+          style={{ position: "absolute", bottom: "-30px", right: "-30px", zIndex:3000 }}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            setIsResizing(true);
+            setLockedWrapperPos({ x: d.x * regionWidth, y: d.y * regionHeight });
+            const startX = e.clientX;
+            const startWidth = d.width;
+            const startHeight = d.height;
+            const aspectRatio = startWidth / startHeight;
+
+            const handleMove = (moveEvent) => {
+              const deltaX = moveEvent.clientX - startX;
+              const newWidth = Math.max(50, startWidth + deltaX);
+              const newHeight = newWidth / aspectRatio;
+              setDesignsByView(prev => ({
+                ...prev,
+                [activePreview]: prev[activePreview].map(item =>
+                  item.id === d.id ? { ...item, width: newWidth, height: newHeight } : item
+                )
+              }));
+            };
+            const handleUp = () => {
+              setIsResizing(false);
+              setLockedWrapperPos(null);
+              window.removeEventListener("mousemove", handleMove);
+              window.removeEventListener("mouseup", handleUp);
+            };
+            window.addEventListener("mousemove", handleMove);
+            window.addEventListener("mouseup", handleUp);
+          }}
+        >
+          ⇲
+        </button>
+      </>
+    )}
+  </div>
+</Rnd>
+
+
+
                       ))}
                     </div>
                   );

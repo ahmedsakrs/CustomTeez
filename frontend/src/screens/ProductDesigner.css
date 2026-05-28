@@ -245,6 +245,11 @@
   max-height: 80px;
 }
 
+.region-overlay {
+  border: 2px dashed #333;
+  pointer-events: none; /* overlay is visible but doesn’t block dragging */
+}
+
 /* Responsive rules */
 @media (min-width: 768px) {
   .designer-container {
