@@ -630,6 +630,8 @@ function getBoundingBox(w, h, angle) {
     }));
   } else {
     // No resize needed, just update position
+    if (posX + bbox.width > regionWidth) posX = regionWidth - bbox.width;
+    if (posY + bbox.height > regionHeight) posY = regionHeight - bbox.height;
     setDesignsByView(prev => ({
       ...prev,
       [activePreview]: prev[activePreview].map(item =>
@@ -641,7 +643,8 @@ function getBoundingBox(w, h, angle) {
             }
           : item
       )
-    }));
+    }
+  ));
   }
 
   setRotationAngles(prev => ({
@@ -651,56 +654,10 @@ function getBoundingBox(w, h, angle) {
 };
 
 
-
-
   const handleUp = () => {
-  setIsRotating(false);
-  setLockedDesignId(null);
-  setLockedWrapperPos(null);
   setSelectedDesignId(d.id);
-
-  // Final clamp before releasing
-  const newAngle = rotationAngles[d.id] || 0;
-  let bbox = getBoundingBox(d.width, d.height, newAngle);
-  let posX = d.x * regionWidth;
-  let posY = d.y * regionHeight;
-
-  if (posX < 0) posX = 0;
-  if (posY < 0) posY = 0;
-  if (posX + bbox.width > regionWidth) posX = regionWidth - bbox.width;
-  if (posY + bbox.height > regionHeight) posY = regionHeight - bbox.height;
-
-  // Resize if still overflowing
-  if (bbox.width > regionWidth || bbox.height > regionHeight) {
-    const widthRatio = regionWidth / bbox.width;
-    const heightRatio = regionHeight / bbox.height;
-    const scale = Math.min(widthRatio, heightRatio);
-
-    const newWidth = d.width * scale;
-    const newHeight = d.height * scale;
-    bbox = getBoundingBox(newWidth, newHeight, newAngle);
-
-    posX = Math.max(0, Math.min(posX, regionWidth - bbox.width));
-    posY = Math.max(0, Math.min(posY, regionHeight - bbox.height));
-
-    setDesignsByView(prev => ({
-      ...prev,
-      [activePreview]: prev[activePreview].map(item =>
-        item.id === d.id
-          ? { ...item, x: posX / regionWidth, y: posY / regionHeight, width: newWidth, height: newHeight }
-          : item
-      )
-    }));
-  } else {
-    setDesignsByView(prev => ({
-      ...prev,
-      [activePreview]: prev[activePreview].map(item =>
-        item.id === d.id
-          ? { ...item, x: posX / regionWidth, y: posY / regionHeight }
-          : item
-      )
-    }));
-  }
+  setIsRotating(false);
+  setLockedWrapperPos(null);
 
   window.removeEventListener("mousemove", handleMove);
   window.removeEventListener("mouseup", handleUp);
@@ -764,8 +721,6 @@ function getBoundingBox(w, h, angle) {
 
   const handleUp = () => {
     setIsResizing(false);
-    setLockedDesignId(null);
-    setLockedWrapperPos(null);
     setSelectedDesignId(d.id);
     window.removeEventListener("mousemove", handleMove);
     window.removeEventListener("mouseup", handleUp);
