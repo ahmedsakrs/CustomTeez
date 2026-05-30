@@ -56,17 +56,76 @@ const productOptions = [
 ];
 
 const designCategories = {
-  Shapes: [
-    { id: "star", name: "Star", src: "/designs/star.png" },
-    { id: "circle", name: "Circle", src: "/designs/circle.png" },
-  ],
   Logos: [
-    { id: "logo1", name: "Logo 1", src: "/designs/logo1.png" },
-    { id: "logo2", name: "Logo 2", src: "/designs/logo2.png" },
+    {
+      id: "collage-1",
+      name: "Cool Logo Collage",
+      src: "/designs/star.png",
+      designs: [
+        {
+          id: "element-1",
+          src: "/designs/star.png",
+          x: 0.4,
+          y: 0.5,
+          width: 0.2,
+          height: 0.2,
+        },
+        {
+          id: "element-2",
+          src: "/designs/star.png",
+          x: 0.6,
+          y: 0.5,
+          width: 0.15,
+          height: 0.15,
+        },
+      ],
+    },
+    {
+      id: "collage-2",
+      name: "Cry Logo Collage",
+      designs: [
+        {
+          id: "element-3",
+          src: "/designs/part1.png",
+          x: 0.4,
+          y: 0.5,
+          width: 0.2,
+          height: 0.2,
+        },
+        {
+          id: "element-4",
+          src: "/designs/part2.png",
+          x: 0.6,
+          y: 0.5,
+          width: 0.15,
+          height: 0.15,
+        },
+        {
+          id: "element-5",
+          src: "/designs/part3.png",
+          x: 0.1,
+          y: 0.2,
+          width: 0.4,
+          height: 0.6,
+        },
+      ],
+    },
   ],
-  "Text Styles": [
-    { id: "text1", name: "Bold Text", src: "/designs/text1.png" },
-    { id: "text2", name: "Italic Text", src: "/designs/text2.png" },
+  Shapes: [
+    {
+      id: "collage-3",
+      name: "Minimal Shape Collage",
+      designs: [
+        {
+          id: "element-6",
+          src: "/designs/circle.png",
+          x: 0.5,
+          y: 0.5,
+          width: 0.25,
+          height: 0.25,
+        },
+      ],
+    },
   ],
 };
 
@@ -209,31 +268,30 @@ export default function ProductDesigner() {
     setShowColorModal(false);
   };
 
-  const addDesignToActiveView = (newDesign) => {
+  const addDesignCollageToActiveView = (collage) => {
     if (!imgRef.current) return;
-
-    // Increment counter and assign unique ID
-    setDesignCounter((prev) => prev + 1);
-    const uniqueId = `design-${designCounter + 1}`;
 
     const regionWidth = imgRef.current.offsetWidth;
     const regionHeight = imgRef.current.offsetHeight;
+
+    setDesignCounter((prev) => prev + collage.designs.length);
 
     setDesignsByView((prev) => ({
       ...prev,
       [activePreview]: [
         ...prev[activePreview],
-        {
-          ...newDesign,
-          id: uniqueId,
-          x: 0.5, // normalized center
-          y: 0.5,
-          width: 100 / regionWidth, // ✅ normalized width
-          height: 100 / regionHeight, // ✅ normalized height
-        },
+        ...collage.designs.map((d, idx) => ({
+          ...d,
+          id: `design-${designCounter + idx + 1}`,
+          x: d.x,
+          y: d.y,
+          width: d.width, // already normalized in data
+          height: d.height, // already normalized in data
+        })),
       ],
     }));
   };
+
   return (
     <div className="designer-container">
       {/* Sidebar */}
@@ -250,10 +308,19 @@ export default function ProductDesigner() {
             if (file) {
               const reader = new FileReader();
               reader.onload = (ev) => {
-                addDesignToActiveView({
+                addDesignCollageToActiveView({
                   id: Date.now(),
                   name: file.name,
-                  src: ev.target.result,
+                  designs: [
+                    {
+                      id: `element-${Date.now()}`,
+                      src: ev.target.result,
+                      x: 0.5,
+                      y: 0.5,
+                      width: 0.2, // normalized default
+                      height: 0.2, // normalized default
+                    },
+                  ],
                 });
               };
               reader.readAsDataURL(file);
@@ -267,11 +334,21 @@ export default function ProductDesigner() {
           placeholder="Enter text..."
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.target.value.trim() !== "") {
-              addDesignToActiveView({
+              addDesignCollageToActiveView({
                 id: Date.now(),
                 name: "Custom Text",
                 src: "",
-                text: e.target.value.trim(),
+                designs: [
+                  {
+                    id: `element-${Date.now()}`,
+                    src: "", // no image
+                    text: e.target.value.trim(),
+                    x: 0.5,
+                    y: 0.5,
+                    width: 0.3, // normalized default
+                    height: 0.1, // normalized default
+                  },
+                ],
               });
               e.target.value = "";
             }
@@ -417,7 +494,7 @@ export default function ProductDesigner() {
                           alt={d.name}
                           className={`design-thumb ${designsByView[activePreview].some((item) => item.id === d.id) ? "active" : ""}`}
                           onClick={() => {
-                            addDesignToActiveView(d);
+                            addDesignCollageToActiveView(d);
                             setShowDesignModal(false);
                             setSelectedCategory(null);
                           }}
