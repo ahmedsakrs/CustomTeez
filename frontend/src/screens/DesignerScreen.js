@@ -159,6 +159,9 @@ export default function ProductDesigner() {
   const [designCounter, setDesignCounter] = useState(0);
   const [regionWidth, setRegionWidth] = useState(0);
   const [regionHeight, setRegionHeight] = useState(0);
+  const [activePanelTab, setActivePanelTab] = useState("default");
+  const [pendingText, setPendingText] = useState("");
+  const [textAdded, setTextAdded] = useState(false);
 
   const previewRef = useRef(null);
   const imgRef = useRef(null);
@@ -184,7 +187,10 @@ export default function ProductDesigner() {
   }, [activeProductId, activePreview]);
 
   useEffect(() => {
-    const handleClickOutside = () => setSelectedDesignId(null);
+    const handleClickOutside = () => {
+      if (isResizing || isRotating) return;
+      setSelectedDesignId(null);
+    };
     window.addEventListener("click", handleClickOutside);
     return () => window.removeEventListener("click", handleClickOutside);
   }, []);
@@ -207,6 +213,76 @@ export default function ProductDesigner() {
   const filteredOptions = productOptions.filter((opt) =>
     opt.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
+
+  const findFittingFontSize = (text, targetWidthPx, fontFamily = "Arial") => {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  ctx.letterSpacing = "0.08em";
+
+  const lines = text.split("\n");
+  let low = 1;
+  let high = 300;
+  let fittingSize = low;
+
+  while (low <= high) {
+    const mid = (low + high) / 2;
+    ctx.font = `${mid}px ${fontFamily}`;
+
+    // measure the widest line
+    let maxLineWidth = 0;
+    for (const line of lines) {
+      const metrics = ctx.measureText(line);
+      if (metrics.width > maxLineWidth) {
+        maxLineWidth = metrics.width;
+      }
+    }
+
+    if (maxLineWidth <= targetWidthPx) {
+      fittingSize = mid;   // fits, try bigger
+      low = mid + 0.2;
+    } else {
+      high = mid - 0.2;      // too big, try smaller
+    }
+  }
+
+  return fittingSize;
+};
+
+
+  const flipSelected = (direction) => {
+    setDesignsByView((prev) => ({
+      ...prev,
+      [activePreview]: prev[activePreview].map((item) =>
+        item.id === selectedDesignId
+          ? {
+              ...item,
+              transform:
+                direction === "horizontal" ? `scaleX(-1)` : `scaleY(-1)`,
+            }
+          : item,
+      ),
+    }));
+  };
+
+  const centerSelectedText = () => {
+    setDesignsByView((prev) => ({
+      ...prev,
+      [activePreview]: prev[activePreview].map((item) =>
+        item.id === selectedDesignId ? { ...item, x: 0.5, y: 0.5 } : item,
+      ),
+    }));
+  };
+
+  const toggleOutlineSelectedText = () => {
+    setDesignsByView((prev) => ({
+      ...prev,
+      [activePreview]: prev[activePreview].map((item) =>
+        item.id === selectedDesignId
+          ? { ...item, outline: !item.outline }
+          : item,
+      ),
+    }));
+  };
 
   function getBoundingBox(w, h, angle) {
     const cos = Math.abs(Math.cos(angle));
@@ -271,9 +347,6 @@ export default function ProductDesigner() {
   const addDesignCollageToActiveView = (collage) => {
     if (!imgRef.current) return;
 
-    const regionWidth = imgRef.current.offsetWidth;
-    const regionHeight = imgRef.current.offsetHeight;
-
     setDesignCounter((prev) => prev + collage.designs.length);
 
     setDesignsByView((prev) => ({
@@ -287,6 +360,7 @@ export default function ProductDesigner() {
           y: d.y,
           width: d.width, // already normalized in data
           height: d.height, // already normalized in data
+          fontSize: d.fontSize,
         })),
       ],
     }));
@@ -296,65 +370,157 @@ export default function ProductDesigner() {
     <div className="designer-container">
       {/* Sidebar */}
       <div className="sidebar">
-        <h3>Designs</h3>
-        <button onClick={() => setShowDesignModal(true)}>➕ Add Design</button>
+        {activePanelTab === "default" && (
+          <>
+            <h3>Designs</h3>
+            <button
+              onClick={() => {
+                setShowDesignModal(true);
+              }}
+            >
+              ➕ Add Design
+            </button>
 
-        <h3>Upload Design</h3>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => {
-            const file = e.target.files[0];
-            if (file) {
-              const reader = new FileReader();
-              reader.onload = (ev) => {
-                addDesignCollageToActiveView({
-                  id: Date.now(),
-                  name: file.name,
-                  designs: [
-                    {
-                      id: `element-${Date.now()}`,
-                      src: ev.target.result,
-                      x: 0.5,
-                      y: 0.5,
-                      width: 0.2, // normalized default
-                      height: 0.2, // normalized default
-                    },
-                  ],
-                });
-              };
-              reader.readAsDataURL(file);
-            }
-          }}
-        />
+            <h3>Upload Design</h3>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (ev) => {
+                    addDesignCollageToActiveView({
+                      id: `upload-${Date.now()}`,
+                      name: file.name,
+                      designs: [
+                        {
+                          id: `element-${Date.now()}`,
+                          src: ev.target.result,
+                          x: 0.5,
+                          y: 0.5,
+                          width: 0.2,
+                          height: 0.2,
+                        },
+                      ],
+                    });
+                    setActivePanelTab("editDesign"); // ✅ switch to edit tab
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+            />
 
-        <h3>Add Text</h3>
-        <input
-          type="text"
-          placeholder="Enter text..."
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && e.target.value.trim() !== "") {
-              addDesignCollageToActiveView({
-                id: Date.now(),
-                name: "Custom Text",
-                src: "",
-                designs: [
-                  {
-                    id: `element-${Date.now()}`,
-                    src: "", // no image
-                    text: e.target.value.trim(),
-                    x: 0.5,
-                    y: 0.5,
-                    width: 0.3, // normalized default
-                    height: 0.1, // normalized default
-                  },
-                ],
-              });
-              e.target.value = "";
-            }
-          }}
-          style={{ width: "100%", padding: "0.5rem" }}
-        />
+            <h3>Add Text</h3>
+            <button
+              onClick={() => {
+                setActivePanelTab("addText");
+                setTextAdded(false);
+              }}
+            >
+              📝 Add Text
+            </button>
+          </>
+        )}
+
+        {activePanelTab === "editDesign" && (
+          <>
+            <h3>Edit Design</h3>
+            <button onClick={() => flipSelected("horizontal")}>
+              Flip Horizontal
+            </button>
+            <button onClick={() => flipSelected("vertical")}>
+              Flip Vertical
+            </button>
+            <input
+              type="color"
+              value={designColor}
+              onChange={(e) => setDesignColor(e.target.value)}
+            />
+            <button onClick={() => setActivePanelTab("default")}>⬅ Back</button>
+          </>
+        )}
+
+        {activePanelTab === "addText" && (
+          <>
+            <h3>Add Text</h3>
+            <textarea
+              placeholder="Type your text here..."
+              rows={4}
+              style={{ width: "100%", padding: "0.5rem" }}
+              value={pendingText}
+              onChange={(e) => setPendingText(e.target.value)}
+            />
+
+            <button
+              onClick={() => {
+                if (pendingText.trim() !== "") {
+                  // Step 1: pick initial bounding box width (in px)
+                  const initialBoxWidthPx = 0.4 * regionWidth; // e.g. 40% of region
+
+                  // Step 2: find font size that fits this width
+                  const fittingFontSizePx = findFittingFontSize(
+                    pendingText,
+                    initialBoxWidthPx,
+                  );
+
+                  // line spacing multiplier (adjust as needed)
+const lineHeight = fittingFontSizePx;
+
+// add padding factor (e.g. 1.1 = 10% extra space)
+const paddingFactor = 1.1;
+
+const totalHeightPx = lineHeight * pendingText.split("\n").length * paddingFactor;
+const totalWidthPx = initialBoxWidthPx * paddingFactor;
+
+                  // Step 4: add design with fitted box + font size
+                  addDesignCollageToActiveView({
+                    id: `text-${Date.now()}`,
+                    name: "Custom Text",
+                    designs: [
+                      {
+                        id: `element-${Date.now()}`,
+                        src: "",
+                        text: pendingText,
+                        x: 0.5,
+                        y: 0.5,
+                        width: initialBoxWidthPx / regionWidth, // normalized width
+                        height: totalHeightPx / regionHeight, // normalized height
+                        fontSize: fittingFontSizePx / regionHeight, // normalized font size
+                      },
+                    ],
+                  });
+
+                  setPendingText("");
+                  setTextAdded(true);
+                  setActivePanelTab("editDesign");
+                }
+              }}
+            >
+              ➕ Add Text
+            </button>
+
+            {/* ✅ Only show options if textAdded is true */}
+            {textAdded && (
+              <>
+                <h4>Text Options</h4>
+                <input
+                  type="color"
+                  value={designColor}
+                  onChange={(e) => setDesignColor(e.target.value)}
+                />
+                <button onClick={() => centerSelectedText()}>
+                  Center Text
+                </button>
+                <button onClick={() => toggleOutlineSelectedText()}>
+                  Toggle Outline
+                </button>
+              </>
+            )}
+
+            <button onClick={() => setActivePanelTab("default")}>⬅ Back</button>
+          </>
+        )}
       </div>
 
       {/* Main content */}
@@ -497,6 +663,7 @@ export default function ProductDesigner() {
                             addDesignCollageToActiveView(d);
                             setShowDesignModal(false);
                             setSelectedCategory(null);
+                            setActivePanelTab("editDesign");
                           }}
                         />
                         <div className="option-name">{d.name}</div>
@@ -620,6 +787,7 @@ export default function ProductDesigner() {
                           }
                           bounds="parent"
                           disableDragging={isRotating || isResizing}
+                          enableResizing={false}
                           onDragStart={() => {
                             if (isRotating || isResizing) return;
                             setIsActive(true);
@@ -673,6 +841,8 @@ export default function ProductDesigner() {
                                 selectedDesignId === d.id
                                   ? "rgba(255,255,255,0.05)"
                                   : "transparent",
+                              cursor:
+                                isRotating || isResizing ? "default" : "grab",
                             }}
                           >
                             {/* Inner design wrapper */}
@@ -694,9 +864,19 @@ export default function ProductDesigner() {
                               ) : (
                                 <div
                                   style={{
-                                    fontSize: "2rem",
+                                    fontSize: `${d.fontSize * regionHeight}px`, // ✅ scales with box height
+                                    
                                     fontWeight: "bold",
+                                    fontFamily: "Arial",
                                     color: designColor,
+                                    textAlign: "center",
+                                    width: "100%",
+                                    height: "100%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    lineHeight: 1,
+                                    whiteSpace: "pre-line",
                                   }}
                                 >
                                   {d.text}
@@ -937,16 +1117,24 @@ export default function ProductDesigner() {
                                         ...prev,
                                         [activePreview]: prev[
                                           activePreview
-                                        ].map((item) =>
-                                          item.id === d.id
-                                            ? {
-                                                ...item,
-                                                width: newWidth / regionWidth,
-                                                height:
-                                                  newHeight / regionHeight,
-                                              }
-                                            : item,
-                                        ),
+                                        ].map((item) => {
+                                          if (item.id !== d.id) return item;
+
+                                          // Step 1: calculate font size that fits new width
+                                          const paddingFactor = 1.1;
+                                          const fittingFontSizePx = findFittingFontSize(item.text, newWidth / paddingFactor);
+const lineHeight = fittingFontSizePx;
+
+const totalHeightPx = lineHeight * item.text.split("\n").length;
+
+return {
+  ...item,
+  width: newWidth / regionWidth,
+  height: totalHeightPx / regionHeight,
+  fontSize: fittingFontSizePx / regionHeight
+};
+
+                                        }),
                                       }));
                                     };
 
