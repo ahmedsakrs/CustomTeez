@@ -215,39 +215,117 @@ export default function ProductDesigner() {
   );
 
   const findFittingFontSize = (text, targetWidthPx, fontFamily = "Arial") => {
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  ctx.letterSpacing = "0.08em";
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    ctx.letterSpacing = "0.08em";
 
-  const lines = text.split("\n");
-  let low = 1;
-  let high = 300;
-  let fittingSize = low;
+    const lines = text.split("\n");
+    let low = 1;
+    let high = 300;
+    let fittingSize = low;
 
-  while (low <= high) {
-    const mid = (low + high) / 2;
-    ctx.font = `${mid}px ${fontFamily}`;
+    while (low <= high) {
+      const mid = (low + high) / 2;
+      ctx.font = `${mid}px ${fontFamily}`;
 
-    // measure the widest line
-    let maxLineWidth = 0;
-    for (const line of lines) {
-      const metrics = ctx.measureText(line);
-      if (metrics.width > maxLineWidth) {
-        maxLineWidth = metrics.width;
+      // measure the widest line
+      let maxLineWidth = 0;
+      for (const line of lines) {
+        const metrics = ctx.measureText(line);
+        if (metrics.width > maxLineWidth) {
+          maxLineWidth = metrics.width;
+        }
+      }
+
+      if (maxLineWidth <= targetWidthPx) {
+        fittingSize = mid; // fits, try bigger
+        low = mid + 0.2;
+      } else {
+        high = mid - 0.2; // too big, try smaller
       }
     }
 
-    if (maxLineWidth <= targetWidthPx) {
-      fittingSize = mid;   // fits, try bigger
-      low = mid + 0.2;
-    } else {
-      high = mid - 0.2;      // too big, try smaller
+    return fittingSize;
+  };
+
+  const fitTextToBox = (text, targetWidthPx, fontFamily = "Arial") => {
+    const span = document.createElement("span");
+    span.style.position = "absolute";
+    span.style.visibility = "hidden";
+    span.style.whiteSpace = "pre"; // preserve newlines
+    span.style.fontFamily = fontFamily;
+    document.body.appendChild(span);
+
+    const lines = text.split("\n");
+    let low = 1;
+    let high = 300;
+    let fittingSize = low;
+
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      span.style.fontSize = `${mid}px`;
+      span.textContent = text;
+
+      const measuredWidth = span.offsetWidth;
+
+      if (measuredWidth <= targetWidthPx) {
+        fittingSize = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
     }
-  }
 
-  return fittingSize;
-};
+    // measure height at final font size
+    span.style.fontSize = `${fittingSize}px`;
+    const measuredHeight = span.offsetHeight;
 
+    document.body.removeChild(span);
+
+    return {
+      fontSize: fittingSize,
+      width: targetWidthPx,
+      height: measuredHeight,
+    };
+  };
+
+  const textToImage = (
+      text,
+      fontSizePx = 24,
+      fontFamily = "Arial",
+      lineHeightMultiplier = 1.1,
+    ) => {
+      const lines = text.split("\n");
+
+      // Create canvas
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      ctx.font = `${fontSizePx}px ${fontFamily}`;
+      const lineHeight = fontSizePx * lineHeightMultiplier;
+
+      // Measure widest line
+      let maxWidth = 0;
+      for (const line of lines) {
+        const width = ctx.measureText(line).width;
+        if (width > maxWidth) maxWidth = width;
+      }
+
+      // Set canvas size based on text
+      canvas.width = Math.ceil(maxWidth);
+      canvas.height = Math.ceil(lineHeight * lines.length);
+
+      // Draw text
+      ctx.font = `${fontSizePx}px ${fontFamily}`;
+      ctx.textBaseline = "top";
+      ctx.fillStyle = "black"; // text color
+      lines.forEach((line, i) => {
+        ctx.fillText(line, 0, i * lineHeight);
+      });
+
+      // Export as image
+      return canvas.toDataURL("image/png");
+    };
 
   const flipSelected = (direction) => {
     setDesignsByView((prev) => ({
@@ -455,38 +533,19 @@ export default function ProductDesigner() {
             <button
               onClick={() => {
                 if (pendingText.trim() !== "") {
-                  // Step 1: pick initial bounding box width (in px)
-                  const initialBoxWidthPx = 0.4 * regionWidth; // e.g. 40% of region
+                  const initialFontSizePx = 24;
+                  const imageData = textToImage(pendingText, initialFontSizePx);
 
-                  // Step 2: find font size that fits this width
-                  const fittingFontSizePx = findFittingFontSize(
-                    pendingText,
-                    initialBoxWidthPx,
-                  );
-
-                  // line spacing multiplier (adjust as needed)
-const lineHeight = fittingFontSizePx;
-
-// add padding factor (e.g. 1.1 = 10% extra space)
-const paddingFactor = 1.1;
-
-const totalHeightPx = lineHeight * pendingText.split("\n").length * paddingFactor;
-const totalWidthPx = initialBoxWidthPx * paddingFactor;
-
-                  // Step 4: add design with fitted box + font size
                   addDesignCollageToActiveView({
                     id: `text-${Date.now()}`,
                     name: "Custom Text",
                     designs: [
                       {
                         id: `element-${Date.now()}`,
-                        src: "",
                         text: pendingText,
-                        x: 0.5,
-                        y: 0.5,
-                        width: initialBoxWidthPx / regionWidth, // normalized width
-                        height: totalHeightPx / regionHeight, // normalized height
-                        fontSize: fittingFontSizePx / regionHeight, // normalized font size
+                        x: 0.25,
+                        y: 0.25,
+                        src: imageData, // ✅ render as image
                       },
                     ],
                   });
@@ -865,7 +924,7 @@ const totalWidthPx = initialBoxWidthPx * paddingFactor;
                                 <div
                                   style={{
                                     fontSize: `${d.fontSize * regionHeight}px`, // ✅ scales with box height
-                                    
+
                                     fontWeight: "bold",
                                     fontFamily: "Arial",
                                     color: designColor,
@@ -895,6 +954,7 @@ const totalWidthPx = initialBoxWidthPx * paddingFactor;
                                   onMouseDown={(e) => e.stopPropagation()}
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    setActivePanelTab("default");
                                     setDesignsByView((prev) => ({
                                       ...prev,
                                       [activePreview]: prev[
@@ -1117,24 +1177,16 @@ const totalWidthPx = initialBoxWidthPx * paddingFactor;
                                         ...prev,
                                         [activePreview]: prev[
                                           activePreview
-                                        ].map((item) => {
-                                          if (item.id !== d.id) return item;
-
-                                          // Step 1: calculate font size that fits new width
-                                          const paddingFactor = 1.1;
-                                          const fittingFontSizePx = findFittingFontSize(item.text, newWidth / paddingFactor);
-const lineHeight = fittingFontSizePx;
-
-const totalHeightPx = lineHeight * item.text.split("\n").length;
-
-return {
-  ...item,
-  width: newWidth / regionWidth,
-  height: totalHeightPx / regionHeight,
-  fontSize: fittingFontSizePx / regionHeight
-};
-
-                                        }),
+                                        ].map((item) =>
+                                          item.id === d.id
+                                            ? {
+                                                ...item,
+                                                width: newWidth / regionWidth,
+                                                height:
+                                                  newHeight / regionHeight,
+                                              }
+                                            : item,
+                                        ),
                                       }));
                                     };
 
