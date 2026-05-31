@@ -190,6 +190,7 @@ export default function ProductDesigner() {
     const handleClickOutside = () => {
       if (isResizing || isRotating) return;
       setSelectedDesignId(null);
+      setActivePanelTab("default");
     };
     window.addEventListener("click", handleClickOutside);
     return () => window.removeEventListener("click", handleClickOutside);
@@ -248,84 +249,47 @@ export default function ProductDesigner() {
     return fittingSize;
   };
 
-  const fitTextToBox = (text, targetWidthPx, fontFamily = "Arial") => {
-    const span = document.createElement("span");
-    span.style.position = "absolute";
-    span.style.visibility = "hidden";
-    span.style.whiteSpace = "pre"; // preserve newlines
-    span.style.fontFamily = fontFamily;
-    document.body.appendChild(span);
-
+  const textToImage = (
+    text,
+    fontSizePx = 24,
+    fontFamily = "Arial",
+    lineHeightMultiplier = 1,
+  ) => {
     const lines = text.split("\n");
-    let low = 1;
-    let high = 300;
-    let fittingSize = low;
 
-    while (low <= high) {
-      const mid = Math.floor((low + high) / 2);
-      span.style.fontSize = `${mid}px`;
-      span.textContent = text;
+    // Create canvas
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
 
-      const measuredWidth = span.offsetWidth;
+    ctx.font = `${fontSizePx}px ${fontFamily}`;
+    const lineHeight = fontSizePx * lineHeightMultiplier;
 
-      if (measuredWidth <= targetWidthPx) {
-        fittingSize = mid;
-        low = mid + 1;
-      } else {
-        high = mid - 1;
-      }
+    // Measure widest line
+    let maxWidth = 0;
+    for (const line of lines) {
+      const width = ctx.measureText(line).width;
+      if (width > maxWidth) maxWidth = width;
     }
 
-    // measure height at final font size
-    span.style.fontSize = `${fittingSize}px`;
-    const measuredHeight = span.offsetHeight;
+    // Set canvas size based on text
+    canvas.width = Math.ceil(maxWidth);
+    canvas.height = Math.ceil(lineHeight * lines.length);
 
-    document.body.removeChild(span);
+    // Draw text
+    ctx.font = `${fontSizePx}px ${fontFamily}`;
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "black"; // text color
+    lines.forEach((line, i) => {
+      ctx.fillText(line, 0, i * lineHeight);
+    });
 
+    // Export as image
     return {
-      fontSize: fittingSize,
-      width: targetWidthPx,
-      height: measuredHeight,
+      img: canvas.toDataURL("image/png"),
+      width: maxWidth,
+      height: lineHeight * lines.length,
     };
   };
-
-  const textToImage = (
-      text,
-      fontSizePx = 24,
-      fontFamily = "Arial",
-      lineHeightMultiplier = 1.1,
-    ) => {
-      const lines = text.split("\n");
-
-      // Create canvas
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-
-      ctx.font = `${fontSizePx}px ${fontFamily}`;
-      const lineHeight = fontSizePx * lineHeightMultiplier;
-
-      // Measure widest line
-      let maxWidth = 0;
-      for (const line of lines) {
-        const width = ctx.measureText(line).width;
-        if (width > maxWidth) maxWidth = width;
-      }
-
-      // Set canvas size based on text
-      canvas.width = Math.ceil(maxWidth);
-      canvas.height = Math.ceil(lineHeight * lines.length);
-
-      // Draw text
-      ctx.font = `${fontSizePx}px ${fontFamily}`;
-      ctx.textBaseline = "top";
-      ctx.fillStyle = "black"; // text color
-      lines.forEach((line, i) => {
-        ctx.fillText(line, 0, i * lineHeight);
-      });
-
-      // Export as image
-      return canvas.toDataURL("image/png");
-    };
 
   const flipSelected = (direction) => {
     setDesignsByView((prev) => ({
@@ -491,7 +455,8 @@ export default function ProductDesigner() {
 
             <h3>Add Text</h3>
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setActivePanelTab("addText");
                 setTextAdded(false);
               }}
@@ -504,16 +469,25 @@ export default function ProductDesigner() {
         {activePanelTab === "editDesign" && (
           <>
             <h3>Edit Design</h3>
-            <button onClick={() => flipSelected("horizontal")}>
+            <button onClick={(e) =>{
+              e.stopPropagation();
+              flipSelected("horizontal");
+            }}>
               Flip Horizontal
             </button>
-            <button onClick={() => flipSelected("vertical")}>
+            <button onClick={(e) =>{
+              e.stopPropagation();
+              flipSelected("vertical");
+            }}>
               Flip Vertical
             </button>
             <input
               type="color"
               value={designColor}
-              onChange={(e) => setDesignColor(e.target.value)}
+              onChange={(e) =>{
+                e.stopPropagation();
+                setDesignColor(e.target.value);
+              }}
             />
             <button onClick={() => setActivePanelTab("default")}>⬅ Back</button>
           </>
@@ -524,35 +498,43 @@ export default function ProductDesigner() {
             <h3>Add Text</h3>
             <textarea
               placeholder="Type your text here..."
-              rows={4}
+              rows={1}
               style={{ width: "100%", padding: "0.5rem" }}
               value={pendingText}
+              onClick={(e) => e.stopPropagation()}
               onChange={(e) => setPendingText(e.target.value)}
             />
 
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 if (pendingText.trim() !== "") {
                   const initialFontSizePx = 24;
                   const imageData = textToImage(pendingText, initialFontSizePx);
+                  const id = `text-${Date.now()}`;
 
                   addDesignCollageToActiveView({
-                    id: `text-${Date.now()}`,
-                    name: "Custom Text",
+                    id: id,
+                    name: "Text Image",
                     designs: [
                       {
                         id: `element-${Date.now()}`,
+                        src: imageData.img, // ✅ treat as normal image
                         text: pendingText,
-                        x: 0.25,
-                        y: 0.25,
-                        src: imageData, // ✅ render as image
+                        x: 0.5,
+                        y: 0.5,
+                        width: imageData.width / regionWidth,
+                        height: imageData.height / regionHeight,
+                        fontSize: initialFontSizePx / regionHeight,
+                        rotation: 0,
                       },
                     ],
                   });
 
                   setPendingText("");
+                  setSelectedDesignId(id);
                   setTextAdded(true);
-                  setActivePanelTab("editDesign");
+                  setActivePanelTab("addText");
                 }
               }}
             >
@@ -876,6 +858,13 @@ export default function ProductDesigner() {
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedDesignId(d.id);
+                              if (d.text) {
+                                // ✅ it's a text image
+                                setActivePanelTab("addText");
+                              } else {
+                                // ✅ it's a normal design image
+                                setActivePanelTab("editDesign");
+                              }
                             }}
                             style={{
                               position: "relative",
@@ -1177,16 +1166,38 @@ export default function ProductDesigner() {
                                         ...prev,
                                         [activePreview]: prev[
                                           activePreview
-                                        ].map((item) =>
-                                          item.id === d.id
-                                            ? {
-                                                ...item,
-                                                width: newWidth / regionWidth,
-                                                height:
-                                                  newHeight / regionHeight,
-                                              }
-                                            : item,
-                                        ),
+                                        ].map((item) => {
+                                          if (item.id !== d.id) return item;
+
+                                          // Step 1: recalc font size from new width
+                                          const fittingFontSizePx =
+                                            findFittingFontSize(
+                                              item.text,
+                                              newWidth,
+                                            );
+
+                                          // Step 2: regenerate image at new font size
+                                          const imageData = textToImage(
+                                            item.text,
+                                            fittingFontSizePx,
+                                          ).img;
+
+                                          // Step 3: recalc height
+                                          const lineHeight = fittingFontSizePx;
+                                          const totalHeightPx =
+                                            lineHeight *
+                                            item.text.split("\n").length;
+
+                                          return {
+                                            ...item,
+                                            width: newWidth / regionWidth,
+                                            height:
+                                              totalHeightPx / regionHeight,
+                                            fontSize:
+                                              fittingFontSizePx / regionHeight,
+                                            src: imageData, // ✅ updated image
+                                          };
+                                        }),
                                       }));
                                     };
 
