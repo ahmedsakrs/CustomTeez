@@ -218,7 +218,6 @@ export default function ProductDesigner() {
   const findFittingFontSize = (text, targetWidthPx, fontFamily = "Arial") => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
-    ctx.letterSpacing = "0.08em";
 
     const lines = text.split("\n");
     let low = 1;
@@ -272,8 +271,8 @@ export default function ProductDesigner() {
     }
 
     // Set canvas size based on text
-    canvas.width = Math.ceil(maxWidth);
-    canvas.height = Math.ceil(lineHeight * lines.length);
+    canvas.width = maxWidth;
+    canvas.height = lineHeight * lines.length;
 
     // Draw text
     ctx.font = `${fontSizePx}px ${fontFamily}`;
@@ -432,21 +431,31 @@ export default function ProductDesigner() {
                 if (file) {
                   const reader = new FileReader();
                   reader.onload = (ev) => {
-                    addDesignCollageToActiveView({
-                      id: `upload-${Date.now()}`,
-                      name: file.name,
-                      designs: [
-                        {
-                          id: `element-${Date.now()}`,
-                          src: ev.target.result,
-                          x: 0.5,
-                          y: 0.5,
-                          width: 0.2,
-                          height: 0.2,
-                        },
-                      ],
-                    });
-                    setActivePanelTab("editDesign"); // ✅ switch to edit tab
+                    const img = new Image();
+                    img.onload = () => {
+                      const aspectRatio = img.width / img.height;
+
+                      // pick a base normalized width
+                      const baseWidth = 0.2;
+                      const baseHeight = baseWidth / aspectRatio;
+
+                      addDesignCollageToActiveView({
+                        id: `upload-${Date.now()}`,
+                        name: file.name,
+                        designs: [
+                          {
+                            id: `element-${Date.now()}`,
+                            src: ev.target.result,
+                            x: 0.25,
+                            y: 0.25,
+                            width: baseWidth,
+                            height: baseHeight, // ✅ preserves aspect ratio
+                          },
+                        ],
+                      });
+                      setActivePanelTab("editDesign");
+                    };
+                    img.src = ev.target.result;
                   };
                   reader.readAsDataURL(file);
                 }
@@ -469,22 +478,26 @@ export default function ProductDesigner() {
         {activePanelTab === "editDesign" && (
           <>
             <h3>Edit Design</h3>
-            <button onClick={(e) =>{
-              e.stopPropagation();
-              flipSelected("horizontal");
-            }}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                flipSelected("horizontal");
+              }}
+            >
               Flip Horizontal
             </button>
-            <button onClick={(e) =>{
-              e.stopPropagation();
-              flipSelected("vertical");
-            }}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                flipSelected("vertical");
+              }}
+            >
               Flip Vertical
             </button>
             <input
               type="color"
               value={designColor}
-              onChange={(e) =>{
+              onChange={(e) => {
                 e.stopPropagation();
                 setDesignColor(e.target.value);
               }}
@@ -509,8 +522,19 @@ export default function ProductDesigner() {
               onClick={(e) => {
                 e.stopPropagation();
                 if (pendingText.trim() !== "") {
-                  const initialFontSizePx = 24;
-                  const imageData = textToImage(pendingText, initialFontSizePx);
+                  const maxFontSizePx = findFittingFontSize(
+                    pendingText,
+                    regionWidth,
+                    "Arial",
+                  );
+                  console.log(regionWidth);
+                  const imageData = textToImage(
+                    pendingText,
+                    maxFontSizePx,
+                    "Arial",
+                    1,
+                    "black",
+                  );
                   const id = `text-${Date.now()}`;
 
                   addDesignCollageToActiveView({
@@ -519,14 +543,16 @@ export default function ProductDesigner() {
                     designs: [
                       {
                         id: `element-${Date.now()}`,
-                        src: imageData.img, // ✅ treat as normal image
+                        src: imageData.img, // ✅ high-res image
                         text: pendingText,
-                        x: 0.5,
-                        y: 0.5,
-                        width: imageData.width / regionWidth,
-                        height: imageData.height / regionHeight,
-                        fontSize: initialFontSizePx / regionHeight,
+                        x: 0,
+                        y: 0,
+                        width: 0.5, // normalized to full region
+                        height: (imageData.height * 0.5) / imageData.width,
                         rotation: 0,
+                        fontFamily: "Arial",
+                        color: "black",
+                        lineSpacing: 1,
                       },
                     ],
                   });
@@ -814,6 +840,8 @@ export default function ProductDesigner() {
                       {designsByView[activePreview].map((d) => (
                         <Rnd
                           key={d.id}
+                          style={{transform: `rotate(${rotationAngles[d.id] || 0}rad)`,
+                                    transformOrigin: "center center"}}
                           size={getBoundingBox(
                             d.width * regionWidth,
                             d.height * regionHeight,
@@ -871,26 +899,8 @@ export default function ProductDesigner() {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              width: getBoundingBox(
-                                d.width * regionWidth,
-                                d.height * regionHeight,
-                                rotationAngles[d.id] || 0,
-                              ).width,
-                              height: getBoundingBox(
-                                d.width * regionWidth,
-                                d.height * regionHeight,
-                                rotationAngles[d.id] || 0,
-                              ).height,
-                              border:
-                                selectedDesignId === d.id
-                                  ? "2px solid rgba(0,0,0,0.2)"
-                                  : "none",
-                              backgroundColor:
-                                selectedDesignId === d.id
-                                  ? "rgba(255,255,255,0.05)"
-                                  : "transparent",
-                              cursor:
-                                isRotating || isResizing ? "default" : "grab",
+                              width: d.width * regionWidth,
+                              height: d.height * regionHeight,
                             }}
                           >
                             {/* Inner design wrapper */}
@@ -899,38 +909,55 @@ export default function ProductDesigner() {
                               style={{
                                 width: d.width * regionWidth,
                                 height: d.height * regionHeight,
+                                alignItems: "center",
+                                objectFit: "contain",
                                 transform: `rotate(${rotationAngles[d.id] || 0}rad)`,
-                                transformOrigin: "center center",
+                                    transformOrigin: "center center",
                               }}
                             >
-                              {d.src ? (
                                 <img
                                   src={d.src}
                                   alt={d.name}
                                   className="preview-image"
-                                />
-                              ) : (
-                                <div
                                   style={{
-                                    fontSize: `${d.fontSize * regionHeight}px`, // ✅ scales with box height
-
-                                    fontWeight: "bold",
-                                    fontFamily: "Arial",
-                                    color: designColor,
-                                    textAlign: "center",
                                     width: "100%",
                                     height: "100%",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    lineHeight: 1,
-                                    whiteSpace: "pre-line",
+                                    objectFit: "contain",
                                   }}
-                                >
-                                  {d.text}
-                                </div>
-                              )}
+                                />
                             </div>
+                              <div
+                                className="bounding-box-overlay"
+                                style={{
+                                  position: "absolute",
+                                  top: "50%",
+                                  left: "50%",
+                                  width: getBoundingBox(
+                                    d.width * regionWidth,
+                                    d.height * regionHeight,
+                                    rotationAngles[d.id] || 0,
+                                  ).width,
+                                  height: getBoundingBox(
+                                    d.width * regionWidth,
+                                    d.height * regionHeight,
+                                    rotationAngles[d.id] || 0,
+                                  ).height,
+                                  transform: `translate(-50%, -50%)`,
+                                  transformOrigin: "center center",
+                                  border:
+                                    selectedDesignId === d.id
+                                      ? "2px solid rgba(0,0,0,0.2)"
+                                      : "none",
+                                  backgroundColor:
+                                    selectedDesignId === d.id
+                                      ? "rgba(255,255,255,0.05)"
+                                      : "transparent",
+                                  cursor:
+                                    isRotating || isResizing
+                                      ? "default"
+                                      : "grab",
+                                }}
+                              >
                             {selectedDesignId === d.id && (
                               <>
                                 <button
@@ -991,6 +1018,11 @@ export default function ProductDesigner() {
                                       );
                                       const delta = currentAngle - startAngle;
                                       const newAngle = baseline + delta;
+
+                                      const currentWidth =
+                                        d.width * regionWidth;
+                                      const currentHeight =
+                                        d.height * regionHeight;
 
                                       let bbox = getBoundingBox(
                                         d.width * regionWidth,
@@ -1161,7 +1193,6 @@ export default function ProductDesigner() {
                                           currentAngle,
                                         );
                                       }
-
                                       setDesignsByView((prev) => ({
                                         ...prev,
                                         [activePreview]: prev[
@@ -1169,33 +1200,11 @@ export default function ProductDesigner() {
                                         ].map((item) => {
                                           if (item.id !== d.id) return item;
 
-                                          // Step 1: recalc font size from new width
-                                          const fittingFontSizePx =
-                                            findFittingFontSize(
-                                              item.text,
-                                              newWidth,
-                                            );
-
-                                          // Step 2: regenerate image at new font size
-                                          const imageData = textToImage(
-                                            item.text,
-                                            fittingFontSizePx,
-                                          ).img;
-
-                                          // Step 3: recalc height
-                                          const lineHeight = fittingFontSizePx;
-                                          const totalHeightPx =
-                                            lineHeight *
-                                            item.text.split("\n").length;
-
                                           return {
                                             ...item,
                                             width: newWidth / regionWidth,
-                                            height:
-                                              totalHeightPx / regionHeight,
-                                            fontSize:
-                                              fittingFontSizePx / regionHeight,
-                                            src: imageData, // ✅ updated image
+                                            height: newHeight / regionHeight,
+                                            // ✅ src stays the same
                                           };
                                         }),
                                       }));
@@ -1228,6 +1237,7 @@ export default function ProductDesigner() {
                                 </button>
                               </>
                             )}
+                            </div>
                           </div>
                         </Rnd>
                       ))}
