@@ -5,13 +5,13 @@ import { LinkContainer, Link } from "react-router-bootstrap";
 function Header() {
   return (
     <header>
-      <Navbar expand="lg" bg="dark" variant="dark" collapseOnSelect className="navbar navbar-custom">
-        <Container>
+      <Navbar expand="sm" bg="dark" variant="dark" collapseOnSelect className="navbar-custom">
+        <Container fluid className="p-0">
           <LinkContainer to={"/"}>
             <Navbar.Brand>CustomTeez</Navbar.Brand>
           </LinkContainer>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav" className="navbar-custom">
+          <Navbar.Toggle aria-controls="basic-navbar-nav" className="navbar-toggle" />
+          <Navbar.Collapse id="basic-navbar-nav" className="navbar-collapse">
             <Nav className="me-auto">
               <LinkContainer to={"/products"}>
                 <Nav.Link>

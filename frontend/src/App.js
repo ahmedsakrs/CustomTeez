@@ -10,30 +10,77 @@ import ProductScreen from "./screens/ProductScreen";
 import ProductsScreen from "./screens/ProductsScreen";
 import DesignsCategoriesScreen from "./screens/DesignsCategoriesScreen";
 import DesignCategoryScreen from "./screens/DesignCategoryScreen";
-import DesignerScreen from './screens/DesignerScreen';
+import DesignerScreen from "./screens/DesignerScreen";
 
 function App() {
   return (
     <Router>
       <Header />
       <main className="py-3">
-        <Container>
-          <Routes>
-            <Route path="/" element={<HomeScreen />} exact />
-            
-            <Route path="/products/" element={<ProductsScreen />} />
-            <Route path="/products/:id/">
-              <Route index element={<ProductScreen />} />
-              <Route path=":color" element={<ProductScreen />} />
-            </Route>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Container>
+                <HomeScreen />
+              </Container>
+            }
+            exact
+          />
 
-            <Route path="/designCategories/" element={<DesignsCategoriesScreen />} />
-            <Route path="/designCategories/:categoryID/" element={<DesignCategoryScreen />} />
+          <Route
+            path="/products/"
+            element={
+              <Container>
+                <ProductsScreen />
+              </Container>
+            }
+          />
+          <Route path="/products/:id/">
+            <Route
+              index
+              element={
+                <Container>
+                  <ProductScreen />
+                </Container>
+              }
+            />
+            <Route
+              path=":color"
+              element={
+                <Container>
+                  <ProductScreen />
+                </Container>
+              }
+            />
+          </Route>
 
-            <Route path="/designer/" element={<DesignerScreen/>}/>
-            
-          </Routes>
-        </Container>
+          <Route
+            path="/designCategories/"
+            element={
+              <Container>
+                <DesignsCategoriesScreen />
+              </Container>
+            }
+          />
+          <Route
+            path="/designCategories/:categoryID/"
+            element={
+              <Container>
+                <DesignCategoryScreen />
+              </Container>
+            }
+          />
+
+          <Route
+            path="/designer/"
+            element={
+              <Container fluid className="p-0">
+                <DesignerScreen />
+              </Container>
+            }
+          />
+        </Routes>
       </main>
       <Footer />
     </Router>

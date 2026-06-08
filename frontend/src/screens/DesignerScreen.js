@@ -12,7 +12,7 @@ const productOptions = [
         Front: "/images/tshirt/red_front.png",
         Back: "/images/tshirt/red_back.png",
         "L Sleeve": "/images/tshirt/red_left.png",
-        "R Sleeve": "/images/tshirt/red_right.png",
+        "R Sleeve": "/images/tshirt/red_left.png",
       },
       Blue: {
         Front: "/images/tshirt/blue_front.png",
@@ -131,7 +131,7 @@ const designCategories = {
 
 export default function ProductDesigner() {
   const [allProducts, setAllProducts] = useState([
-    { id: 1, productType: "tshirt", name: "Product 1", color: "Red" },
+    { id: 1, productType: "tshirt", name: "tshirt", color: "Red" },
   ]);
   const [activeProductId, setActiveProductId] = useState(1);
   const [designsByView, setDesignsByView] = useState({
@@ -162,9 +162,41 @@ export default function ProductDesigner() {
   const [activePanelTab, setActivePanelTab] = useState("default");
   const [pendingText, setPendingText] = useState("");
   const [textAdded, setTextAdded] = useState(false);
+  const [justFinishedInteraction, setJustFinishedInteraction] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   const previewRef = useRef(null);
   const imgRef = useRef(null);
+  const panelRef = useRef(null);
+  const textPanelRef = useRef(null);
+  const scrollRef = useRef(null);
+
+  const checkScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  };
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) {
+      el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
+    }
+  }, [allProducts]); // runs every time a product is added/removed
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    checkScroll();
+    el.addEventListener("scroll", checkScroll);
+    window.addEventListener("resize", checkScroll);
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, []);
 
   const activeProduct = allProducts.find((p) => p.id === activeProductId);
 
@@ -186,15 +218,31 @@ export default function ProductDesigner() {
     });
   }, [activeProductId, activePreview]);
 
-  useEffect(() => {
-    const handleClickOutside = () => {
+  useEffect((e) => {
+    const handleClickOutside = (e) => {
+      if (panelRef.current && panelRef.current.contains(e.target)) {
+        return;
+      }
+
+      if (textPanelRef.current && textPanelRef.current.contains(e.target)) {
+        return;
+      }
+
+      if (justFinishedInteraction) {
+        // Suppress deselect once
+        setJustFinishedInteraction(false);
+        return;
+      }
+
+      if (isActive) return;
+
       if (isResizing || isRotating) return;
+      if (selectedDesignId) setActivePanelTab("default");
       setSelectedDesignId(null);
-      setActivePanelTab("default");
     };
-    window.addEventListener("click", handleClickOutside);
-    return () => window.removeEventListener("click", handleClickOutside);
-  }, []);
+    window.addEventListener("mousedown", handleClickOutside);
+    return () => window.removeEventListener("mousedown", handleClickOutside);
+  }, [isActive, isResizing, isRotating, selectedDesignId, justFinishedInteraction]);
 
   useEffect(() => {
     if (!previewRef.current) return;
@@ -343,7 +391,7 @@ export default function ProductDesigner() {
     const updated = allProducts.filter((p) => p.id !== id);
     setAllProducts(updated);
     if (id === activeProductId && updated.length > 0) {
-      setActiveProductId(updated[0].id);
+      setActiveProductId(updated[updated.length - 1].id);
     }
   };
 
@@ -355,11 +403,11 @@ export default function ProductDesigner() {
 
   const changeProductColor = (newColor) => {
     if (isAddingProduct && pendingProductType) {
-      const newId = allProducts.length + 1;
+      const newId = Date.now();
       const newProduct = {
         id: newId,
         productType: pendingProductType,
-        name: `Product ${newId}`,
+        name: pendingProductType,
         color: newColor,
       };
       setAllProducts([...allProducts, newProduct]);
@@ -370,7 +418,12 @@ export default function ProductDesigner() {
       setAllProducts(
         allProducts.map((p) =>
           p.id === activeProductId
-            ? { ...p, productType: pendingProductType, color: newColor }
+            ? {
+                ...p,
+                productType: pendingProductType,
+                color: newColor,
+                name: pendingProductType,
+              }
             : p,
         ),
       );
@@ -478,114 +531,131 @@ export default function ProductDesigner() {
         {activePanelTab === "editDesign" && (
           <>
             <h3>Edit Design</h3>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                flipSelected("horizontal");
-              }}
-            >
-              Flip Horizontal
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                flipSelected("vertical");
-              }}
-            >
-              Flip Vertical
-            </button>
-            <input
-              type="color"
-              value={designColor}
-              onChange={(e) => {
-                e.stopPropagation();
-                setDesignColor(e.target.value);
-              }}
-            />
-            <button onClick={() => setActivePanelTab("default")}>⬅ Back</button>
+            <div ref={panelRef} className="edit-panel">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  flipSelected("horizontal");
+                }}
+              >
+                Flip Horizontal
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  flipSelected("vertical");
+                }}
+              >
+                Flip Vertical
+              </button>
+              <input
+                type="color"
+                value={designColor}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setDesignColor(e.target.value);
+                }}
+              />
+              <button
+                onClick={() => {
+                  setActivePanelTab("default");
+                  setSelectedDesignId(null);
+                }}
+              >
+                ⬅ Back
+              </button>
+            </div>
           </>
         )}
 
         {activePanelTab === "addText" && (
           <>
             <h3>Add Text</h3>
-            <textarea
-              placeholder="Type your text here..."
-              rows={1}
-              style={{ width: "100%", padding: "0.5rem" }}
-              value={pendingText}
-              onClick={(e) => e.stopPropagation()}
-              onChange={(e) => setPendingText(e.target.value)}
-            />
+            <div ref={textPanelRef} className="text-panel">
+              <textarea
+                placeholder="Type your text here..."
+                rows={1}
+                style={{ width: "100%", padding: "0.5rem" }}
+                value={pendingText}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => setPendingText(e.target.value)}
+              />
 
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (pendingText.trim() !== "") {
-                  const maxFontSizePx = findFittingFontSize(
-                    pendingText,
-                    regionWidth,
-                    "Arial",
-                  );
-                  console.log(regionWidth);
-                  const imageData = textToImage(
-                    pendingText,
-                    maxFontSizePx,
-                    "Arial",
-                    1,
-                    "black",
-                  );
-                  const id = `text-${Date.now()}`;
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (pendingText.trim() !== "") {
+                    const maxFontSizePx = findFittingFontSize(
+                      pendingText,
+                      regionWidth,
+                      "Arial",
+                    );
+                    const imageData = textToImage(
+                      pendingText,
+                      maxFontSizePx,
+                      "Arial",
+                      1,
+                      "black",
+                    );
+                    const id = `text-${Date.now()}`;
 
-                  addDesignCollageToActiveView({
-                    id: id,
-                    name: "Text Image",
-                    designs: [
-                      {
-                        id: `element-${Date.now()}`,
-                        src: imageData.img, // ✅ high-res image
-                        text: pendingText,
-                        x: 0,
-                        y: 0,
-                        width: 0.5, // normalized to full region
-                        height: (imageData.height * 0.5) / imageData.width,
-                        rotation: 0,
-                        fontFamily: "Arial",
-                        color: "black",
-                        lineSpacing: 1,
-                      },
-                    ],
-                  });
+                    addDesignCollageToActiveView({
+                      id: id,
+                      name: "Text Image",
+                      designs: [
+                        {
+                          id: `element-${Date.now()}`,
+                          src: imageData.img, // ✅ high-res image
+                          text: pendingText,
+                          x: 0,
+                          y: 0,
+                          width: 0.5, // normalized to full region
+                          height: (imageData.height * 0.5) / imageData.width,
+                          rotation: 0,
+                          fontFamily: "Arial",
+                          color: "black",
+                          lineSpacing: 1,
+                        },
+                      ],
+                    });
 
-                  setPendingText("");
-                  setSelectedDesignId(id);
-                  setTextAdded(true);
-                  setActivePanelTab("addText");
-                }
-              }}
-            >
-              ➕ Add Text
-            </button>
+                    setPendingText("");
+                    setSelectedDesignId(id);
+                    setTextAdded(true);
+                    setActivePanelTab("addText");
+                  }
+                }}
+              >
+                ➕ Add Text
+              </button>
 
-            {/* ✅ Only show options if textAdded is true */}
-            {textAdded && (
-              <>
-                <h4>Text Options</h4>
-                <input
-                  type="color"
-                  value={designColor}
-                  onChange={(e) => setDesignColor(e.target.value)}
-                />
-                <button onClick={() => centerSelectedText()}>
-                  Center Text
-                </button>
-                <button onClick={() => toggleOutlineSelectedText()}>
-                  Toggle Outline
-                </button>
-              </>
-            )}
+              {/* ✅ Only show options if textAdded is true */}
+              {textAdded && (
+                <>
+                  <h4>Text Options</h4>
+                  <input
+                    type="color"
+                    value={designColor}
+                    onChange={(e) => setDesignColor(e.target.value)}
+                  />
+                  <button onClick={() => centerSelectedText()}>
+                    Center Text
+                  </button>
+                  <button onClick={() => toggleOutlineSelectedText()}>
+                    Toggle Outline
+                  </button>
+                </>
+              )}
 
-            <button onClick={() => setActivePanelTab("default")}>⬅ Back</button>
+              <button
+                onClick={() => {
+                  setActivePanelTab("default");
+                  setSelectedDesignId(null);
+                }}
+              >
+                ⬅ Back
+              </button>
+            </div>
           </>
         )}
       </div>
@@ -594,48 +664,93 @@ export default function ProductDesigner() {
       <div className="main-content">
         {/* Product bar */}
         <div className="header-bar">
-          <button onClick={addProduct}>➕ Add Product</button>
-          <button onClick={() => setShowProductModal(true)}>
-            🔄 Change Product
-          </button>
-          <button onClick={() => setShowColorModal(true)}>
-            🎨 Change Color
+          <button onClick={addProduct} className="add-product">
+            {" "}
+            <i className="fa-solid fa-circle-plus"></i> Add Product
           </button>
 
-          <div className="product-thumbnails">
-            {allProducts.map((p) => (
-              <div
-                key={p.id}
-                className={`thumbnail ${p.id === activeProductId ? "active" : ""}`}
-                onClick={() => setActiveProductId(p.id)}
-              >
-                {p.id === activeProductId && allProducts.length > 1 && (
-                  <button
-                    className="delete-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteProduct(p.id);
-                    }}
-                  >
-                    ✖
-                  </button>
-                )}
-                <img
-                  src={
-                    productOptions.find((opt) => opt.id === p.productType)
-                      ?.viewImages[p.color]["Front"]
-                  }
-                  alt={p.name}
-                  className="preview-image"
-                />
-                <div className="option-name">{p.name}</div>
-              </div>
-            ))}
+          <div
+            className="product-thumbnails-container"
+            style={{
+              maxWidth:
+                allProducts.length === 1
+                  ? "55px"
+                  : allProducts.length === 2
+                    ? "115px"
+                    : "120px",
+            }}
+          >
+            {/* Left fade + button */}
+            <div className={`fade-left ${!canScrollLeft ? "hidden" : ""}`} />
+            <button
+              className={`scroll-btn left ${!canScrollLeft ? "hidden" : ""}`}
+              onClick={() =>
+                scrollRef.current.scrollBy({ left: -40, behavior: "smooth" })
+              }
+            >
+              ‹
+            </button>
+
+            {/* Scrollable thumbnails */}
+            <div className="product-thumbnails-scroll" ref={scrollRef}>
+              {allProducts.map((p) => (
+                <div
+                  key={p.id}
+                  className={`thumbnail ${p.id === activeProductId ? "active" : ""}`}
+                  onClick={() => setActiveProductId(p.id)}
+                >
+                  {p.id === activeProductId && allProducts.length > 1 && (
+                    <button
+                      className="delete-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteProduct(p.id);
+                      }}
+                    >
+                      ✖
+                    </button>
+                  )}
+                  <img
+                    src={
+                      productOptions.find((opt) => opt.id === p.productType)
+                        ?.viewImages[p.color]["Front"]
+                    }
+                    alt={p.name}
+                    className="preview-image"
+                  />
+                  {/* Tooltip on hover */}
+                  <div className="tooltip">{p.name}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Right fade + button */}
+            <div className={`fade-right ${!canScrollRight ? "hidden" : ""}`} />
+            <button
+              className={`scroll-btn right ${!canScrollRight ? "hidden" : ""}`}
+              onClick={() =>
+                scrollRef.current.scrollBy({ left: 40, behavior: "smooth" })
+              }
+            >
+              ›
+            </button>
           </div>
 
-          <div className="active-label">
-            {activeProduct?.name} — <span>{activeProduct?.color}</span>
-          </div>
+          <button
+            onClick={() => setShowProductModal(true)}
+            className="add-product"
+          >
+            {" "}
+            <i className="fa-solid fa-arrows-rotate"></i>
+            Change Product
+          </button>
+          <button
+            className="color-button"
+            style={{ backgroundColor: activeProduct.color }}
+            onClick={() => setShowColorModal(true)}
+          >
+            <div className="tooltip">{activeProduct.color}</div>
+          </button>
         </div>
 
         {/* Product modal */}
@@ -792,7 +907,6 @@ export default function ProductDesigner() {
           <div className="preview-grid">
             {/* Column 1: Active preview */}
             <div className="active-preview">
-              <h3>{activePreview} Preview</h3>
               <div
                 className="preview-image-wrapper"
                 ref={previewRef}
@@ -840,8 +954,10 @@ export default function ProductDesigner() {
                       {designsByView[activePreview].map((d) => (
                         <Rnd
                           key={d.id}
-                          style={{transform: `rotate(${rotationAngles[d.id] || 0}rad)`,
-                                    transformOrigin: "center center"}}
+                          style={{
+                            transform: `rotate(${rotationAngles[d.id] || 0}rad)`,
+                            transformOrigin: "center center",
+                          }}
                           size={getBoundingBox(
                             d.width * regionWidth,
                             d.height * regionHeight,
@@ -855,11 +971,11 @@ export default function ProductDesigner() {
                               : { x: d.x * regionWidth, y: d.y * regionHeight }
                           }
                           bounds="parent"
-                          disableDragging={isRotating || isResizing}
+                          // disableDragging={isRotating || isResizing}
                           enableResizing={false}
                           onDragStart={() => {
-                            if (isRotating || isResizing) return;
                             setIsActive(true);
+                            setSelectedDesignId(d.id);
                           }}
                           onDrag={(e, data) => {
                             if (isRotating || isResizing) return;
@@ -876,8 +992,8 @@ export default function ProductDesigner() {
                             }));
                           }}
                           onDragStop={() => {
-                            if (isRotating || isResizing) return;
                             setIsActive(false);
+                            setSelectedDesignId(d.id);
                           }}
                         >
                           {/* Outer wrapper */}
@@ -894,6 +1010,7 @@ export default function ProductDesigner() {
                                 setActivePanelTab("editDesign");
                               }
                             }}
+                            draggable="false"
                             style={{
                               position: "relative",
                               display: "flex",
@@ -906,337 +1023,343 @@ export default function ProductDesigner() {
                             {/* Inner design wrapper */}
                             <div
                               className="design-wrapper"
+                              draggable="false"
                               style={{
                                 width: d.width * regionWidth,
                                 height: d.height * regionHeight,
                                 alignItems: "center",
                                 objectFit: "contain",
                                 transform: `rotate(${rotationAngles[d.id] || 0}rad)`,
-                                    transformOrigin: "center center",
+                                transformOrigin: "center center",
                               }}
                             >
-                                <img
-                                  src={d.src}
-                                  alt={d.name}
-                                  className="preview-image"
-                                  style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "contain",
-                                  }}
-                                />
-                            </div>
-                              <div
-                                className="bounding-box-overlay"
+                              <img
+                                src={d.src}
+                                alt={d.name}
+                                className="preview-image"
+                                draggable="false"
                                 style={{
-                                  position: "absolute",
-                                  top: "50%",
-                                  left: "50%",
-                                  width: getBoundingBox(
-                                    d.width * regionWidth,
-                                    d.height * regionHeight,
-                                    rotationAngles[d.id] || 0,
-                                  ).width,
-                                  height: getBoundingBox(
-                                    d.width * regionWidth,
-                                    d.height * regionHeight,
-                                    rotationAngles[d.id] || 0,
-                                  ).height,
-                                  transform: `translate(-50%, -50%)`,
-                                  transformOrigin: "center center",
-                                  border:
-                                    selectedDesignId === d.id
-                                      ? "2px solid rgba(0,0,0,0.2)"
-                                      : "none",
-                                  backgroundColor:
-                                    selectedDesignId === d.id
-                                      ? "rgba(255,255,255,0.05)"
-                                      : "transparent",
-                                  cursor:
-                                    isRotating || isResizing
-                                      ? "default"
-                                      : "grab",
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "contain",
                                 }}
-                              >
-                            {selectedDesignId === d.id && (
-                              <>
-                                <button
-                                  style={{
-                                    position: "absolute",
-                                    top: "-30px",
-                                    right: "-30px",
-                                    zIndex: 3000,
-                                  }}
-                                  onMouseDown={(e) => e.stopPropagation()}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setActivePanelTab("default");
-                                    setDesignsByView((prev) => ({
-                                      ...prev,
-                                      [activePreview]: prev[
-                                        activePreview
-                                      ].filter((item) => item.id !== d.id),
-                                    }));
-                                    setSelectedDesignId(null);
-                                  }}
-                                >
-                                  ✖
-                                </button>
-
-                                <button
-                                  style={{
-                                    position: "absolute",
-                                    top: "-30px",
-                                    left: "-30px",
-                                    zIndex: 3000,
-                                  }}
-                                  onMouseDown={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                    setIsRotating(true);
-                                    setLockedDesignId(d.id);
-                                    setLockedWrapperPos({
-                                      x: d.x * regionWidth,
-                                      y: d.y * regionHeight,
-                                    });
-
-                                    const rect =
-                                      e.target.getBoundingClientRect();
-                                    const centerX = rect.left + rect.width / 2;
-                                    const centerY = rect.top + rect.height / 2;
-
-                                    const startAngle = Math.atan2(
-                                      e.clientY - centerY,
-                                      e.clientX - centerX,
-                                    );
-                                    const baseline = rotationAngles[d.id] || 0;
-
-                                    const handleMove = (moveEvent) => {
-                                      const currentAngle = Math.atan2(
-                                        moveEvent.clientY - centerY,
-                                        moveEvent.clientX - centerX,
-                                      );
-                                      const delta = currentAngle - startAngle;
-                                      const newAngle = baseline + delta;
-
-                                      const currentWidth =
-                                        d.width * regionWidth;
-                                      const currentHeight =
-                                        d.height * regionHeight;
-
-                                      let bbox = getBoundingBox(
-                                        d.width * regionWidth,
-                                        d.height * regionHeight,
-                                        newAngle,
-                                      );
-                                      let posX = d.x * regionWidth;
-                                      let posY = d.y * regionHeight;
-
-                                      if (posX < 0) posX = 0;
-                                      if (posY < 0) posY = 0;
-                                      if (posX + bbox.width > regionWidth)
-                                        posX = regionWidth - bbox.width;
-                                      if (posY + bbox.height > regionHeight)
-                                        posY = regionHeight - bbox.height;
-
-                                      if (
-                                        bbox.width > regionWidth ||
-                                        bbox.height > regionHeight
-                                      ) {
-                                        const widthRatio =
-                                          regionWidth / bbox.width;
-                                        const heightRatio =
-                                          regionHeight / bbox.height;
-                                        const scale = Math.min(
-                                          widthRatio,
-                                          heightRatio,
-                                        );
-
-                                        const newWidth =
-                                          d.width * regionWidth * scale;
-                                        const newHeight =
-                                          d.height * regionHeight * scale;
-
-                                        bbox = getBoundingBox(
-                                          newWidth,
-                                          newHeight,
-                                          newAngle,
-                                        );
-
-                                        setDesignsByView((prev) => ({
-                                          ...prev,
-                                          [activePreview]: prev[
-                                            activePreview
-                                          ].map((item) =>
-                                            item.id === d.id
-                                              ? {
-                                                  ...item,
-                                                  x: posX / regionWidth,
-                                                  y: posY / regionHeight,
-                                                  width: newWidth / regionWidth,
-                                                  height:
-                                                    newHeight / regionHeight,
-                                                }
-                                              : item,
-                                          ),
-                                        }));
-                                      } else {
-                                        setDesignsByView((prev) => ({
-                                          ...prev,
-                                          [activePreview]: prev[
-                                            activePreview
-                                          ].map((item) =>
-                                            item.id === d.id
-                                              ? {
-                                                  ...item,
-                                                  x: posX / regionWidth,
-                                                  y: posY / regionHeight,
-                                                }
-                                              : item,
-                                          ),
-                                        }));
-                                      }
-
-                                      setRotationAngles((prev) => ({
-                                        ...prev,
-                                        [d.id]: newAngle,
-                                      }));
-                                    };
-
-                                    const handleUp = () => {
-                                      setSelectedDesignId(d.id);
-                                      setIsRotating(false);
-                                      setLockedWrapperPos(null);
-                                      window.removeEventListener(
-                                        "mousemove",
-                                        handleMove,
-                                      );
-                                      window.removeEventListener(
-                                        "mouseup",
-                                        handleUp,
-                                      );
-                                    };
-
-                                    window.addEventListener(
-                                      "mousemove",
-                                      handleMove,
-                                    );
-                                    window.addEventListener(
-                                      "mouseup",
-                                      handleUp,
-                                    );
-                                  }}
-                                >
-                                  ⟳
-                                </button>
-
-                                <button
-                                  style={{
-                                    position: "absolute",
-                                    bottom: "-30px",
-                                    right: "-30px",
-                                    zIndex: 3000,
-                                  }}
-                                  onMouseDown={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                    setIsResizing(true);
-                                    setLockedDesignId(d.id);
-                                    setLockedWrapperPos({
-                                      x: d.x * regionWidth,
-                                      y: d.y * regionHeight,
-                                    });
-
-                                    const startX = e.clientX;
-                                    const startWidth = d.width * regionWidth;
-                                    const startHeight = d.height * regionHeight;
-                                    const aspectRatio =
-                                      startWidth / startHeight;
-                                    const currentAngle =
-                                      rotationAngles[d.id] || 0;
-
-                                    const handleMove = (moveEvent) => {
-                                      const deltaX = moveEvent.clientX - startX;
-                                      let newWidth = Math.max(
-                                        50,
-                                        startWidth + deltaX,
-                                      );
-                                      let newHeight = newWidth / aspectRatio;
-
-                                      let bbox = getBoundingBox(
-                                        newWidth,
-                                        newHeight,
-                                        currentAngle,
-                                      );
-                                      const posX = d.x * regionWidth;
-                                      const posY = d.y * regionHeight;
-
-                                      if (posX + bbox.width > regionWidth) {
-                                        const widthRatio =
-                                          (regionWidth - posX) / bbox.width;
-                                        newWidth = newWidth * widthRatio;
-                                        newHeight = newWidth / aspectRatio;
-                                        bbox = getBoundingBox(
-                                          newWidth,
-                                          newHeight,
-                                          currentAngle,
-                                        );
-                                      }
-                                      if (posY + bbox.height > regionHeight) {
-                                        const heightRatio =
-                                          (regionHeight - posY) / bbox.height;
-                                        newHeight = newHeight * heightRatio;
-                                        newWidth = newHeight * aspectRatio;
-                                        bbox = getBoundingBox(
-                                          newWidth,
-                                          newHeight,
-                                          currentAngle,
-                                        );
-                                      }
+                              />
+                            </div>
+                            <div
+                              className="bounding-box-overlay"
+                              style={{
+                                position: "absolute",
+                                top: "50%",
+                                left: "50%",
+                                width: getBoundingBox(
+                                  d.width * regionWidth,
+                                  d.height * regionHeight,
+                                  rotationAngles[d.id] || 0,
+                                ).width,
+                                height: getBoundingBox(
+                                  d.width * regionWidth,
+                                  d.height * regionHeight,
+                                  rotationAngles[d.id] || 0,
+                                ).height,
+                                transform: `translate(-50%, -50%)`,
+                                transformOrigin: "center center",
+                                border:
+                                  selectedDesignId === d.id
+                                    ? "2px solid rgba(0,0,0,0.2)"
+                                    : "none",
+                                backgroundColor:
+                                  selectedDesignId === d.id
+                                    ? "rgba(255,255,255,0.05)"
+                                    : "transparent",
+                                cursor:
+                                  isRotating || isResizing ? "default" : "grab",
+                              }}
+                            >
+                              {selectedDesignId === d.id && (
+                                <>
+                                  <button
+                                    style={{
+                                      position: "absolute",
+                                      top: "-30px",
+                                      right: "-30px",
+                                      zIndex: 3000,
+                                    }}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setActivePanelTab("default");
                                       setDesignsByView((prev) => ({
                                         ...prev,
                                         [activePreview]: prev[
                                           activePreview
-                                        ].map((item) => {
-                                          if (item.id !== d.id) return item;
-
-                                          return {
-                                            ...item,
-                                            width: newWidth / regionWidth,
-                                            height: newHeight / regionHeight,
-                                            // ✅ src stays the same
-                                          };
-                                        }),
+                                        ].filter((item) => item.id !== d.id),
                                       }));
-                                    };
+                                      setSelectedDesignId(null);
+                                    }}
+                                  >
+                                    ✖
+                                  </button>
 
-                                    const handleUp = () => {
-                                      setIsResizing(false);
-                                      setSelectedDesignId(d.id);
-                                      window.removeEventListener(
+                                  {/* TODO: fix the offset on rotation bug */}
+                                  <button
+                                    style={{
+                                      position: "absolute",
+                                      top: "-30px",
+                                      left: "-30px",
+                                      zIndex: 3000,
+                                    }}
+                                    onMouseDown={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
+                                      setIsRotating(true);
+                                      setLockedDesignId(d.id);
+                                      setLockedWrapperPos({
+                                        x: d.x * regionWidth,
+                                        y: d.y * regionHeight,
+                                      });
+
+                                      const rect =
+                                        e.target.getBoundingClientRect();
+                                      const centerX =
+                                        rect.left + rect.width / 2;
+                                      const centerY =
+                                        rect.top + rect.height / 2;
+
+                                      const startAngle = Math.atan2(
+                                        e.clientY - centerY,
+                                        e.clientX - centerX,
+                                      );
+                                      const baseline =
+                                        rotationAngles[d.id] || 0;
+
+                                      const handleMove = (moveEvent) => {
+                                        const currentAngle = Math.atan2(
+                                          moveEvent.clientY - centerY,
+                                          moveEvent.clientX - centerX,
+                                        );
+                                        const delta = currentAngle - startAngle;
+                                        const newAngle = baseline + delta;
+
+                                        let bbox = getBoundingBox(
+                                          d.width * regionWidth,
+                                          d.height * regionHeight,
+                                          newAngle,
+                                        );
+                                        let posX = d.x * regionWidth;
+                                        let posY = d.y * regionHeight;
+
+                                        if (posX < 0) posX = 0;
+                                        if (posY < 0) posY = 0;
+                                        if (posX + bbox.width > regionWidth)
+                                          posX = regionWidth - bbox.width;
+                                        if (posY + bbox.height > regionHeight)
+                                          posY = regionHeight - bbox.height;
+
+                                        if (
+                                          bbox.width > regionWidth ||
+                                          bbox.height > regionHeight
+                                        ) {
+                                          const widthRatio =
+                                            regionWidth / bbox.width;
+                                          const heightRatio =
+                                            regionHeight / bbox.height;
+                                          const scale = Math.min(
+                                            widthRatio,
+                                            heightRatio,
+                                          );
+
+                                          const newWidth =
+                                            d.width * regionWidth * scale;
+                                          const newHeight =
+                                            d.height * regionHeight * scale;
+
+                                          bbox = getBoundingBox(
+                                            newWidth,
+                                            newHeight,
+                                            newAngle,
+                                          );
+
+                                          setDesignsByView((prev) => ({
+                                            ...prev,
+                                            [activePreview]: prev[
+                                              activePreview
+                                            ].map((item) =>
+                                              item.id === d.id
+                                                ? {
+                                                    ...item,
+                                                    x: posX / regionWidth,
+                                                    y: posY / regionHeight,
+                                                    width:
+                                                      newWidth / regionWidth,
+                                                    height:
+                                                      newHeight / regionHeight,
+                                                  }
+                                                : item,
+                                            ),
+                                          }));
+                                        } else {
+                                          setDesignsByView((prev) => ({
+                                            ...prev,
+                                            [activePreview]: prev[
+                                              activePreview
+                                            ].map((item) =>
+                                              item.id === d.id
+                                                ? {
+                                                    ...item,
+                                                    x: posX / regionWidth,
+                                                    y: posY / regionHeight,
+                                                  }
+                                                : item,
+                                            ),
+                                          }));
+                                        }
+
+                                        setRotationAngles((prev) => ({
+                                          ...prev,
+                                          [d.id]: newAngle,
+                                        }));
+                                        setJustFinishedInteraction(true);
+                                      };
+
+                                      const handleUp = () => {
+                                        setSelectedDesignId(d.id);
+                                        setJustFinishedInteraction(true);
+                                        setIsRotating(false);
+                                        setLockedWrapperPos(null);
+                                        window.removeEventListener(
+                                          "mousemove",
+                                          handleMove,
+                                        );
+                                        window.removeEventListener(
+                                          "mouseup",
+                                          handleUp,
+                                        );
+                                      };
+
+                                      window.addEventListener(
                                         "mousemove",
                                         handleMove,
                                       );
-                                      window.removeEventListener(
+                                      window.addEventListener(
                                         "mouseup",
                                         handleUp,
                                       );
-                                    };
+                                    }}
+                                  >
+                                    ⟳
+                                  </button>
 
-                                    window.addEventListener(
-                                      "mousemove",
-                                      handleMove,
-                                    );
-                                    window.addEventListener(
-                                      "mouseup",
-                                      handleUp,
-                                    );
-                                  }}
-                                >
-                                  ⇲
-                                </button>
-                              </>
-                            )}
+                                  <button
+                                    style={{
+                                      position: "absolute",
+                                      bottom: "-30px",
+                                      right: "-30px",
+                                      zIndex: 3000,
+                                    }}
+                                    onMouseDown={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
+                                      setIsResizing(true);
+                                      setLockedDesignId(d.id);
+                                      setLockedWrapperPos({
+                                        x: d.x * regionWidth,
+                                        y: d.y * regionHeight,
+                                      });
+
+                                      const startX = e.clientX;
+                                      const startWidth = d.width * regionWidth;
+                                      const startHeight =
+                                        d.height * regionHeight;
+                                      const aspectRatio =
+                                        startWidth / startHeight;
+                                      const currentAngle =
+                                        rotationAngles[d.id] || 0;
+
+                                      const handleMove = (moveEvent) => {
+                                        const deltaX =
+                                          moveEvent.clientX - startX;
+                                        let newWidth = Math.max(
+                                          50,
+                                          startWidth + deltaX,
+                                        );
+                                        let newHeight = newWidth / aspectRatio;
+
+                                        let bbox = getBoundingBox(
+                                          newWidth,
+                                          newHeight,
+                                          currentAngle,
+                                        );
+                                        const posX = d.x * regionWidth;
+                                        const posY = d.y * regionHeight;
+
+                                        if (posX + bbox.width > regionWidth) {
+                                          const widthRatio =
+                                            (regionWidth - posX) / bbox.width;
+                                          newWidth = newWidth * widthRatio;
+                                          newHeight = newWidth / aspectRatio;
+                                          bbox = getBoundingBox(
+                                            newWidth,
+                                            newHeight,
+                                            currentAngle,
+                                          );
+                                        }
+                                        if (posY + bbox.height > regionHeight) {
+                                          const heightRatio =
+                                            (regionHeight - posY) / bbox.height;
+                                          newHeight = newHeight * heightRatio;
+                                          newWidth = newHeight * aspectRatio;
+                                          bbox = getBoundingBox(
+                                            newWidth,
+                                            newHeight,
+                                            currentAngle,
+                                          );
+                                        }
+                                        setDesignsByView((prev) => ({
+                                          ...prev,
+                                          [activePreview]: prev[
+                                            activePreview
+                                          ].map((item) => {
+                                            if (item.id !== d.id) return item;
+
+                                            return {
+                                              ...item,
+                                              width: newWidth / regionWidth,
+                                              height: newHeight / regionHeight,
+                                              // ✅ src stays the same
+                                            };
+                                          }),
+                                        }));
+                                        setJustFinishedInteraction(true);
+                                      };
+
+                                      const handleUp = () => {
+                                        setJustFinishedInteraction(true);
+                                        setIsResizing(false);
+                                        setSelectedDesignId(d.id);
+                                        window.removeEventListener(
+                                          "mousemove",
+                                          handleMove,
+                                        );
+                                        window.removeEventListener(
+                                          "mouseup",
+                                          handleUp,
+                                        );
+                                      };
+
+                                      window.addEventListener(
+                                        "mousemove",
+                                        handleMove,
+                                      );
+                                      window.addEventListener(
+                                        "mouseup",
+                                        handleUp,
+                                      );
+                                    }}
+                                  >
+                                    ⇲
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </div>
                         </Rnd>

@@ -7,9 +7,10 @@
   box-sizing: border-box;
 }
 
+
 /* Sidebar (left panel) */
 .sidebar {
-  flex: 1 1 100%;
+  flex: 0 0 100%; /* full width by default (mobile) */
   max-width: 100%;
   border-right: 2px solid #ccc;
   padding: 1rem;
@@ -18,22 +19,31 @@
 
 /* Main content (right side) */
 .main-content {
-  flex: 1 1 100%;
+  flex: 2 1 auto;
   display: flex;
   flex-direction: column;
+  min-width: 0; /* prevents overflow */
 }
 
-/* Header bar */
 .header-bar {
-  width: 100%;
-  box-sizing: border-box;
-  background-color: #f5f5f5;
-  padding: 0.75rem 1rem;
-  border-bottom: 2px solid #ccc;
+  position: sticky;       /* ✅ stick to top */
+  top: 0;                 /* anchor at top */
+  z-index: 1000;          /* keep above content */
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
   align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: #f5f5f5;
+  border-bottom: 2px solid #ccc;
+  flex-wrap: nowrap;
+  max-height: 55px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.product-thumbnails-container {
+  flex: 1 1 auto; /* scroll area expands */
+  position: relative;
+  overflow: hidden;
 }
 
 /* Product thumbnails */
@@ -43,35 +53,167 @@
   flex-wrap: wrap;
 }
 
+.product-thumbnails-scroll::-webkit-scrollbar {
+  height: 6px; /* small scrollbar height */
+}
+
+.product-thumbnails-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
 .thumbnail {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  position: relative; /* allow absolute positioning inside */
+  flex: 0 0 auto; /* prevent shrinking */
+  width: 45px; /* smaller thumbnail size */
   text-align: center;
-  position: relative;
   cursor: pointer;
 }
 
+.add-product {
+  color: black;
+  font-size: clamp(10px, 1.1vw, 16px); /* scales with viewport */
+  padding: 0.3rem 0.75rem;
+  flex: 0 0 auto;
+}
+
+.add-product:hover {
+  background-color: black;
+  color: yellow;
+}
+
+.thumbnail .tooltip {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  top: 50%; /* show above thumbnail */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  white-space: nowrap;
+  transition: opacity 0.5s;
+  pointer-events: none;
+}
+
+.thumbnail:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
 .thumbnail img {
-  max-width: 60px;
-  height: auto;
+  max-width: 40px;
+  max-height: 40px;
   object-fit: contain;
 }
 
+.product-thumbnails-scroll {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+.product-thumbnails-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.product-thumbnails-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+/* Fade edges */
+.fade-left,
+.fade-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 30px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.fade-left {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    rgba(250, 250, 250, 1),
+    rgba(250, 250, 250, 0)
+  );
+}
+
+.fade-right {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    rgba(250, 250, 250, 1),
+    rgba(250, 250, 250, 0)
+  );
+}
+
+/* Scroll buttons */
+.scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scroll-btn.left {
+  left: 5px;
+}
+.scroll-btn.right {
+  right: 5px;
+}
+
+.scroll-btn.hidden,
+.fade-left.hidden,
+.fade-right.hidden {
+  display: none; /* hide when not needed */
+}
+
 .thumbnail.active {
-  border: 2px solid #007BFF;
+  border: 2px solid #007bff;
   border-radius: 4px;
+  background-color: rgba(175, 175, 175, 0.25); 
 }
 
 .delete-btn {
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: 0px;
+  right: -8px;
   background: transparent;
   border: none;
   color: red;
-  font-weight: bold;
+  /* font-weight: bold; */
   cursor: pointer;
+  width: 10px;
+  height: 10px;
+  font-size: 18px;
+  -webkit-text-stroke: 0.8px black;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Active product label */
@@ -84,8 +226,8 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;   /* full viewport width */
-  height: 100vh;  /* full viewport height */
+  width: 100vw; /* full viewport width */
+  height: 100vh; /* full viewport height */
   background-color: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
@@ -103,7 +245,7 @@
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .modal-content.small {
@@ -142,7 +284,7 @@
 }
 
 .modal-option.active {
-  border: 2px solid #007BFF;
+  border: 2px solid #007bff;
 }
 
 .modal-option-img {
@@ -172,7 +314,44 @@
 }
 
 .design-thumb.active {
-  border: 2px solid #007BFF;
+  border: 2px solid #007bff;
+}
+
+.color-button {
+  width: 40px; /* fixed width */
+  height: 40px; /* fixed height */
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: var(--active-color, #007bff);
+  flex: 0 0 auto; /* prevent flexbox from stretching */
+  padding: 0; /* no padding so it stays square */
+}
+
+.color-button .tooltip {
+  visibility: hidden;
+  opacity: 0;
+  position: relative;
+  top: 100%; /* show above button */
+  left: 100%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  text-align: center;
+  white-space: normal;
+  transition: opacity 0.5s;
+  pointer-events: none;
+  max-width: 200px;          /* allow longer names but cap */
+  overflow: hidden;
+  /* text-overflow: ellipsis;    */
+}
+
+.color-button:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
 }
 
 .color-grid {
@@ -201,48 +380,83 @@
 
 /* Preview area */
 .preview-area {
-  flex: 1 1 100%;
+  flex: 1 1 auto;
   padding: 1rem;
+  height: 100vh;             /* fill viewport */
+  overflow-y: hidden;        /* no vertical scroll */
+  box-sizing: border-box;
 }
+
 
 .preview-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
+  width: 100%;
+  grid-template-columns: 1fr 9.2vw;
+  gap: 2%;
+  height: calc(90vh - 100px);           /* take full height of parent */
+  overflow: hidden;       /* no vertical overflow */
 }
 
 .active-preview {
   border: 2px solid #ccc;
   border-radius: 8px;
-  padding: 1rem;
+  padding: 1%;
   background-color: #fff;
+  height: 100%;              /* fill parent */
+  max-height: 100%;          /* cap at viewport height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .preview-image-wrapper {
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%;
 }
 
 .preview-image {
   max-width: 100%;
-  max-height: 100%;
+  max-height: 100%;          /* ✅ scale to container */
   object-fit: contain;
-  display: block;
-  margin: 0 auto;
 }
 
+
 .view-thumbnails {
-  display: flex;
-  flex-direction: row;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  display: grid;
+  flex-direction: column;
+  max-width: 100%;
+  max-height: calc(90vh - 100px);
+  overflow-y: auto;
+  overflow-x: auto;
+  padding-right: 2wh;     /* space for scrollbar */
+}
+
+.view-thumbnails::-webkit-scrollbar {
+  width: 1.5wh;
+}
+
+.view-thumbnails::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.view-thumbnails .thumbnail {
+  width: 100%;            /* fill column width */
+  height: 100%;
+  padding: 0.25rem 0.25rem;
+  gap: 1rem;
+  text-align: center;
+  align-items: center;
 }
 
 .view-thumbnails .thumbnail img {
-  max-width: 80px;
-  max-height: 80px;
+  max-width: 70%;        /* scale to column */
+  max-height: 80%;
 }
 
 .region-overlay {
@@ -250,27 +464,67 @@
   pointer-events: none; /* overlay is visible but doesn’t block dragging */
 }
 
+/* Base font size for body */
+body {
+  font-family: Arial, sans-serif;
+  font-size: clamp(14px, 1.2vw, 18px); /* scales between 14px and 18px */
+  line-height: 1.5;
+}
+
+/* Headings */
+h1 {
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: bold;
+}
+
+h2 {
+  font-size: clamp(20px, 2.5vw, 30px);
+  font-weight: bold;
+}
+
+h3 {
+  font-size: clamp(12px, 1.5vw, 18px);
+  font-weight: bold;
+}
+
+/* Sidebar text */
+.sidebar {
+  font-size: clamp(14px, 1.1vw, 16px);
+}
+
+/* Buttons */
+button {
+  font-size: clamp(14px, 1.2vw, 16px);
+  padding: 0.5rem 1rem;
+}
+
+/* Labels and small text */
+.option-name,
+.active-label {
+  font-size: clamp(12px, 1vw, 14px);
+}
+
 /* Responsive rules */
-@media (min-width: 768px) {
+@media (min-width: 600px) {
   .designer-container {
     flex-wrap: nowrap;
   }
   .sidebar {
-    flex: 0 0 250px;
-    max-width: 250px;
-  }
-  .preview-grid {
-    grid-template-columns: 2fr 1fr;
-  }
-  .view-thumbnails {
-    flex-direction: column;
+    flex: 0 0 300px; /* tablet width */
+    max-width: 300px;
   }
 }
 
-@media (max-width: 480px) {
-  .modal-option-img,
-  .design-thumb {
-    max-width: 80px;
-    max-height: 80px;
+@media (min-width: 992px) {
+  .sidebar {
+    flex: 0 0 390px; /* desktop width */
+    max-width: 390px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .sidebar {
+    flex: 0 0 450px; /* extra wide screens */
+    max-width: 450px;
   }
 }
