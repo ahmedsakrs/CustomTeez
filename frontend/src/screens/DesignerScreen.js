@@ -165,12 +165,24 @@ export default function ProductDesigner() {
   const [justFinishedInteraction, setJustFinishedInteraction] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [thumbSizes, setThumbSizes] = useState({
+    Front: { w: 0, h: 0 },
+    Back: { w: 0, h: 0 },
+    "L Sleeve": { w: 0, h: 0 },
+    "R Sleeve": { w: 0, h: 0 },
+  });
 
   const previewRef = useRef(null);
   const imgRef = useRef(null);
   const panelRef = useRef(null);
   const textPanelRef = useRef(null);
   const scrollRef = useRef(null);
+  const thumbRefs = {
+    Front: useRef(null),
+    Back: useRef(null),
+    "L Sleeve": useRef(null),
+    "R Sleeve": useRef(null),
+  };
 
   const checkScroll = () => {
     const el = scrollRef.current;
@@ -218,31 +230,63 @@ export default function ProductDesigner() {
     });
   }, [activeProductId, activePreview]);
 
-  useEffect((e) => {
-    const handleClickOutside = (e) => {
-      if (panelRef.current && panelRef.current.contains(e.target)) {
-        return;
+  useEffect(
+    (e) => {
+      const handleClickOutside = (e) => {
+        if (panelRef.current && panelRef.current.contains(e.target)) {
+          return;
+        }
+
+        if (textPanelRef.current && textPanelRef.current.contains(e.target)) {
+          return;
+        }
+
+        if (justFinishedInteraction) {
+          // Suppress deselect once
+          setJustFinishedInteraction(false);
+          return;
+        }
+
+        if (isActive) return;
+
+        if (isResizing || isRotating) return;
+        if (selectedDesignId) setActivePanelTab("default");
+        setSelectedDesignId(null);
+      };
+      window.addEventListener("mousedown", handleClickOutside);
+      return () => window.removeEventListener("mousedown", handleClickOutside);
+    },
+    [
+      isActive,
+      isResizing,
+      isRotating,
+      selectedDesignId,
+      justFinishedInteraction,
+    ],
+  );
+
+  useEffect(() => {
+    const observers = {};
+
+    Object.keys(thumbRefs).forEach((view) => {
+      if (thumbRefs[view].current) {
+        observers[view] = new ResizeObserver((entries) => {
+          for (let entry of entries) {
+            const { width, height } = entry.contentRect;
+            setThumbSizes((prev) => ({
+              ...prev,
+              [view]: { w: width, h: height },
+            }));
+          }
+        });
+        observers[view].observe(thumbRefs[view].current);
       }
+    });
 
-      if (textPanelRef.current && textPanelRef.current.contains(e.target)) {
-        return;
-      }
-
-      if (justFinishedInteraction) {
-        // Suppress deselect once
-        setJustFinishedInteraction(false);
-        return;
-      }
-
-      if (isActive) return;
-
-      if (isResizing || isRotating) return;
-      if (selectedDesignId) setActivePanelTab("default");
-      setSelectedDesignId(null);
+    return () => {
+      Object.values(observers).forEach((observer) => observer.disconnect());
     };
-    window.addEventListener("mousedown", handleClickOutside);
-    return () => window.removeEventListener("mousedown", handleClickOutside);
-  }, [isActive, isResizing, isRotating, selectedDesignId, justFinishedInteraction]);
+  }, []);
 
   useEffect(() => {
     if (!previewRef.current) return;
@@ -1078,11 +1122,11 @@ export default function ProductDesigner() {
                               {selectedDesignId === d.id && (
                                 <>
                                   <button
+                                    className="control-btn"
                                     style={{
                                       position: "absolute",
                                       top: "-30px",
                                       right: "-30px",
-                                      zIndex: 3000,
                                     }}
                                     onMouseDown={(e) => e.stopPropagation()}
                                     onClick={(e) => {
@@ -1102,6 +1146,7 @@ export default function ProductDesigner() {
 
                                   {/* TODO: fix the offset on rotation bug */}
                                   <button
+                                    className="control-btn"
                                     style={{
                                       position: "absolute",
                                       top: "-30px",
@@ -1246,10 +1291,11 @@ export default function ProductDesigner() {
                                       );
                                     }}
                                   >
-                                    ⟳
+                                    <i className="bi bi-arrow-clockwise"></i>
                                   </button>
 
                                   <button
+                                    className="control-btn"
                                     style={{
                                       position: "absolute",
                                       bottom: "-30px",
@@ -1356,7 +1402,10 @@ export default function ProductDesigner() {
                                       );
                                     }}
                                   >
-                                    ⇲
+                                    <i
+                                      className="bi bi-arrows-angle-expand"
+                                      style={{ transform: "scaleX(-1)" }}
+                                    ></i>
                                   </button>
                                 </>
                               )}
@@ -1375,7 +1424,7 @@ export default function ProductDesigner() {
               {["Front", "Back", "L Sleeve", "R Sleeve"].map((view) => (
                 <div
                   key={view}
-                  className={`thumbnail ${activePreview === view ? "active" : ""}`}
+                  className={`view-thumbnail ${activePreview === view ? "active" : ""}`}
                   onClick={() => setActivePreview(view)}
                 >
                   <img
@@ -1387,7 +1436,25 @@ export default function ProductDesigner() {
                     alt={`${view} preview`}
                     className="preview-image"
                     draggable="false"
+                    ref={thumbRefs[view]}
                   />
+                  {designsByView[view]?.map((design) => (
+                    <img
+                      key={design.id}
+                      src={design.src}
+                      alt="design overlay"
+                      className="preview-image"
+                      style={{
+                        position: "absolute",
+                        left: design.x * thumbSizes[view].w,
+                        top: design.y * thumbSizes[view].h,
+                        width: design.width * thumbSizes[view].w,
+                        height: design.height * thumbSizes[view].h,
+                        transform: `rotate(${rotationAngles[design.id] || 0}rad)`,
+                        pointerEvents: "none",
+                      }}
+                    />
+                  ))}
                   <div className="option-name">{view}</div>
                 </div>
               ))}

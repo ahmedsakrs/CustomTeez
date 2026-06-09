@@ -7,6 +7,20 @@
   box-sizing: border-box;
 }
 
+.designer-container .control-btn {
+  width: 28px;          /* ✅ square size */
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;   /* small rounding */
+  cursor: pointer;
+  font-size: 16px;      /* icon size */
+  z-index: 10;
+}
+
 
 /* Sidebar (left panel) */
 .sidebar {
@@ -32,7 +46,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.75rem 1rem;
+  padding: 0.3rem 1rem;
   background-color: #f5f5f5;
   border-bottom: 2px solid #ccc;
   flex-wrap: nowrap;
@@ -41,25 +55,24 @@
 }
 
 .product-thumbnails-container {
-  flex: 1 1 auto; /* scroll area expands */
+  flex: 1 1 auto;
   position: relative;
-  overflow: hidden;
+  display: block;
+  flex-direction: column; /* stack children vertically */
+  overflow: hidden;       /* prevent vertical overflow */
 }
 
-/* Product thumbnails */
-.product-thumbnails {
+.product-thumbnails-scroll {
+  flex: 1 1 auto;         /* ✅ take remaining space */
   display: flex;
+  flex-direction: row;
   gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.product-thumbnails-scroll::-webkit-scrollbar {
-  height: 6px; /* small scrollbar height */
-}
-
-.product-thumbnails-scroll::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 3px;
+  overflow-x: hidden;       /* horizontal scroll only */
+  overflow-y: hidden;     /* no vertical growth */
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  box-sizing: border-box;
+  padding: 0.25rem 0;     /* small padding, doesn’t add height */
 }
 
 .thumbnail {
@@ -68,6 +81,7 @@
   width: 45px; /* smaller thumbnail size */
   text-align: center;
   cursor: pointer;
+  padding: 1px 1px;
 }
 
 .add-product {
@@ -75,6 +89,7 @@
   font-size: clamp(10px, 1.1vw, 16px); /* scales with viewport */
   padding: 0.3rem 0.75rem;
   flex: 0 0 auto;
+  height: 90%;
 }
 
 .add-product:hover {
@@ -105,30 +120,9 @@
 }
 
 .thumbnail img {
-  max-width: 40px;
-  max-height: 40px;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
-}
-
-.product-thumbnails-scroll {
-  display: flex;
-  flex-direction: row;
-  gap: 0.5rem;
-  overflow-x: auto;
-  padding: 0.5rem 0;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scroll-behavior: smooth;
-  position: relative;
-}
-
-.product-thumbnails-scroll::-webkit-scrollbar {
-  height: 6px;
-}
-
-.product-thumbnails-scroll::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 3px;
 }
 
 /* Fade edges */
@@ -216,11 +210,6 @@
   justify-content: center;
 }
 
-/* Active product label */
-.active-label {
-  font-weight: bold;
-}
-
 /* Modal overlay */
 .modal-overlay {
   position: fixed;
@@ -240,7 +229,6 @@
   background-color: #fff;
   padding: 1rem;
   border-radius: 8px;
-  width: 90%;
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
@@ -318,8 +306,9 @@
 }
 
 .color-button {
-  width: 40px; /* fixed width */
-  height: 40px; /* fixed height */
+  width: auto; /* fixed width */
+  height: 90%; /* fixed height */
+  aspect-ratio: 1/1;
   border: 2px solid #ccc;
   border-radius: 4px;
   cursor: pointer;
@@ -400,9 +389,8 @@
 .active-preview {
   border: 2px solid #ccc;
   border-radius: 8px;
-  padding: 1%;
+  padding: 0 0;
   background-color: #fff;
-  height: 100%;              /* fill parent */
   max-height: 100%;          /* cap at viewport height */
   display: flex;
   align-items: center;
@@ -412,8 +400,8 @@
 }
 
 .preview-image-wrapper {
-  width: 100%;
-  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -434,6 +422,28 @@
   overflow-y: auto;
   overflow-x: auto;
   padding-right: 2wh;     /* space for scrollbar */
+  position: relative;
+}
+
+.view-thumbnails::before,
+.view-thumbnails::after {
+  content: "";
+  position: sticky;
+  left: 0;
+  right: 0;
+  height: 10px;
+  pointer-events: none;    /* don’t block clicks */
+  z-index: 2;
+}
+
+.view-thumbnails::before {
+  top: 0;
+  background: linear-gradient(to bottom, rgba(255,255,255,1), rgba(255,255,255,0));
+}
+
+.view-thumbnails::after {
+  bottom: 0;
+  background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));
 }
 
 .view-thumbnails::-webkit-scrollbar {
@@ -445,18 +455,26 @@
   border-radius: 3px;
 }
 
-.view-thumbnails .thumbnail {
+.view-thumbnails .view-thumbnail {
   width: 100%;            /* fill column width */
   height: 100%;
-  padding: 0.25rem 0.25rem;
+  padding: 0 0;
   gap: 1rem;
   text-align: center;
   align-items: center;
+  cursor: pointer;
+  position: relative;
 }
 
-.view-thumbnails .thumbnail img {
-  max-width: 70%;        /* scale to column */
-  max-height: 80%;
+.view-thumbnails .view-thumbnail.active {
+  border: 2px solid #007bff;
+  border-radius: 4px;
+  background-color: rgba(175, 175, 175, 0.25); 
+}
+
+.view-thumbnails .view-thumbnail img {
+  max-width: 100%;        /* scale to column */
+  max-height: 100%;
 }
 
 .region-overlay {
