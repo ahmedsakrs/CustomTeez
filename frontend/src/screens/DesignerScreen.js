@@ -23,7 +23,7 @@ const productOptions = [
     },
     viewRegions: {
       Front: { xStart: 0, yStart: 0, xEnd: 1, yEnd: 1 },
-      Back: { xStart: 0.2, yStart: 0.25, xEnd: 0.8, yEnd: 0.75 },
+      Back: { xStart: 0.1, yStart: 0.4, xEnd: 0.8, yEnd: 1 },
       "L Sleeve": { xStart: 0.1, yStart: 0.2, xEnd: 0.9, yEnd: 0.8 },
       "R Sleeve": { xStart: 0.1, yStart: 0.2, xEnd: 0.9, yEnd: 0.8 },
     },
@@ -1438,23 +1438,54 @@ export default function ProductDesigner() {
                     draggable="false"
                     ref={thumbRefs[view]}
                   />
-                  {designsByView[view]?.map((design) => (
-                    <img
-                      key={design.id}
-                      src={design.src}
-                      alt="design overlay"
-                      className="preview-image"
-                      style={{
-                        position: "absolute",
-                        left: design.x * thumbSizes[view].w,
-                        top: design.y * thumbSizes[view].h,
-                        width: design.width * thumbSizes[view].w,
-                        height: design.height * thumbSizes[view].h,
-                        transform: `rotate(${rotationAngles[design.id] || 0}rad)`,
-                        pointerEvents: "none",
-                      }}
-                    />
-                  ))}
+                  <div
+                    className="design-region"
+                    style={{
+                      position: "absolute",
+                      left:
+                        productOptions.find(
+                          (opt) => opt.id === activeProduct?.productType,
+                        )?.viewRegions[view].xStart * thumbSizes[view].w,
+                      top:
+                        productOptions.find(
+                          (opt) => opt.id === activeProduct?.productType,
+                        )?.viewRegions[view].yStart * thumbSizes[view].h,
+                      width:
+                        (productOptions.find(
+                          (opt) => opt.id === activeProduct?.productType,
+                        )?.viewRegions[view].xEnd -
+                          productOptions.find(
+                            (opt) => opt.id === activeProduct?.productType,
+                          )?.viewRegions[view].xStart) *
+                        thumbSizes[view].w,
+                      height:
+                        (productOptions.find(
+                          (opt) => opt.id === activeProduct?.productType,
+                        )?.viewRegions[view].yEnd -
+                          productOptions.find(
+                            (opt) => opt.id === activeProduct?.productType,
+                          )?.viewRegions[view].yStart) *
+                        thumbSizes[view].h,
+                    }}
+                  >
+                    {designsByView[view]?.map((design) => (
+                      <img
+                        key={design.id}
+                        src={design.src}
+                        alt="design overlay"
+                        className="preview-image"
+                        style={{
+                          position: "absolute",
+                          left: `${design.x * 100}%`,
+                          top: `${design.y * 100}%`,
+                          width: `${design.width * 100}%`,
+                          height: `${design.height * 100}%`,
+                          transform: `rotate(${rotationAngles[design.id] || 0}rad)`,
+                          pointerEvents: "none",
+                        }}
+                      />
+                    ))}
+                  </div>
                   <div className="option-name">{view}</div>
                 </div>
               ))}
