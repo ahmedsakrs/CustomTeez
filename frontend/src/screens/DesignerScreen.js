@@ -966,6 +966,7 @@ export default function ProductDesigner() {
                   alt={`${activeProduct?.name} ${activePreview}`}
                   className="preview-image"
                   style={{ display: "block" }}
+                  draggable="false"
                 />
 
                 {/* Region overlay aligned to the image */}
@@ -1003,8 +1004,8 @@ export default function ProductDesigner() {
                             transformOrigin: "center center",
                           }}
                           size={getBoundingBox(
-                            d.width * regionWidth,
-                            d.height * regionHeight,
+                            d.width * Math.min(regionWidth, regionHeight),
+                            d.height * Math.min(regionWidth, regionHeight),
                             rotationAngles[d.id] || 0,
                           )}
                           position={
@@ -1060,8 +1061,8 @@ export default function ProductDesigner() {
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              width: d.width * regionWidth,
-                              height: d.height * regionHeight,
+                              width: d.width * Math.min(regionWidth, regionHeight),
+                              height: d.height * Math.min(regionWidth, regionHeight),
                             }}
                           >
                             {/* Inner design wrapper */}
@@ -1069,8 +1070,8 @@ export default function ProductDesigner() {
                               className="design-wrapper"
                               draggable="false"
                               style={{
-                                width: d.width * regionWidth,
-                                height: d.height * regionHeight,
+                                width: d.width * Math.min(regionWidth, regionHeight),
+                                height: d.height * Math.min(regionWidth, regionHeight),
                                 alignItems: "center",
                                 objectFit: "contain",
                                 transform: `rotate(${rotationAngles[d.id] || 0}rad)`,
@@ -1096,13 +1097,13 @@ export default function ProductDesigner() {
                                 top: "50%",
                                 left: "50%",
                                 width: getBoundingBox(
-                                  d.width * regionWidth,
-                                  d.height * regionHeight,
+                                  d.width * Math.min(regionWidth, regionHeight),
+                                  d.height * Math.min(regionWidth, regionHeight),
                                   rotationAngles[d.id] || 0,
                                 ).width,
                                 height: getBoundingBox(
-                                  d.width * regionWidth,
-                                  d.height * regionHeight,
+                                  d.width * Math.min(regionWidth, regionHeight),
+                                  d.height * Math.min(regionWidth, regionHeight),
                                   rotationAngles[d.id] || 0,
                                 ).height,
                                 transform: `translate(-50%, -50%)`,
