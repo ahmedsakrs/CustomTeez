@@ -999,10 +999,6 @@ export default function ProductDesigner() {
                       {designsByView[activePreview].map((d) => (
                         <Rnd
                           key={d.id}
-                          style={{
-                            transform: `rotate(${rotationAngles[d.id] || 0}rad)`,
-                            transformOrigin: "center center",
-                          }}
                           size={getBoundingBox(
                             d.width * Math.min(regionWidth, regionHeight),
                             d.height * Math.min(regionWidth, regionHeight),
@@ -1057,12 +1053,18 @@ export default function ProductDesigner() {
                             }}
                             draggable="false"
                             style={{
-                              position: "relative",
+                              position: "absolute",
+                              top: "50%",
+                              left: "50%",
+                              transform: "translate(-50%, -50%)",
+                              transformOrigin: "center center",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              width: d.width * Math.min(regionWidth, regionHeight),
-                              height: d.height * Math.min(regionWidth, regionHeight),
+                              width:
+                                d.width * Math.min(regionWidth, regionHeight),
+                              height:
+                                d.height * Math.min(regionWidth, regionHeight),
                             }}
                           >
                             {/* Inner design wrapper */}
@@ -1070,8 +1072,11 @@ export default function ProductDesigner() {
                               className="design-wrapper"
                               draggable="false"
                               style={{
-                                width: d.width * Math.min(regionWidth, regionHeight),
-                                height: d.height * Math.min(regionWidth, regionHeight),
+                                width:
+                                  d.width * Math.min(regionWidth, regionHeight),
+                                height:
+                                  d.height *
+                                  Math.min(regionWidth, regionHeight),
                                 alignItems: "center",
                                 objectFit: "contain",
                                 transform: `rotate(${rotationAngles[d.id] || 0}rad)`,
@@ -1094,20 +1099,22 @@ export default function ProductDesigner() {
                               className="bounding-box-overlay"
                               style={{
                                 position: "absolute",
-                                top: "50%",
-                                left: "50%",
+                                // top: "50%",
+                                // left: "50%",
                                 width: getBoundingBox(
                                   d.width * Math.min(regionWidth, regionHeight),
-                                  d.height * Math.min(regionWidth, regionHeight),
+                                  d.height *
+                                    Math.min(regionWidth, regionHeight),
                                   rotationAngles[d.id] || 0,
                                 ).width,
                                 height: getBoundingBox(
                                   d.width * Math.min(regionWidth, regionHeight),
-                                  d.height * Math.min(regionWidth, regionHeight),
+                                  d.height *
+                                    Math.min(regionWidth, regionHeight),
                                   rotationAngles[d.id] || 0,
                                 ).height,
-                                transform: `translate(-50%, -50%)`,
-                                transformOrigin: "center center",
+                                // transform: `translate(-50%, -50%)`,
+                                // transformOrigin: "center center",
                                 border:
                                   selectedDesignId === d.id
                                     ? "2px solid rgba(0,0,0,0.2)"
