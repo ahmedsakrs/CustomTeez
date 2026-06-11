@@ -996,6 +996,33 @@ export default function ProductDesigner() {
 
                   return (
                     <div style={style}>
+                      {selectedDesignId != null &&
+                        isActive &&
+                        Math.abs(
+                          designsByView[activePreview].find(
+                            (d) => d.id === selectedDesignId,
+                          ).x *
+                            regionWidth +
+                            (designsByView[activePreview].find(
+                              (d) => d.id === selectedDesignId,
+                            ).width *
+                              regionWidth) /
+                              2 -
+                            regionWidth / 2,
+                        ) < 10 && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              left: regionWidth / 2,
+                              top: 0,
+                              bottom: 0,
+                              width: 1,
+                              borderLeft: "2px dashed gray",
+                              pointerEvents: "none",
+                              zIndex: 9999,
+                            }}
+                          />
+                        )}
                       {designsByView[activePreview].map((d) => (
                         <Rnd
                           key={d.id}
@@ -1020,14 +1047,39 @@ export default function ProductDesigner() {
                           }}
                           onDrag={(e, data) => {
                             if (isRotating || isResizing) return;
-                            const normX = data.x / regionWidth;
-                            const normY = data.y / regionHeight;
+
+                            const rawW =
+                              d.width * Math.min(regionWidth, regionHeight);
+                            const centerX = data.x + rawW / 2;
+                            const regionCenterX = regionWidth / 2;
+                            const threshold = 0.03 * regionWidth; // px tolerance
+
+                            let normX = data.x;
+                            const normY = data.y;
+
+                            const distance = centerX - regionCenterX;
+
+                            if (Math.abs(distance) < threshold) {
+                              // use a quadratic easing curve for smoother pull
+                              const strength =
+                                0.35 *
+                                Math.pow(1 - Math.abs(distance) / threshold, 2);
+                              const targetX = regionCenterX - rawW / 2;
+
+                              // blend drag position toward center
+                              normX =
+                                data.x * (1 - strength) + targetX * strength;
+                            }
                             setDesignsByView((prev) => ({
                               ...prev,
                               [activePreview]: prev[activePreview].map(
                                 (item) =>
                                   item.id === d.id
-                                    ? { ...item, x: normX, y: normY }
+                                    ? {
+                                        ...item,
+                                        x: normX / regionWidth,
+                                        y: normY / regionHeight,
+                                      }
                                     : item,
                               ),
                             }));
