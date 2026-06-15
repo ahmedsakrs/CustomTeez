@@ -4,12 +4,12 @@ import CategoryThumb from "./CategoryThumb";
 import DesignThumb from "./DesignThumb";
 
 function bringToFront(activePreview, selectedDesignId, setDesignsByView) {
-  setDesignsByView(prev => {
+  setDesignsByView((prev) => {
     const designs = [...(prev[activePreview] || [])];
     // sort designs by zIndex ascending
     designs.sort((a, b) => (a.layer || 0) - (b.layer || 0));
 
-    const idx = designs.findIndex(d => d.id === selectedDesignId);
+    const idx = designs.findIndex((d) => d.id === selectedDesignId);
     if (idx === designs.length - 1) return prev; // already highest
 
     // swap zIndex with the next higher design
@@ -24,12 +24,12 @@ function bringToFront(activePreview, selectedDesignId, setDesignsByView) {
 }
 
 function sendToBack(activePreview, selectedDesignId, setDesignsByView) {
-  setDesignsByView(prev => {
+  setDesignsByView((prev) => {
     const designs = [...(prev[activePreview] || [])];
     // sort designs by zIndex ascending
     designs.sort((a, b) => (a.layer || 0) - (b.layer || 0));
 
-    const idx = designs.findIndex(d => d.id === selectedDesignId);
+    const idx = designs.findIndex((d) => d.id === selectedDesignId);
     if (idx === 0) return prev; // already lowest
 
     // swap zIndex with the next lower design
@@ -43,7 +43,6 @@ function sendToBack(activePreview, selectedDesignId, setDesignsByView) {
     return { ...prev, [activePreview]: [...designs] };
   });
 }
-
 
 const flipHorizontal = (activePreview, selectedDesignId, setDesignsByView) => {
   setDesignsByView((prev) => ({
@@ -67,6 +66,93 @@ const flipVertical = (activePreview, selectedDesignId, setDesignsByView) => {
   }));
 };
 
+const rotate = (
+  d,
+  getBoundingBox,
+  regionWidth,
+  regionHeight,
+  setDesignsByView,
+  activePreview,
+  setRotationAngles,
+  angleRad,
+) => {
+  let bbox = getBoundingBox(
+    d.width * regionWidth,
+    d.height * regionHeight,
+    angleRad,
+  );
+  let posX = d.x * regionWidth;
+  let posY = d.y * regionHeight;
+
+  if (posX < 0) posX = 0;
+  if (posY < 0) posY = 0;
+  if (posX + bbox.width > regionWidth) posX = regionWidth - bbox.width;
+  if (posY + bbox.height > regionHeight) posY = regionHeight - bbox.height;
+
+  if (bbox.width > regionWidth || bbox.height > regionHeight) {
+    const widthRatio = regionWidth / bbox.width;
+    const heightRatio = regionHeight / bbox.height;
+    const scale = Math.min(widthRatio, heightRatio);
+
+    const newWidth = d.width * regionWidth * scale;
+    const newHeight = d.height * regionHeight * scale;
+
+    bbox = getBoundingBox(newWidth, newHeight, d.rotation);
+
+    setDesignsByView((prev) => ({
+      ...prev,
+      [activePreview]: prev[activePreview].map((item) =>
+        item.id === d.id
+          ? {
+              ...item,
+              x: posX / regionWidth,
+              y: posY / regionHeight,
+              width: newWidth / regionWidth,
+              height: newHeight / regionHeight,
+            }
+          : item,
+      ),
+    }));
+  } else {
+    setDesignsByView((prev) => ({
+      ...prev,
+      [activePreview]: prev[activePreview].map((item) =>
+        item.id === d.id
+          ? {
+              ...item,
+              x: posX / regionWidth,
+              y: posY / regionHeight,
+            }
+          : item,
+      ),
+    }));
+  }
+
+  setDesignsByView((prev) => ({
+    ...prev,
+    [activePreview]: prev[activePreview].map((item) =>
+      item.id === d.id
+        ? {
+            ...item,
+            rotation: angleRad,
+          }
+        : item,
+    ),
+  }));
+
+  setRotationAngles((prev) => ({
+    ...prev,
+    [d.id]: angleRad,
+  }));
+};
+
+function radToGed(angleRad) {
+  let degrees = angleRad * (180 / Math.PI);
+  while (degrees > 180) degrees -= 360;
+  while (degrees < -180) degrees += 360;
+  return degrees;
+}
+
 function TabPanel({
   selectedCategory,
   setSelectedCategory,
@@ -79,10 +165,14 @@ function TabPanel({
   designsByView,
   setDesignsByView,
   panelRef,
+  getBoundingBox,
+  regionWidth,
+  regionHeight,
+  setRotationAngles,
 }) {
-    const currentDesigns = designsByView[activePreview] || [];
-const highestZ = Math.max(...currentDesigns.map(d => d.layer || 1));
-const lowestZ  = Math.min(...currentDesigns.map(d => d.layer || 0));
+  const currentDesigns = designsByView[activePreview] || [];
+  const highestZ = Math.max(...currentDesigns.map((d) => d.layer || 1));
+  const lowestZ = Math.min(...currentDesigns.map((d) => d.layer || 0));
   return (
     <div className="tab-content" ref={panelRef}>
       {!selectedCategory && activeTab === "addDesign" && (
@@ -141,7 +231,7 @@ const lowestZ  = Math.min(...currentDesigns.map(d => d.layer || 0));
                   Bring to Front
                 </button>
                 <button
-                disabled={
+                  disabled={
                     designsByView[activePreview].find(
                       (d) => d.id === selectedDesignId,
                     ).layer === lowestZ
@@ -195,18 +285,82 @@ const lowestZ  = Math.min(...currentDesigns.map(d => d.layer || 0));
               </div>
 
               {/* 4. Rotate */}
-              {/* <div className="edit-row">
+              <div className="edit-row">
                 <label>Rotate:</label>
                 <input
                   type="range"
-                  min="0"
-                  max="360"
-                  value={selectedDesign.rotation}
+                  min="-180"
+                  max="180"
+                  value={Math.floor(
+                    radToGed(
+                      designsByView[activePreview].find(
+                        (d) => d.id === selectedDesignId,
+                      ).rotation,
+                    ),
+                  )}
                   onChange={(e) =>
-                    updateRotation(selectedDesign.id, parseInt(e.target.value))
+                    rotate(
+                      designsByView[activePreview].find(
+                        (d) => d.id === selectedDesignId,
+                      ),
+                      getBoundingBox,
+                      regionWidth,
+                      regionHeight,
+                      setDesignsByView,
+                      activePreview,
+                      setRotationAngles,
+                      (parseInt(e.target.value) * Math.PI) / 180,
+                    )
                   }
                 />
-              </div> */}
+                <input
+                  type="number"
+                  min="-180"
+                  max="180"
+                  value={Math.floor(
+                    radToGed(
+                      designsByView[activePreview].find(
+                        (d) => d.id === selectedDesignId,
+                      ).rotation,
+                    ),
+                  )}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "") {
+                      setRotationAngles((prev) => ({
+                        ...prev,
+                        [selectedDesignId]: 0,
+                      }));
+
+                      setDesignsByView((prev) => ({
+                        ...prev,
+                        [activePreview]: prev[activePreview].map((item) =>
+                          item.id === selectedDesignId
+                            ? {
+                                ...item,
+                                rotation: 0,
+                              }
+                            : item,
+                        ),
+                      }));
+                    }
+                    const angle = (parseInt(val) * Math.PI) / 180;
+                    rotate(
+                      designsByView[activePreview].find(
+                        (d) => d.id === selectedDesignId,
+                      ),
+                      getBoundingBox,
+                      regionWidth,
+                      regionHeight,
+                      setDesignsByView,
+                      activePreview,
+                      setRotationAngles,
+                      angle,
+                    );
+                  }}
+                  style={{ width: "60px", marginLeft: "8px" }}
+                />
+              </div>
 
               {/* 5. Color */}
               {/* <div className="edit-row">

@@ -13,6 +13,10 @@ function Sidebar({
   setDesignsByView,
   activePreview,
   selectedDesignId,
+  getBoundingBox,
+  regionWidth,
+  regionHeight,
+  setRotationAngles
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [textAdded, setTextAdded] = useState(false);
@@ -23,8 +27,12 @@ function Sidebar({
 
     setDesignCounter((prev) => prev + collage.designs.length);
 
-    setDesignsByView((prev) => ({
-      ...prev,
+    setDesignsByView(prev => {
+      const designs = prev[activePreview] || [];
+    const highest = designs.length
+      ? Math.max(...designs.map(d => d.layer || 0))
+      : 0;
+      return{...prev,
       [activePreview]: [
         ...prev[activePreview],
         ...collage.designs.map((d, idx) => ({
@@ -47,11 +55,11 @@ function Sidebar({
           horizontalFlip: false,
           verticalFlip: false,
           rotation: 0,
-          layer: designCounter + idx,
+          layer: highest + idx,
           cropCoordinates: { xmin: 0, ymin: 0, xmax: 1, ymax: 1 },
         })),
       ],
-    }));
+    }});
   };
   return (
     <div className="sidebar">
@@ -121,6 +129,10 @@ function Sidebar({
           designsByView={designsByView}
           setDesignsByView={setDesignsByView}
           panelRef={panelRef}
+          getBoundingBox={getBoundingBox}
+          regionWidth={regionWidth}
+  regionHeight={regionHeight}
+  setRotationAngles={setRotationAngles}
         />
 
         {/* {activeTab === "default" && (

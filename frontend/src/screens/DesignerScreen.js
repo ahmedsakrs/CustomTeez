@@ -547,6 +547,10 @@ function ProductDesigner() {
         setDesignsByView={setDesignsByView}
         activePreview={activePreview}
         selectedDesignId={selectedDesignId}
+        getBoundingBox={getBoundingBox}
+        regionWidth={regionWidth}
+  regionHeight={regionHeight}
+  setRotationAngles={setRotationAngles}
         onClick={(e) => {
           e.stopPropagation();
         }}
@@ -883,7 +887,7 @@ function ProductDesigner() {
                       >
                         {/* Outer wrapper */}
                         <div
-                          className={`design-container ${selectedDesignId === d.id ? "active" : ""}`}
+                          className={"design-container"}
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedDesignId(d.id);
@@ -897,14 +901,6 @@ function ProductDesigner() {
                           }}
                           draggable="false"
                           style={{
-                            position: "absolute",
-                            top: "50%",
-                            left: "50%",
-                            transform: "translate(-50%, -50%)",
-                            transformOrigin: "center center",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
                             width:
                               d.width * Math.min(regionWidth, regionHeight),
                             height:
@@ -920,8 +916,6 @@ function ProductDesigner() {
                                 d.width * Math.min(regionWidth, regionHeight),
                               height:
                                 d.height * Math.min(regionWidth, regionHeight),
-                              alignItems: "center",
-                              objectFit: "contain",
                               transform: `rotate(${rotationAngles[d.id] || 0}rad)
                                           scaleX(${d.horizontalFlip ? -1 : 1})
                                           scaleY(${d.verticalFlip ? -1 : 1})`,
@@ -944,9 +938,6 @@ function ProductDesigner() {
                           <div
                             className="bounding-box-overlay"
                             style={{
-                              position: "absolute",
-                              // top: "50%",
-                              // left: "50%",
                               width: getBoundingBox(
                                 d.width * Math.min(regionWidth, regionHeight),
                                 d.height * Math.min(regionWidth, regionHeight),
@@ -1106,6 +1097,20 @@ function ProductDesigner() {
                                           ),
                                         }));
                                       }
+
+                                      setDesignsByView((prev) => ({
+                                          ...prev,
+                                          [activePreview]: prev[
+                                            activePreview
+                                          ].map((item) =>
+                                            item.id === d.id
+                                              ? {
+                                                  ...item,
+                                                  rotation: newAngle,
+                                                }
+                                              : item,
+                                          ),
+                                        }));
 
                                       setRotationAngles((prev) => ({
                                         ...prev,
