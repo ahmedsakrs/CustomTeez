@@ -16,7 +16,7 @@ function App() {
   return (
     <Router>
       <Header />
-      <main className="py-3">
+      <main className="py-1">
         <Routes>
           <Route
             path="/"
@@ -75,7 +75,7 @@ function App() {
           <Route
             path="/designer/"
             element={
-              <Container fluid className="p-0">
+              <Container fluid className="p-1">
                 <DesignerScreen />
               </Container>
             }

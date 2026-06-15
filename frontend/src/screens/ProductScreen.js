@@ -65,7 +65,7 @@ function ProductScreen() {
                 <Row>
                   {product.colors &&
                     Object.keys(product.colors).map((productColor) => (
-                      <Col key={productColor} sm={8} md={6} lg={4} xl={1}>
+                      <Col key={productColor} xs={2} sm={2} md={2} lg={2} xl={2} xxl={1}>
                         <ProductColor
                           color_name={productColor}
                           productColor={product.colors[productColor]}
@@ -89,7 +89,7 @@ function ProductScreen() {
                     product.colors[params.color].sizes &&
                     Object.keys(product.colors[params.color].sizes).map(
                       (productSize) => (
-                        <Col key={productSize} sm={6} md={4} lg={2} xl={1}>
+                        <Col key={productSize} xs={2} sm={2} md={2} lg={2} xl={1}>
                           <SizeLabel
                             color={params.color}
                             size={productSize}
