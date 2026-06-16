@@ -68,66 +68,11 @@ const flipVertical = (activePreview, selectedDesignId, setDesignsByView) => {
 
 const rotate = (
   d,
-  getBoundingBox,
-  regionWidth,
-  regionHeight,
   setDesignsByView,
   activePreview,
   setRotationAngles,
   angleRad,
 ) => {
-  let bbox = getBoundingBox(
-    d.width * regionWidth,
-    d.height * regionHeight,
-    angleRad,
-  );
-  let posX = d.x * regionWidth;
-  let posY = d.y * regionHeight;
-
-  if (posX < 0) posX = 0;
-  if (posY < 0) posY = 0;
-  if (posX + bbox.width > regionWidth) posX = regionWidth - bbox.width;
-  if (posY + bbox.height > regionHeight) posY = regionHeight - bbox.height;
-
-  if (bbox.width > regionWidth || bbox.height > regionHeight) {
-    const widthRatio = regionWidth / bbox.width;
-    const heightRatio = regionHeight / bbox.height;
-    const scale = Math.min(widthRatio, heightRatio);
-
-    const newWidth = d.width * regionWidth * scale;
-    const newHeight = d.height * regionHeight * scale;
-
-    bbox = getBoundingBox(newWidth, newHeight, d.rotation);
-
-    setDesignsByView((prev) => ({
-      ...prev,
-      [activePreview]: prev[activePreview].map((item) =>
-        item.id === d.id
-          ? {
-              ...item,
-              x: posX / regionWidth,
-              y: posY / regionHeight,
-              width: newWidth / regionWidth,
-              height: newHeight / regionHeight,
-            }
-          : item,
-      ),
-    }));
-  } else {
-    setDesignsByView((prev) => ({
-      ...prev,
-      [activePreview]: prev[activePreview].map((item) =>
-        item.id === d.id
-          ? {
-              ...item,
-              x: posX / regionWidth,
-              y: posY / regionHeight,
-            }
-          : item,
-      ),
-    }));
-  }
-
   setDesignsByView((prev) => ({
     ...prev,
     [activePreview]: prev[activePreview].map((item) =>
@@ -146,7 +91,7 @@ const rotate = (
   }));
 };
 
-function radToGed(angleRad) {
+function radToDeg(angleRad) {
   let degrees = angleRad * (180 / Math.PI);
   while (degrees > 180) degrees -= 360;
   while (degrees < -180) degrees += 360;
@@ -209,8 +154,6 @@ function TabPanel({
         <>
           {activeTab === "editDesign" && selectedDesignId && (
             <div className="tab-content">
-              <h3>Edit Design</h3>
-
               {/* 1. Layer order */}
               <div className="edit-row">
                 <button
@@ -228,7 +171,7 @@ function TabPanel({
                     );
                   }}
                 >
-                  Bring to Front
+                  <i class="bi bi-front"></i>
                 </button>
                 <button
                   disabled={
@@ -245,7 +188,7 @@ function TabPanel({
                     );
                   }}
                 >
-                  Send to Back
+                  <i class="bi bi-back"></i>
                 </button>
               </div>
 
@@ -268,7 +211,7 @@ function TabPanel({
                     );
                   }}
                 >
-                  Flip Horizontal
+                  <i class="bi bi-symmetry-vertical"></i>
                 </button>
                 <button
                   onClick={(e) => {
@@ -280,7 +223,7 @@ function TabPanel({
                     );
                   }}
                 >
-                  Flip Vertical
+                  <i class="bi bi-symmetry-horizontal"></i>
                 </button>
               </div>
 
@@ -292,7 +235,7 @@ function TabPanel({
                   min="-180"
                   max="180"
                   value={Math.floor(
-                    radToGed(
+                    radToDeg(
                       designsByView[activePreview].find(
                         (d) => d.id === selectedDesignId,
                       ).rotation,
@@ -303,22 +246,78 @@ function TabPanel({
                       designsByView[activePreview].find(
                         (d) => d.id === selectedDesignId,
                       ),
-                      getBoundingBox,
-                      regionWidth,
-                      regionHeight,
                       setDesignsByView,
                       activePreview,
                       setRotationAngles,
                       (parseInt(e.target.value) * Math.PI) / 180,
                     )
                   }
+                  onMouseUp={(e) => {
+                    let d = designsByView[activePreview].find(
+                      (d) => d.id === selectedDesignId,
+                    );
+                    let bbox = getBoundingBox(
+                      d.width * regionWidth,
+                      d.height * regionHeight,
+                      d.rotation,
+                    );
+                    let posX = d.x * regionWidth;
+                    let posY = d.y * regionHeight;
+
+                    if (posX < 0) posX = 0;
+                    if (posY < 0) posY = 0;
+                    if (posX + bbox.width > regionWidth)
+                      posX = regionWidth - bbox.width;
+                    if (posY + bbox.height > regionHeight)
+                      posY = regionHeight - bbox.height;
+
+                    if (
+                      bbox.width > regionWidth ||
+                      bbox.height > regionHeight
+                    ) {
+                      const widthRatio = regionWidth / bbox.width;
+                      const heightRatio = regionHeight / bbox.height;
+                      const scale = Math.min(widthRatio, heightRatio);
+
+                      const newWidth = d.width * regionWidth * scale;
+                      const newHeight = d.height * regionHeight * scale;
+
+                      setDesignsByView((prev) => ({
+                        ...prev,
+                        [activePreview]: prev[activePreview].map((item) =>
+                          item.id === d.id
+                            ? {
+                                ...item,
+                                x: posX / regionWidth,
+                                y: posY / regionHeight,
+                                width: newWidth / regionWidth,
+                                height: newHeight / regionHeight,
+                              }
+                            : item,
+                        ),
+                      }));
+                    } else {
+                      setDesignsByView((prev) => ({
+                        ...prev,
+                        [activePreview]: prev[activePreview].map((item) =>
+                          item.id === d.id
+                            ? {
+                                ...item,
+                                x: posX / regionWidth,
+                                y: posY / regionHeight,
+                              }
+                            : item,
+                        ),
+                      }));
+                    }
+                  }}
                 />
                 <input
                   type="number"
                   min="-180"
                   max="180"
                   value={Math.floor(
-                    radToGed(
+                    radToDeg(
                       designsByView[activePreview].find(
                         (d) => d.id === selectedDesignId,
                       ).rotation,
@@ -345,13 +344,68 @@ function TabPanel({
                       }));
                     }
                     const angle = (parseInt(val) * Math.PI) / 180;
+                    let d = designsByView[activePreview].find(
+                      (d) => d.id === selectedDesignId,
+                    );
+                    let bbox = getBoundingBox(
+                      d.width * regionWidth,
+                      d.height * regionHeight,
+                      angle,
+                    );
+                    let posX = d.x * regionWidth;
+                    let posY = d.y * regionHeight;
+
+                    if (posX < 0) posX = 0;
+                    if (posY < 0) posY = 0;
+                    if (posX + bbox.width > regionWidth)
+                      posX = regionWidth - bbox.width;
+                    if (posY + bbox.height > regionHeight)
+                      posY = regionHeight - bbox.height;
+
+                    if (
+                      bbox.width > regionWidth ||
+                      bbox.height > regionHeight
+                    ) {
+                      const widthRatio = regionWidth / bbox.width;
+                      const heightRatio = regionHeight / bbox.height;
+                      const scale = Math.min(widthRatio, heightRatio);
+
+                      const newWidth = d.width * regionWidth * scale;
+                      const newHeight = d.height * regionHeight * scale;
+
+                      setDesignsByView((prev) => ({
+                        ...prev,
+                        [activePreview]: prev[activePreview].map((item) =>
+                          item.id === d.id
+                            ? {
+                                ...item,
+                                x: posX / regionWidth,
+                                y: posY / regionHeight,
+                                width: newWidth / regionWidth,
+                                height: newHeight / regionHeight,
+                              }
+                            : item,
+                        ),
+                      }));
+                    } else {
+                      setDesignsByView((prev) => ({
+                        ...prev,
+                        [activePreview]: prev[activePreview].map((item) =>
+                          item.id === d.id
+                            ? {
+                                ...item,
+                                x: posX / regionWidth,
+                                y: posY / regionHeight,
+                              }
+                            : item,
+                        ),
+                      }));
+                    }
+
                     rotate(
                       designsByView[activePreview].find(
                         (d) => d.id === selectedDesignId,
                       ),
-                      getBoundingBox,
-                      regionWidth,
-                      regionHeight,
                       setDesignsByView,
                       activePreview,
                       setRotationAngles,

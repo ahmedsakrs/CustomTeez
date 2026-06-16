@@ -16,7 +16,7 @@ function Sidebar({
   getBoundingBox,
   regionWidth,
   regionHeight,
-  setRotationAngles
+  setRotationAngles,
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [textAdded, setTextAdded] = useState(false);
@@ -27,39 +27,41 @@ function Sidebar({
 
     setDesignCounter((prev) => prev + collage.designs.length);
 
-    setDesignsByView(prev => {
+    setDesignsByView((prev) => {
       const designs = prev[activePreview] || [];
-    const highest = designs.length
-      ? Math.max(...designs.map(d => d.layer || 0))
-      : 0;
-      return{...prev,
-      [activePreview]: [
-        ...prev[activePreview],
-        ...collage.designs.map((d, idx) => ({
-          ...d,
-          id: `design-${designCounter + idx + 1}`,
-          x: d.x,
-          y: d.y,
-          width: d.width, // already normalized in data
-          height: d.height, // already normalized in data
-          type: d.type,
-          text: d.text,
-          is_colorable: d.is_colorable,
-          design_color: d.color,
-          design_outline: d.design_outline,
-          font: d.font,
-          text_alignment: d.text_alignment,
-          text_shape: d.text_shape,
-          shape_intensity: d.shape_intensity,
+      const highest = designs.length
+        ? Math.max(...designs.map((d) => d.layer || 0))
+        : 0;
+      return {
+        ...prev,
+        [activePreview]: [
+          ...prev[activePreview],
+          ...collage.designs.map((d, idx) => ({
+            ...d,
+            id: `design-${designCounter + idx + 1}`,
+            x: d.x,
+            y: d.y,
+            width: d.width, // already normalized in data
+            height: d.height, // already normalized in data
+            type: d.type,
+            text: d.text,
+            is_colorable: d.is_colorable,
+            design_color: d.color,
+            design_outline: d.design_outline,
+            font: d.font,
+            text_alignment: d.text_alignment,
+            text_shape: d.text_shape,
+            shape_intensity: d.shape_intensity,
 
-          horizontalFlip: false,
-          verticalFlip: false,
-          rotation: 0,
-          layer: highest + idx,
-          cropCoordinates: { xmin: 0, ymin: 0, xmax: 1, ymax: 1 },
-        })),
-      ],
-    }});
+            horizontalFlip: false,
+            verticalFlip: false,
+            rotation: 0,
+            layer: highest + idx,
+            cropCoordinates: { xmin: 0, ymin: 0, xmax: 1, ymax: 1 },
+          })),
+        ],
+      };
+    });
   };
   return (
     <div className="sidebar">
@@ -131,8 +133,8 @@ function Sidebar({
           panelRef={panelRef}
           getBoundingBox={getBoundingBox}
           regionWidth={regionWidth}
-  regionHeight={regionHeight}
-  setRotationAngles={setRotationAngles}
+          regionHeight={regionHeight}
+          setRotationAngles={setRotationAngles}
         />
 
         {/* {activeTab === "default" && (

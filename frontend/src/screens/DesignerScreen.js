@@ -355,6 +355,22 @@ function ProductDesigner() {
     return () => observer.disconnect();
   }, []);
 
+  const getThumbRegionSize = (view) => {
+    let width =
+      (productOptions.find((opt) => opt.id === activeProduct?.productType)
+        ?.viewRegions[view].xEnd -
+      productOptions.find((opt) => opt.id === activeProduct?.productType)
+        ?.viewRegions[view].xStart) *
+        thumbSizes[view].w;
+    let height =
+      (productOptions.find((opt) => opt.id === activeProduct?.productType)
+        ?.viewRegions[view].yEnd -
+      productOptions.find((opt) => opt.id === activeProduct?.productType)
+        ?.viewRegions[view].yStart) *
+        thumbSizes[view].h;
+    return {w: width, h: height}
+  };
+
   const filteredOptions = productOptions.filter((opt) =>
     opt.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
@@ -549,8 +565,8 @@ function ProductDesigner() {
         selectedDesignId={selectedDesignId}
         getBoundingBox={getBoundingBox}
         regionWidth={regionWidth}
-  regionHeight={regionHeight}
-  setRotationAngles={setRotationAngles}
+        regionHeight={regionHeight}
+        setRotationAngles={setRotationAngles}
         onClick={(e) => {
           e.stopPropagation();
         }}
@@ -891,6 +907,7 @@ function ProductDesigner() {
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedDesignId(d.id);
+                            console.log(rotationAngles[selectedDesignId]);
                             if (d.text) {
                               // ✅ it's a text image
                               setActiveTab("addText");
@@ -1058,12 +1075,6 @@ function ProductDesigner() {
                                         const newHeight =
                                           d.height * regionHeight * scale;
 
-                                        bbox = getBoundingBox(
-                                          newWidth,
-                                          newHeight,
-                                          newAngle,
-                                        );
-
                                         setDesignsByView((prev) => ({
                                           ...prev,
                                           [activePreview]: prev[
@@ -1099,18 +1110,18 @@ function ProductDesigner() {
                                       }
 
                                       setDesignsByView((prev) => ({
-                                          ...prev,
-                                          [activePreview]: prev[
-                                            activePreview
-                                          ].map((item) =>
-                                            item.id === d.id
-                                              ? {
-                                                  ...item,
-                                                  rotation: newAngle,
-                                                }
-                                              : item,
-                                          ),
-                                        }));
+                                        ...prev,
+                                        [activePreview]: prev[
+                                          activePreview
+                                        ].map((item) =>
+                                          item.id === d.id
+                                            ? {
+                                                ...item,
+                                                rotation: newAngle,
+                                              }
+                                            : item,
+                                        ),
+                                      }));
 
                                       setRotationAngles((prev) => ({
                                         ...prev,
@@ -1300,40 +1311,87 @@ function ProductDesigner() {
                         productOptions.find(
                           (opt) => opt.id === activeProduct?.productType,
                         )?.viewRegions[view].yStart * thumbSizes[view].h,
-                      width:
-                        (productOptions.find(
-                          (opt) => opt.id === activeProduct?.productType,
-                        )?.viewRegions[view].xEnd -
-                          productOptions.find(
-                            (opt) => opt.id === activeProduct?.productType,
-                          )?.viewRegions[view].xStart) *
-                        thumbSizes[view].w,
-                      height:
-                        (productOptions.find(
-                          (opt) => opt.id === activeProduct?.productType,
-                        )?.viewRegions[view].yEnd -
-                          productOptions.find(
-                            (opt) => opt.id === activeProduct?.productType,
-                          )?.viewRegions[view].yStart) *
-                        thumbSizes[view].h,
+                      width: getThumbRegionSize(view).w ,
+                      height: getThumbRegionSize(view).h,
                     }}
                   >
                     {designsByView[view]?.map((design) => (
-                      <img
-                        key={design.id}
-                        src={design.src}
-                        alt="design overlay"
-                        className="preview-image"
+                      <div
                         style={{
                           position: "absolute",
-                          left: `${design.x * 100}%`,
-                          top: `${design.y * 100}%`,
-                          width: `${design.width * 100}%`,
-                          height: `${design.height * 100}%`,
-                          transform: `rotate(${rotationAngles[design.id] || 0}rad)`,
-                          pointerEvents: "none",
+                          left: design.x * getThumbRegionSize(view).w ,
+                          top: design.y * getThumbRegionSize(view).h,
+                          width: getBoundingBox(
+                            design.width *
+                              Math.min(getThumbRegionSize(view).w, getThumbRegionSize(view).h),
+                            design.height *
+                              Math.min(getThumbRegionSize(view).w , getThumbRegionSize(view).h),
+                            rotationAngles[design.id] || 0,
+                          ).width,
+                          height: getBoundingBox(
+                            design.width *
+                              Math.min(getThumbRegionSize(view).w , getThumbRegionSize(view).h),
+                            design.height *
+                              Math.min(getThumbRegionSize(view).w , getThumbRegionSize(view).h),
+                            rotationAngles[design.id] || 0,
+                          ).width,
                         }}
-                      />
+                      >
+                        <div
+                          className="design-container"
+                          style={{
+                            width:
+                              design.width *
+                              getBoundingBox(
+                                getThumbRegionSize(view).w ,
+                                getThumbRegionSize(view).h,
+                                design.rotation,
+                              ).width,
+                            height:
+                              design.height *
+                              getBoundingBox(
+                                getThumbRegionSize(view).w ,
+                                getThumbRegionSize(view).h,
+                                design.rotation,
+                              ).height,
+                          }}
+                        >
+                          <div
+                            className="design-wrapper"
+                            style={{
+                              width:
+                                design.width *
+                                Math.min(
+                                  getThumbRegionSize(view).w ,
+                                  getThumbRegionSize(view).h,
+                                ),
+                              height:
+                                design.height *
+                                Math.min(
+                                  getThumbRegionSize(view).w,
+                                  getThumbRegionSize(view).h,
+                                ),
+                              transform: `rotate(${rotationAngles[design.id] || 0}rad)
+                                          scaleX(${design.horizontalFlip ? -1 : 1})
+                                          scaleY(${design.verticalFlip ? -1 : 1})`,
+                              transformOrigin: "center center",
+                            }}
+                          >
+                            <img
+                              key={design.id}
+                              src={design.src}
+                              alt="design overlay"
+                              className="preview-image"
+                              draggable="false"
+                              style={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
                     ))}
                   </div>
                   <div className="option-name">{view}</div>
