@@ -66,13 +66,7 @@ const flipVertical = (activePreview, selectedDesignId, setDesignsByView) => {
   }));
 };
 
-const rotate = (
-  d,
-  setDesignsByView,
-  activePreview,
-  setRotationAngles,
-  angleRad,
-) => {
+const rotate = (d, setDesignsByView, activePreview, angleRad) => {
   setDesignsByView((prev) => ({
     ...prev,
     [activePreview]: prev[activePreview].map((item) =>
@@ -84,11 +78,6 @@ const rotate = (
         : item,
     ),
   }));
-
-  setRotationAngles((prev) => ({
-    ...prev,
-    [d.id]: angleRad,
-  }));
 };
 
 function radToDeg(angleRad) {
@@ -96,6 +85,69 @@ function radToDeg(angleRad) {
   while (degrees > 180) degrees -= 360;
   while (degrees < -180) degrees += 360;
   return degrees;
+}
+
+function duplicateDesign(
+  designId,
+  activeView,
+  setDesignsByView,
+  regionWidth,
+  regionHeight,
+  setSelectedDesignId,
+) {
+  setDesignsByView((prev) => {
+    const designs = prev[activeView] || [];
+    const original = designs.find((d) => d.id === designId);
+    if (!original) return prev;
+
+    const highestZ = designs.length
+      ? Math.max(...designs.map((d) => d.layer || 0))
+      : 0;
+
+    const newId = `${designId}-copy-${Date.now()}`;
+
+    // default offset (10px normalized)
+    let offsetX = 10 / regionWidth;
+    let offsetY = 10 / regionHeight;
+
+    // check boundaries for X
+    if (original.x + offsetX + original.width > 1) {
+      // would overflow to the right, flip offset left
+      offsetX = -10 / regionWidth;
+    }
+    if (original.x + offsetX < 0) {
+      // would overflow to the left, reset to 0
+      offsetX = 0;
+    }
+
+    // check boundaries for Y
+    if (original.y + offsetY + original.height > 1) {
+      // would overflow bottom, flip offset up
+      offsetY = -10 / regionHeight;
+    }
+    if (original.y + offsetY < 0) {
+      // would overflow top, reset to 0
+      offsetY = 0;
+    }
+
+    const duplicate = {
+      ...original,
+      id: newId,
+      x: original.x + offsetX,
+      y: original.y + offsetY,
+      layer: highestZ + 1,
+    };
+
+    const updated = [...designs, duplicate];
+
+    // auto-select the duplicate
+    setSelectedDesignId(newId);
+
+    return {
+      ...prev,
+      [activeView]: updated,
+    };
+  });
 }
 
 function TabPanel({
@@ -106,6 +158,7 @@ function TabPanel({
   activeTab,
   setActiveTab,
   selectedDesignId,
+  setSelectedDesignId,
   activePreview,
   designsByView,
   setDesignsByView,
@@ -113,7 +166,6 @@ function TabPanel({
   getBoundingBox,
   regionWidth,
   regionHeight,
-  setRotationAngles,
 }) {
   const currentDesigns = designsByView[activePreview] || [];
   const highestZ = Math.max(...currentDesigns.map((d) => d.layer || 1));
@@ -225,6 +277,21 @@ function TabPanel({
                 >
                   <i class="bi bi-symmetry-horizontal"></i>
                 </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    duplicateDesign(
+                      selectedDesignId,
+                      activePreview,
+                      setDesignsByView,
+                      regionWidth,
+                      regionHeight,
+                      setSelectedDesignId,
+                    );
+                  }}
+                >
+                  <i class="fa-solid fa-clone"></i>
+                </button>
               </div>
 
               {/* 4. Rotate */}
@@ -248,7 +315,6 @@ function TabPanel({
                       ),
                       setDesignsByView,
                       activePreview,
-                      setRotationAngles,
                       (parseInt(e.target.value) * Math.PI) / 180,
                     )
                   }
@@ -326,11 +392,6 @@ function TabPanel({
                   onChange={(e) => {
                     const val = e.target.value;
                     if (val === "") {
-                      setRotationAngles((prev) => ({
-                        ...prev,
-                        [selectedDesignId]: 0,
-                      }));
-
                       setDesignsByView((prev) => ({
                         ...prev,
                         [activePreview]: prev[activePreview].map((item) =>
@@ -408,7 +469,6 @@ function TabPanel({
                       ),
                       setDesignsByView,
                       activePreview,
-                      setRotationAngles,
                       angle,
                     );
                   }}

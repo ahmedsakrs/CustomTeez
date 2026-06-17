@@ -13,10 +13,10 @@ function Sidebar({
   setDesignsByView,
   activePreview,
   selectedDesignId,
+  setSelectedDesignId,
   getBoundingBox,
   regionWidth,
   regionHeight,
-  setRotationAngles,
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [textAdded, setTextAdded] = useState(false);
@@ -127,6 +127,7 @@ function Sidebar({
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           selectedDesignId={selectedDesignId}
+          setSelectedDesignId={setSelectedDesignId}
           activePreview={activePreview}
           designsByView={designsByView}
           setDesignsByView={setDesignsByView}
@@ -134,7 +135,6 @@ function Sidebar({
           getBoundingBox={getBoundingBox}
           regionWidth={regionWidth}
           regionHeight={regionHeight}
-          setRotationAngles={setRotationAngles}
         />
 
         {/* {activeTab === "default" && (
