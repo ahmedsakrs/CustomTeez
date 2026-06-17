@@ -402,7 +402,6 @@
 
 .bounding-box-overlay {
   position: absolute;
-  z-index: var(--design-z); /* design’s own stacking */
 }
 
 .designer-container .control-btn {
