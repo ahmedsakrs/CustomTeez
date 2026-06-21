@@ -368,7 +368,6 @@
   border-radius: 8px;
   padding: 1%;
   background-color: #fff;
-  height: 100%; /* fill parent */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -376,10 +375,18 @@
   box-sizing: border-box;
 }
 
+.design-preview-image {
+  max-width: 100%;
+  max-height: 100%; /* ✅ scale to container */
+  object-fit: fill;
+  user-select: none;
+}
+
 .preview-image {
   max-width: 100%;
   max-height: 100%; /* ✅ scale to container */
   object-fit: contain;
+  user-select: none;
 }
 
 .design-container {
@@ -415,7 +422,6 @@
   border-radius: 4px; /* small rounding */
   cursor: pointer;
   font-size: 16px; /* icon size */
-  z-index: 9999;
 }
 
 .view-thumbnails {

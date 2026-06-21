@@ -43,6 +43,8 @@ function Sidebar({
             y: d.y,
             width: d.width, // already normalized in data
             height: d.height, // already normalized in data
+            aspect_ratio: d.width / d.height,
+            isLocked_aspect_ratio: true,
             type: d.type,
             text: d.text,
             is_colorable: d.is_colorable,

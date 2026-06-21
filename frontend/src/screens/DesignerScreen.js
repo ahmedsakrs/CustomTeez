@@ -2,6 +2,12 @@ import React, { useState, useRef, useEffect } from "react";
 import { Rnd } from "react-rnd";
 import "./ProductDesigner.css"; // responsive styles
 import Sidebar from "../components/designer_components/sidebar/Sidebar";
+import {
+  checkAfterRotation,
+  handleToggleAspectLock,
+  updateSize,
+  updateSizeClamped,
+} from "../utils/designerUtils";
 
 const productOptions = [
   {
@@ -449,30 +455,6 @@ function ProductDesigner() {
     };
   };
 
-  const flipSelected = (direction) => {
-    setDesignsByView((prev) => ({
-      ...prev,
-      [activePreview]: prev[activePreview].map((item) =>
-        item.id === selectedDesignId
-          ? {
-              ...item,
-              transform:
-                direction === "horizontal" ? `scaleX(-1)` : `scaleY(-1)`,
-            }
-          : item,
-      ),
-    }));
-  };
-
-  const centerSelectedText = () => {
-    setDesignsByView((prev) => ({
-      ...prev,
-      [activePreview]: prev[activePreview].map((item) =>
-        item.id === selectedDesignId ? { ...item, x: 0.5, y: 0.5 } : item,
-      ),
-    }));
-  };
-
   const toggleOutlineSelectedText = () => {
     setDesignsByView((prev) => ({
       ...prev,
@@ -618,7 +600,7 @@ function ProductDesigner() {
                         deleteProduct(p.id);
                       }}
                     >
-                      ✖
+                      <i class="fa fa-times"></i>
                     </button>
                   )}
                   <img
@@ -676,7 +658,7 @@ function ProductDesigner() {
                   setPendingProductType(null);
                 }}
               >
-                ✖
+                <i class="fa fa-times"></i>
               </button>
 
               <input
@@ -723,7 +705,7 @@ function ProductDesigner() {
                   setPendingProductType(null);
                 }}
               >
-                ✖
+                <i class="fa fa-times"></i>
               </button>
 
               <h3>Select Product Color</h3>
@@ -788,8 +770,10 @@ function ProductDesigner() {
 
                 const w = imgRef.current.offsetWidth;
                 const h = imgRef.current.offsetHeight;
-                const regionWidth = (region.xEnd - region.xStart) * w;
-                const regionHeight = (region.yEnd - region.yStart) * h;
+                const r_w = (region.xEnd - region.xStart) * w;
+                const r_h = (region.yEnd - region.yStart) * h;
+                if (r_w !== regionWidth) setRegionWidth(r_w);
+                if (r_h !== regionHeight) setRegionHeight(r_h);
 
                 const style = {
                   position: "absolute",
@@ -797,7 +781,7 @@ function ProductDesigner() {
                   top: imgRef.current.offsetTop + region.yStart * h,
                   width: regionWidth,
                   height: regionHeight,
-                  border: isActive ? "2px dashed #333" : "none",
+                  border: isActive ? "1.5px dashed #333" : "none",
                   backgroundColor: isActive
                     ? "rgba(0,0,0,0.05)"
                     : "transparent",
@@ -856,6 +840,13 @@ function ProductDesigner() {
                         onDragStart={() => {
                           setIsActive(true);
                           setSelectedDesignId(d.id);
+                          if (d.text) {
+                            // ✅ it's a text image
+                            setActiveTab("addText");
+                          } else {
+                            // ✅ it's a normal design image
+                            setActiveTab("editDesign");
+                          }
                         }}
                         onDrag={(e, data) => {
                           if (isRotating || isResizing) return;
@@ -916,10 +907,16 @@ function ProductDesigner() {
                           }}
                           draggable="false"
                           style={{
-                            width:
+                            width: getBoundingBox(
                               d.width * Math.min(regionWidth, regionHeight),
-                            height:
                               d.height * Math.min(regionWidth, regionHeight),
+                              d.rotation,
+                            ).width,
+                            height: getBoundingBox(
+                              d.width * Math.min(regionWidth, regionHeight),
+                              d.height * Math.min(regionWidth, regionHeight),
+                              d.rotation,
+                            ).height,
                           }}
                         >
                           {/* Inner design wrapper */}
@@ -941,12 +938,11 @@ function ProductDesigner() {
                             <img
                               src={d.src}
                               alt={d.name}
-                              className="preview-image"
+                              className="design-preview-image"
                               draggable="false"
                               style={{
                                 width: "100%",
                                 height: "100%",
-                                objectFit: "contain",
                               }}
                             />
                           </div>
@@ -957,8 +953,18 @@ function ProductDesigner() {
                       <div
                         className="bounding-box-overlay"
                         style={{
-                          left: d.x * regionWidth,
-                          top: d.y * regionHeight,
+                          left:
+                            (isRotating || isResizing) &&
+                            lockedWrapperPos &&
+                            lockedDesignId === d.id
+                              ? lockedWrapperPos.x
+                              : d.x * regionWidth,
+                          top:
+                            (isRotating || isResizing) &&
+                            lockedWrapperPos &&
+                            lockedDesignId === d.id
+                              ? lockedWrapperPos.y
+                              : d.y * regionHeight,
                           width: getBoundingBox(
                             d.width * Math.min(regionWidth, regionHeight),
                             d.height * Math.min(regionWidth, regionHeight),
@@ -978,7 +984,7 @@ function ProductDesigner() {
                             selectedDesignId === d.id
                               ? "rgba(255,255,255,0.05)"
                               : "transparent",
-                          pointerEvents: "none"
+                          pointerEvents: "none",
                         }}
                       >
                         {selectedDesignId === d.id && (
@@ -989,7 +995,7 @@ function ProductDesigner() {
                                 position: "absolute",
                                 top: "-30px",
                                 right: "-30px",
-                                pointerEvents: "auto"
+                                pointerEvents: "auto",
                               }}
                               onMouseDown={(e) => e.stopPropagation()}
                               onClick={(e) => {
@@ -1004,7 +1010,10 @@ function ProductDesigner() {
                                 setSelectedDesignId(null);
                               }}
                             >
-                              ✖
+                              <i
+                                class="bi bi-x"
+                                style={{ fontSize: "24px" }}
+                              ></i>
                             </button>
 
                             <button
@@ -1013,7 +1022,7 @@ function ProductDesigner() {
                                 position: "absolute",
                                 top: "-30px",
                                 left: "-30px",
-                                pointerEvents: "auto"
+                                pointerEvents: "auto",
                               }}
                               draggable="false"
                               onMouseDown={(e) => {
@@ -1036,77 +1045,35 @@ function ProductDesigner() {
                                 );
                                 const baseline = d.rotation || 0;
 
+                                if (!d.isLocked_aspect_ratio) {
+                                  handleToggleAspectLock(
+                                    d,
+                                    activePreview,
+                                    setDesignsByView,
+                                    getBoundingBox,
+                                    regionWidth,
+                                    regionHeight,
+                                  );
+                                }
+
                                 const handleMove = (moveEvent) => {
                                   const currentAngle = Math.atan2(
                                     moveEvent.clientY - centerY,
                                     moveEvent.clientX - centerX,
                                   );
                                   const delta = currentAngle - startAngle;
+
                                   const newAngle = baseline + delta;
 
-                                  let bbox = getBoundingBox(
-                                    d.width * regionWidth,
-                                    d.height * regionHeight,
+                                  checkAfterRotation(
+                                    getBoundingBox,
+                                    d,
+                                    activePreview,
+                                    regionWidth,
+                                    regionHeight,
+                                    setDesignsByView,
                                     newAngle,
                                   );
-                                  let posX = d.x * regionWidth;
-                                  let posY = d.y * regionHeight;
-
-                                  if (posX < 0) posX = 0;
-                                  if (posY < 0) posY = 0;
-                                  if (posX + bbox.width > regionWidth)
-                                    posX = regionWidth - bbox.width;
-                                  if (posY + bbox.height > regionHeight)
-                                    posY = regionHeight - bbox.height;
-
-                                  if (
-                                    bbox.width > regionWidth ||
-                                    bbox.height > regionHeight
-                                  ) {
-                                    const widthRatio = regionWidth / bbox.width;
-                                    const heightRatio =
-                                      regionHeight / bbox.height;
-                                    const scale = Math.min(
-                                      widthRatio,
-                                      heightRatio,
-                                    );
-
-                                    const newWidth =
-                                      d.width * regionWidth * scale;
-                                    const newHeight =
-                                      d.height * regionHeight * scale;
-
-                                    setDesignsByView((prev) => ({
-                                      ...prev,
-                                      [activePreview]: prev[activePreview].map(
-                                        (item) =>
-                                          item.id === d.id
-                                            ? {
-                                                ...item,
-                                                x: posX / regionWidth,
-                                                y: posY / regionHeight,
-                                                width: newWidth / regionWidth,
-                                                height:
-                                                  newHeight / regionHeight,
-                                              }
-                                            : item,
-                                      ),
-                                    }));
-                                  } else {
-                                    setDesignsByView((prev) => ({
-                                      ...prev,
-                                      [activePreview]: prev[activePreview].map(
-                                        (item) =>
-                                          item.id === d.id
-                                            ? {
-                                                ...item,
-                                                x: posX / regionWidth,
-                                                y: posY / regionHeight,
-                                              }
-                                            : item,
-                                      ),
-                                    }));
-                                  }
 
                                   setDesignsByView((prev) => ({
                                     ...prev,
@@ -1154,7 +1121,7 @@ function ProductDesigner() {
                                 position: "absolute",
                                 bottom: "-30px",
                                 right: "-30px",
-                                pointerEvents: "auto"
+                                pointerEvents: "auto",
                               }}
                               onMouseDown={(e) => {
                                 e.stopPropagation();
@@ -1167,6 +1134,7 @@ function ProductDesigner() {
                                 });
 
                                 const startX = e.clientX;
+                                const startY = e.clientY;
                                 const startWidth = d.width * regionWidth;
                                 const startHeight = d.height * regionHeight;
                                 const aspectRatio = startWidth / startHeight;
@@ -1174,63 +1142,120 @@ function ProductDesigner() {
 
                                 const handleMove = (moveEvent) => {
                                   const deltaX = moveEvent.clientX - startX;
+                                  const deltaY = moveEvent.clientY - startY;
                                   let newWidth = Math.max(
                                     50,
                                     startWidth + deltaX,
                                   );
                                   let newHeight = newWidth / aspectRatio;
+                                  if (!d.isLocked_aspect_ratio) {
+                                    newHeight = Math.max(
+                                      50,
+                                      startHeight + deltaY,
+                                    );
+                                  }
 
-                                  let bbox = getBoundingBox(
-                                    newWidth,
-                                    newHeight,
-                                    currentAngle,
+                                  updateSizeClamped(
+                                    d.id,
+                                    newWidth / regionWidth,
+                                    newHeight / regionHeight,
+                                    setDesignsByView,
+                                    activePreview,
+                                    getBoundingBox,
+                                    regionWidth,
+                                    regionHeight,
                                   );
-                                  const posX = d.x * regionWidth;
-                                  const posY = d.y * regionHeight;
 
-                                  if (posX + bbox.width > regionWidth) {
-                                    const widthRatio =
-                                      (regionWidth - posX) / bbox.width;
-                                    newWidth = newWidth * widthRatio;
-                                    newHeight = newWidth / aspectRatio;
-                                    bbox = getBoundingBox(
-                                      newWidth,
-                                      newHeight,
-                                      currentAngle,
-                                    );
-                                  }
-                                  if (posY + bbox.height > regionHeight) {
-                                    const heightRatio =
-                                      (regionHeight - posY) / bbox.height;
-                                    newHeight = newHeight * heightRatio;
-                                    newWidth = newHeight * aspectRatio;
-                                    bbox = getBoundingBox(
-                                      newWidth,
-                                      newHeight,
-                                      currentAngle,
-                                    );
-                                  }
-                                  setDesignsByView((prev) => ({
-                                    ...prev,
-                                    [activePreview]: prev[activePreview].map(
-                                      (item) => {
-                                        if (item.id !== d.id) return item;
+                                  // let bbox = getBoundingBox(
+                                  //   Math.max(
+                                  //     50,
+                                  //     d.width *
+                                  //       Math.min(regionWidth, regionHeight) +
+                                  //       deltaX,
+                                  //   ),
+                                  //   Math.max(
+                                  //     50,
+                                  //     d.width *
+                                  //       Math.min(regionWidth, regionHeight) +
+                                  //       deltaX,
+                                  //   ) / d.aspect_ratio,
+                                  //   currentAngle,
+                                  // );
 
-                                        return {
-                                          ...item,
-                                          width: newWidth / regionWidth,
-                                          height: newHeight / regionHeight,
-                                          // ✅ src stays the same
-                                        };
-                                      },
-                                    ),
-                                  }));
+                                  // if (!d.isLocked_aspect_ratio) {
+                                  //   bbox = getBoundingBox(
+                                  //     Math.max(
+                                  //       50,
+                                  //       d.width *
+                                  //         Math.min(regionWidth, regionHeight) +
+                                  //         deltaX,
+                                  //     ),
+                                  //     Math.max(
+                                  //       50,
+                                  //       d.height *
+                                  //         Math.min(regionWidth, regionHeight) +
+                                  //         deltaY,
+                                  //     ),
+                                  //     currentAngle,
+                                  //   );
+                                  // }
+
+                                  // const posX = d.x * regionWidth;
+                                  // const posY = d.y * regionHeight;
+                                  // if (!d.isLocked_aspect_ratio) {
+                                  //   if (posX + bbox.width > regionWidth) {
+                                  //     newWidth = regionWidth - posX;
+                                  //   }
+                                  //   if (posY + bbox.height > regionHeight) {
+                                  //     newHeight = regionHeight - posY;
+                                  //   }
+                                  // } else {
+                                  //   if (posX + bbox.width > regionWidth) {
+                                  //     const widthRatio =
+                                  //       (regionWidth - posX) / bbox.width;
+                                  //     newWidth = newWidth * widthRatio;
+                                  //     newHeight = newWidth / aspectRatio;
+
+                                  //     bbox = getBoundingBox(
+                                  //       newWidth,
+                                  //       newHeight,
+                                  //       currentAngle,
+                                  //     );
+                                  //   }
+                                  //   if (posY + bbox.height > regionHeight) {
+                                  //     const heightRatio =
+                                  //       (regionHeight - posY) / bbox.height;
+                                  //     newHeight = newHeight * heightRatio;
+                                  //     newWidth = newHeight * aspectRatio;
+                                  //     bbox = getBoundingBox(
+                                  //       newWidth,
+                                  //       newHeight,
+                                  //       currentAngle,
+                                  //     );
+                                  //   }
+                                  // }
+                                  // setDesignsByView((prev) => ({
+                                  //   ...prev,
+                                  //   [activePreview]: prev[activePreview].map(
+                                  //     (item) => {
+                                  //       if (item.id !== d.id) return item;
+
+                                  //       return {
+                                  //         ...item,
+                                  //         width: newWidth / regionWidth,
+                                  //         height: newHeight / regionHeight,
+                                  //         // ✅ src stays the same
+                                  //       };
+                                  //     },
+                                  //   ),
+                                  // }));
                                   setJustFinishedInteraction(true);
                                 };
 
                                 const handleUp = () => {
                                   setJustFinishedInteraction(true);
                                   setIsResizing(false);
+                                  setLockedWrapperPos(null);
                                   setSelectedDesignId(d.id);
                                   window.removeEventListener(
                                     "mousemove",
@@ -1329,26 +1354,38 @@ function ProductDesigner() {
                                 getThumbRegionSize(view).h,
                               ),
                             design.rotation,
-                          ).width,
+                          ).height,
                         }}
                       >
                         <div
-                          className="design-container"
+                          className={"design-container"}
                           style={{
-                            width:
+                            width: getBoundingBox(
                               design.width *
-                              getBoundingBox(
-                                getThumbRegionSize(view).w,
-                                getThumbRegionSize(view).h,
-                                design.rotation,
-                              ).width,
-                            height:
+                                Math.min(
+                                  getThumbRegionSize(view).w,
+                                  getThumbRegionSize(view).h,
+                                ),
                               design.height *
-                              getBoundingBox(
-                                getThumbRegionSize(view).w,
-                                getThumbRegionSize(view).h,
-                                design.rotation,
-                              ).height,
+                                Math.min(
+                                  getThumbRegionSize(view).w,
+                                  getThumbRegionSize(view).h,
+                                ),
+                              design.rotation,
+                            ).width,
+                            height: getBoundingBox(
+                              design.width *
+                                Math.min(
+                                  getThumbRegionSize(view).w,
+                                  getThumbRegionSize(view).h,
+                                ),
+                              design.height *
+                                Math.min(
+                                  getThumbRegionSize(view).w,
+                                  getThumbRegionSize(view).h,
+                                ),
+                              design.rotation,
+                            ).height,
                           }}
                         >
                           <div
@@ -1376,9 +1413,11 @@ function ProductDesigner() {
                               key={design.id}
                               src={design.src}
                               alt="design overlay"
-                              className="preview-image"
+                              className="design-preview-image"
                               draggable="false"
                               style={{
+                                height: "100%",
+                                width: "100%",
                                 position: "absolute",
                                 top: 0,
                                 left: 0,

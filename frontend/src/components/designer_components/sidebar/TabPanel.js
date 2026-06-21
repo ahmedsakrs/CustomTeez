@@ -1,154 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
 import { Row, Col } from "react-bootstrap";
 import CategoryThumb from "./CategoryThumb";
 import DesignThumb from "./DesignThumb";
-
-function bringToFront(activePreview, selectedDesignId, setDesignsByView) {
-  setDesignsByView((prev) => {
-    const designs = [...(prev[activePreview] || [])];
-    // sort designs by zIndex ascending
-    designs.sort((a, b) => (a.layer || 0) - (b.layer || 0));
-
-    const idx = designs.findIndex((d) => d.id === selectedDesignId);
-    if (idx === designs.length - 1) return prev; // already highest
-
-    // swap zIndex with the next higher design
-    const current = designs[idx];
-    const above = designs[idx + 1];
-    const temp = current.layer;
-    current.layer = above.layer;
-    above.layer = temp;
-
-    return { ...prev, [activePreview]: [...designs] };
-  });
-}
-
-function sendToBack(activePreview, selectedDesignId, setDesignsByView) {
-  setDesignsByView((prev) => {
-    const designs = [...(prev[activePreview] || [])];
-    // sort designs by zIndex ascending
-    designs.sort((a, b) => (a.layer || 0) - (b.layer || 0));
-
-    const idx = designs.findIndex((d) => d.id === selectedDesignId);
-    if (idx === 0) return prev; // already lowest
-
-    // swap zIndex with the next lower design
-    const current = designs[idx];
-    console.log(designs);
-    const below = designs[idx - 1];
-    const temp = current.layer;
-    current.layer = below.layer;
-    below.layer = temp;
-
-    return { ...prev, [activePreview]: [...designs] };
-  });
-}
-
-const flipHorizontal = (activePreview, selectedDesignId, setDesignsByView) => {
-  setDesignsByView((prev) => ({
-    ...prev,
-    [activePreview]: prev[activePreview].map((item) =>
-      item.id === selectedDesignId
-        ? { ...item, horizontalFlip: !item.horizontalFlip }
-        : item,
-    ),
-  }));
-};
-
-const flipVertical = (activePreview, selectedDesignId, setDesignsByView) => {
-  setDesignsByView((prev) => ({
-    ...prev,
-    [activePreview]: prev[activePreview].map((item) =>
-      item.id === selectedDesignId
-        ? { ...item, verticalFlip: !item.verticalFlip }
-        : item,
-    ),
-  }));
-};
-
-const rotate = (d, setDesignsByView, activePreview, angleRad) => {
-  setDesignsByView((prev) => ({
-    ...prev,
-    [activePreview]: prev[activePreview].map((item) =>
-      item.id === d.id
-        ? {
-            ...item,
-            rotation: angleRad,
-          }
-        : item,
-    ),
-  }));
-};
-
-function radToDeg(angleRad) {
-  let degrees = angleRad * (180 / Math.PI);
-  while (degrees > 180) degrees -= 360;
-  while (degrees < -180) degrees += 360;
-  return degrees;
-}
-
-function duplicateDesign(
-  designId,
-  activeView,
-  setDesignsByView,
-  regionWidth,
-  regionHeight,
-  setSelectedDesignId,
-) {
-  setDesignsByView((prev) => {
-    const designs = prev[activeView] || [];
-    const original = designs.find((d) => d.id === designId);
-    if (!original) return prev;
-
-    const highestZ = designs.length
-      ? Math.max(...designs.map((d) => d.layer || 0))
-      : 0;
-
-    const newId = `${designId}-copy-${Date.now()}`;
-
-    // default offset (10px normalized)
-    let offsetX = 10 / regionWidth;
-    let offsetY = 10 / regionHeight;
-
-    // check boundaries for X
-    if (original.x + offsetX + original.width > 1) {
-      // would overflow to the right, flip offset left
-      offsetX = -10 / regionWidth;
-    }
-    if (original.x + offsetX < 0) {
-      // would overflow to the left, reset to 0
-      offsetX = 0;
-    }
-
-    // check boundaries for Y
-    if (original.y + offsetY + original.height > 1) {
-      // would overflow bottom, flip offset up
-      offsetY = -10 / regionHeight;
-    }
-    if (original.y + offsetY < 0) {
-      // would overflow top, reset to 0
-      offsetY = 0;
-    }
-
-    const duplicate = {
-      ...original,
-      id: newId,
-      x: original.x + offsetX,
-      y: original.y + offsetY,
-      layer: highestZ + 1,
-    };
-
-    const updated = [...designs, duplicate];
-
-    // auto-select the duplicate
-    setSelectedDesignId(newId);
-
-    return {
-      ...prev,
-      [activeView]: updated,
-    };
-  });
-}
+import {
+  sendToBack,
+  bringToFront,
+  flipHorizontal,
+  flipVertical,
+  duplicateDesign,
+  radToDeg,
+  rotate,
+  updateSize,
+  handleToggleAspectLock,
+  checkAfterRotation,
+} from "../../../utils/designerUtils";
 
 function TabPanel({
   selectedCategory,
@@ -167,9 +32,14 @@ function TabPanel({
   regionWidth,
   regionHeight,
 }) {
+  const [sizeWarning, setSizeWarning] = useState(false);
+
   const currentDesigns = designsByView[activePreview] || [];
   const highestZ = Math.max(...currentDesigns.map((d) => d.layer || 1));
   const lowestZ = Math.min(...currentDesigns.map((d) => d.layer || 0));
+  const selectedDesign = designsByView[activePreview].find(
+    (d) => d.id === selectedDesignId,
+  );
   return (
     <div className="tab-content" ref={panelRef}>
       {!selectedCategory && activeTab === "addDesign" && (
@@ -202,18 +72,14 @@ function TabPanel({
         </>
       )}
 
-      {selectedDesignId && (
+      {selectedDesignId && selectedDesign && (
         <>
           {activeTab === "editDesign" && selectedDesignId && (
             <div className="tab-content">
               {/* 1. Layer order */}
               <div className="edit-row">
                 <button
-                  disabled={
-                    designsByView[activePreview].find(
-                      (d) => d.id === selectedDesignId,
-                    ).layer === highestZ
-                  }
+                  disabled={selectedDesign?.layer === highestZ}
                   onClick={(e) => {
                     e.stopPropagation();
                     bringToFront(
@@ -226,11 +92,7 @@ function TabPanel({
                   <i class="bi bi-front"></i>
                 </button>
                 <button
-                  disabled={
-                    designsByView[activePreview].find(
-                      (d) => d.id === selectedDesignId,
-                    ).layer === lowestZ
-                  }
+                  disabled={selectedDesign?.layer === lowestZ}
                   onClick={(e) => {
                     e.stopPropagation();
                     sendToBack(
@@ -301,175 +163,50 @@ function TabPanel({
                   type="range"
                   min="-180"
                   max="180"
-                  value={Math.floor(
-                    radToDeg(
-                      designsByView[activePreview].find(
-                        (d) => d.id === selectedDesignId,
-                      ).rotation,
-                    ),
-                  )}
+                  step={1}
+                  value={Math.floor(radToDeg(selectedDesign?.rotation))}
                   onChange={(e) =>
                     rotate(
-                      designsByView[activePreview].find(
-                        (d) => d.id === selectedDesignId,
-                      ),
+                      selectedDesign,
                       setDesignsByView,
                       activePreview,
                       (parseInt(e.target.value) * Math.PI) / 180,
+                      getBoundingBox,
+                      regionWidth,
+                      regionHeight,
                     )
                   }
                   onMouseUp={(e) => {
-                    let d = designsByView[activePreview].find(
-                      (d) => d.id === selectedDesignId,
+                    rotate(
+                      selectedDesign,
+                      setDesignsByView,
+                      activePreview,
+                      selectedDesign.rotation,
+                      getBoundingBox,
+                      regionWidth,
+                      regionHeight,
+                      true
                     );
-                    let bbox = getBoundingBox(
-                      d.width * regionWidth,
-                      d.height * regionHeight,
-                      d.rotation,
-                    );
-                    let posX = d.x * regionWidth;
-                    let posY = d.y * regionHeight;
-
-                    if (posX < 0) posX = 0;
-                    if (posY < 0) posY = 0;
-                    if (posX + bbox.width > regionWidth)
-                      posX = regionWidth - bbox.width;
-                    if (posY + bbox.height > regionHeight)
-                      posY = regionHeight - bbox.height;
-
-                    if (
-                      bbox.width > regionWidth ||
-                      bbox.height > regionHeight
-                    ) {
-                      const widthRatio = regionWidth / bbox.width;
-                      const heightRatio = regionHeight / bbox.height;
-                      const scale = Math.min(widthRatio, heightRatio);
-
-                      const newWidth = d.width * regionWidth * scale;
-                      const newHeight = d.height * regionHeight * scale;
-
-                      setDesignsByView((prev) => ({
-                        ...prev,
-                        [activePreview]: prev[activePreview].map((item) =>
-                          item.id === d.id
-                            ? {
-                                ...item,
-                                x: posX / regionWidth,
-                                y: posY / regionHeight,
-                                width: newWidth / regionWidth,
-                                height: newHeight / regionHeight,
-                              }
-                            : item,
-                        ),
-                      }));
-                    } else {
-                      setDesignsByView((prev) => ({
-                        ...prev,
-                        [activePreview]: prev[activePreview].map((item) =>
-                          item.id === d.id
-                            ? {
-                                ...item,
-                                x: posX / regionWidth,
-                                y: posY / regionHeight,
-                              }
-                            : item,
-                        ),
-                      }));
-                    }
                   }}
                 />
                 <input
                   type="number"
                   min="-180"
                   max="180"
-                  value={Math.floor(
-                    radToDeg(
-                      designsByView[activePreview].find(
-                        (d) => d.id === selectedDesignId,
-                      ).rotation,
-                    ),
-                  )}
+                  value={Math.round(radToDeg(selectedDesign?.rotation))}
                   onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === "") {
-                      setDesignsByView((prev) => ({
-                        ...prev,
-                        [activePreview]: prev[activePreview].map((item) =>
-                          item.id === selectedDesignId
-                            ? {
-                                ...item,
-                                rotation: 0,
-                              }
-                            : item,
-                        ),
-                      }));
-                    }
+                    let val = e.target.value;
+                    if (val === "") val = 0;
                     const angle = (parseInt(val) * Math.PI) / 180;
-                    let d = designsByView[activePreview].find(
-                      (d) => d.id === selectedDesignId,
-                    );
-                    let bbox = getBoundingBox(
-                      d.width * regionWidth,
-                      d.height * regionHeight,
-                      angle,
-                    );
-                    let posX = d.x * regionWidth;
-                    let posY = d.y * regionHeight;
-
-                    if (posX < 0) posX = 0;
-                    if (posY < 0) posY = 0;
-                    if (posX + bbox.width > regionWidth)
-                      posX = regionWidth - bbox.width;
-                    if (posY + bbox.height > regionHeight)
-                      posY = regionHeight - bbox.height;
-
-                    if (
-                      bbox.width > regionWidth ||
-                      bbox.height > regionHeight
-                    ) {
-                      const widthRatio = regionWidth / bbox.width;
-                      const heightRatio = regionHeight / bbox.height;
-                      const scale = Math.min(widthRatio, heightRatio);
-
-                      const newWidth = d.width * regionWidth * scale;
-                      const newHeight = d.height * regionHeight * scale;
-
-                      setDesignsByView((prev) => ({
-                        ...prev,
-                        [activePreview]: prev[activePreview].map((item) =>
-                          item.id === d.id
-                            ? {
-                                ...item,
-                                x: posX / regionWidth,
-                                y: posY / regionHeight,
-                                width: newWidth / regionWidth,
-                                height: newHeight / regionHeight,
-                              }
-                            : item,
-                        ),
-                      }));
-                    } else {
-                      setDesignsByView((prev) => ({
-                        ...prev,
-                        [activePreview]: prev[activePreview].map((item) =>
-                          item.id === d.id
-                            ? {
-                                ...item,
-                                x: posX / regionWidth,
-                                y: posY / regionHeight,
-                              }
-                            : item,
-                        ),
-                      }));
-                    }
-
                     rotate(
-                      designsByView[activePreview].find(
-                        (d) => d.id === selectedDesignId,
-                      ),
+                      selectedDesign,
                       setDesignsByView,
                       activePreview,
                       angle,
+                      getBoundingBox,
+                      regionWidth,
+                      regionHeight,
+                      true
                     );
                   }}
                   style={{ width: "60px", marginLeft: "8px" }}
@@ -489,40 +226,129 @@ function TabPanel({
               </div> */}
 
               {/* 6. Width/Height with aspect toggle */}
-              {/* <div className="edit-row">
+              <div className="edit-row">
                 <label>Width:</label>
                 <input
                   type="number"
-                  value={selectedDesign.width}
-                  onChange={(e) =>
-                    updateSize(
-                      selectedDesign.id,
-                      "width",
-                      parseInt(e.target.value),
-                    )
-                  }
+                  min="0.1"
+                  max={regionHeight > regionWidth ? 1 : regionWidth / regionHeight}
+                  step="0.01"
+                  value={selectedDesign?.width?.toFixed(2)}
+                  onChange={(e) => {
+                    let newWidthNorm = parseFloat(e.target.value);
+                    if (isNaN(newWidthNorm)) return;
+                    newWidthNorm = Math.max(0.1, newWidthNorm);
+
+                    if (selectedDesign.isLocked_aspect_ratio) {
+                      const aspect = selectedDesign?.aspect_ratio;
+                      const newHeightNorm = newWidthNorm / aspect;
+                      updateSize(
+                        selectedDesign.id,
+                        newWidthNorm,
+                        newHeightNorm,
+                        setDesignsByView,
+                        activePreview,
+                        getBoundingBox,
+                        regionWidth,
+                        regionHeight,
+                        setSizeWarning,
+                      );
+                    } else {
+                      updateSize(
+                        selectedDesign.id,
+                        newWidthNorm,
+                        selectedDesign.height,
+                        setDesignsByView,
+                        activePreview,
+                        getBoundingBox,
+                        regionWidth,
+                        regionHeight,
+                        setSizeWarning,
+                      );
+                    }
+                  }}
+                  style={{
+                    width: "80px",
+                    marginLeft: "8px",
+                    border: sizeWarning ? "2px solid red" : "1px solid #ccc",
+                  }}
                 />
+              </div>
+
+              <div className="edit-row">
                 <label>Height:</label>
                 <input
                   type="number"
-                  value={selectedDesign.height}
-                  onChange={(e) =>
-                    updateSize(
-                      selectedDesign.id,
-                      "height",
-                      parseInt(e.target.value),
+                  min="0.1"
+                  max={regionHeight < regionWidth ? 1 : regionHeight / regionWidth}
+                  step="0.01"
+                  value={selectedDesign.height?.toFixed(2)}
+                  onChange={(e) => {
+                    let newHeightNorm = parseFloat(e.target.value);
+                    if (isNaN(newHeightNorm)) return;
+                    newHeightNorm = Math.max(0.1, newHeightNorm);
+
+                    if (selectedDesign.isLocked_aspect_ratio) {
+                      const aspect = selectedDesign.aspect_ratio;
+                      const newWidthNorm = newHeightNorm * aspect;
+                      updateSize(
+                        selectedDesign.id,
+                        newWidthNorm,
+                        newHeightNorm,
+                        setDesignsByView,
+                        activePreview,
+                        getBoundingBox,
+                        regionWidth,
+                        regionHeight,
+                        setSizeWarning,
+                      );
+                    } else {
+                      updateSize(
+                        selectedDesign.id,
+                        selectedDesign.width,
+                        newHeightNorm,
+                        setDesignsByView,
+                        activePreview,
+                        getBoundingBox,
+                        regionWidth,
+                        regionHeight,
+                        setSizeWarning,
+                      );
+                    }
+                  }}
+                  style={{
+                    width: "80px",
+                    marginLeft: "8px",
+                    border: sizeWarning ? "2px solid red" : "1px solid #ccc",
+                  }}
+                />
+              </div>
+
+              {/* Aspect Ratio Toggle */}
+              <div className="edit-row">
+                <button
+                  onClick={() =>
+                    handleToggleAspectLock(
+                      selectedDesign,
+                      activePreview,
+                      setDesignsByView,
+                      getBoundingBox,
+                      regionWidth,
+                      regionHeight,
                     )
                   }
-                />
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={lockAspect}
-                    onChange={() => setLockAspect(!lockAspect)}
-                  />
-                  Lock Aspect Ratio
-                </label>
-              </div> */}
+                  disabled={
+                    selectedDesign.isLocked_aspect_ratio &&
+                    selectedDesign.rotation !== 0
+                  }
+                >
+                  {selectedDesign.isLocked_aspect_ratio ? (
+                    <i class="bi bi-lock-fill"></i>
+                  ) : (
+                    <i class="bi bi-unlock-fill"></i>
+                  )}
+                </button>
+              </div>
             </div>
           )}
         </>
