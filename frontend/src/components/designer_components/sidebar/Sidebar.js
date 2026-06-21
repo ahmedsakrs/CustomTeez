@@ -39,11 +39,13 @@ function Sidebar({
           ...collage.designs.map((d, idx) => ({
             ...d,
             id: `design-${designCounter + idx + 1}`,
+            croppedSrc: d.src,
             x: d.x,
             y: d.y,
             width: d.width, // already normalized in data
             height: d.height, // already normalized in data
             aspect_ratio: d.width / d.height,
+            croppedAspectRatio: d.width / d.height,
             isLocked_aspect_ratio: true,
             type: d.type,
             text: d.text,
@@ -59,7 +61,7 @@ function Sidebar({
             verticalFlip: false,
             rotation: 0,
             layer: highest + idx,
-            cropCoordinates: { xmin: 0, ymin: 0, xmax: 1, ymax: 1 },
+            crop: { x: 0, y: 0, width: 1, height: 1 },
           })),
         ],
       };

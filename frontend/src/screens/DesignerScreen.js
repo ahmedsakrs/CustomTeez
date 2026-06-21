@@ -936,7 +936,7 @@ function ProductDesigner() {
                             }}
                           >
                             <img
-                              src={d.src}
+                              src={d.croppedSrc || d.src}
                               alt={d.name}
                               className="design-preview-image"
                               draggable="false"
@@ -1138,7 +1138,6 @@ function ProductDesigner() {
                                 const startWidth = d.width * regionWidth;
                                 const startHeight = d.height * regionHeight;
                                 const aspectRatio = startWidth / startHeight;
-                                const currentAngle = d.rotation;
 
                                 const handleMove = (moveEvent) => {
                                   const deltaX = moveEvent.clientX - startX;
@@ -1165,90 +1164,6 @@ function ProductDesigner() {
                                     regionWidth,
                                     regionHeight,
                                   );
-
-                                  // let bbox = getBoundingBox(
-                                  //   Math.max(
-                                  //     50,
-                                  //     d.width *
-                                  //       Math.min(regionWidth, regionHeight) +
-                                  //       deltaX,
-                                  //   ),
-                                  //   Math.max(
-                                  //     50,
-                                  //     d.width *
-                                  //       Math.min(regionWidth, regionHeight) +
-                                  //       deltaX,
-                                  //   ) / d.aspect_ratio,
-                                  //   currentAngle,
-                                  // );
-
-                                  // if (!d.isLocked_aspect_ratio) {
-                                  //   bbox = getBoundingBox(
-                                  //     Math.max(
-                                  //       50,
-                                  //       d.width *
-                                  //         Math.min(regionWidth, regionHeight) +
-                                  //         deltaX,
-                                  //     ),
-                                  //     Math.max(
-                                  //       50,
-                                  //       d.height *
-                                  //         Math.min(regionWidth, regionHeight) +
-                                  //         deltaY,
-                                  //     ),
-                                  //     currentAngle,
-                                  //   );
-                                  // }
-
-                                  // const posX = d.x * regionWidth;
-                                  // const posY = d.y * regionHeight;
-                                  // if (!d.isLocked_aspect_ratio) {
-                                  //   if (posX + bbox.width > regionWidth) {
-                                  //     newWidth = regionWidth - posX;
-                                  //   }
-                                  //   if (posY + bbox.height > regionHeight) {
-                                  //     newHeight = regionHeight - posY;
-                                  //   }
-                                  // } else {
-                                  //   if (posX + bbox.width > regionWidth) {
-                                  //     const widthRatio =
-                                  //       (regionWidth - posX) / bbox.width;
-                                  //     newWidth = newWidth * widthRatio;
-                                  //     newHeight = newWidth / aspectRatio;
-
-                                  //     bbox = getBoundingBox(
-                                  //       newWidth,
-                                  //       newHeight,
-                                  //       currentAngle,
-                                  //     );
-                                  //   }
-                                  //   if (posY + bbox.height > regionHeight) {
-                                  //     const heightRatio =
-                                  //       (regionHeight - posY) / bbox.height;
-                                  //     newHeight = newHeight * heightRatio;
-                                  //     newWidth = newHeight * aspectRatio;
-                                  //     bbox = getBoundingBox(
-                                  //       newWidth,
-                                  //       newHeight,
-                                  //       currentAngle,
-                                  //     );
-                                  //   }
-                                  // }
-                                  // setDesignsByView((prev) => ({
-                                  //   ...prev,
-                                  //   [activePreview]: prev[activePreview].map(
-                                  //     (item) => {
-                                  //       if (item.id !== d.id) return item;
-
-                                  //       return {
-                                  //         ...item,
-                                  //         width: newWidth / regionWidth,
-                                  //         height: newHeight / regionHeight,
-                                  //         // ✅ src stays the same
-                                  //       };
-                                  //     },
-                                  //   ),
-                                  // }));
                                   setJustFinishedInteraction(true);
                                 };
 

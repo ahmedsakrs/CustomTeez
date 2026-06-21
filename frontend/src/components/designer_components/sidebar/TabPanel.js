@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Row, Col } from "react-bootstrap";
 import CategoryThumb from "./CategoryThumb";
 import DesignThumb from "./DesignThumb";
+// import Cropper from "react-easy-crop";
+import SideBarCropper from './SideBarCropper'
 import {
   sendToBack,
   bringToFront,
@@ -13,6 +15,7 @@ import {
   updateSize,
   handleToggleAspectLock,
   checkAfterRotation,
+  applyCrop
 } from "../../../utils/designerUtils";
 
 function TabPanel({
@@ -32,7 +35,10 @@ function TabPanel({
   regionWidth,
   regionHeight,
 }) {
-  const [sizeWarning, setSizeWarning] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [isCropping, setIsCropping] = useState(false);
 
   const currentDesigns = designsByView[activePreview] || [];
   const highestZ = Math.max(...currentDesigns.map((d) => d.layer || 1));
@@ -72,7 +78,7 @@ function TabPanel({
         </>
       )}
 
-      {selectedDesignId && selectedDesign && (
+      {selectedDesignId && selectedDesign && !isCropping &&(
         <>
           {activeTab === "editDesign" && selectedDesignId && (
             <div className="tab-content">
@@ -107,11 +113,11 @@ function TabPanel({
               </div>
 
               {/* 2. Crop */}
-              {/* <div className="edit-row">
-                <button onClick={() => startCrop(selectedDesign.id)}>
-                  ✂️ Crop
+              <div className="edit-row">
+                <button onClick={() => setIsCropping(true)}>
+                  Crop
                 </button>
-              </div> */}
+              </div>
 
               {/* 3. Flip */}
               <div className="edit-row">
@@ -185,7 +191,7 @@ function TabPanel({
                       getBoundingBox,
                       regionWidth,
                       regionHeight,
-                      true
+                      true,
                     );
                   }}
                 />
@@ -206,7 +212,7 @@ function TabPanel({
                       getBoundingBox,
                       regionWidth,
                       regionHeight,
-                      true
+                      true,
                     );
                   }}
                   style={{ width: "60px", marginLeft: "8px" }}
@@ -231,7 +237,9 @@ function TabPanel({
                 <input
                   type="number"
                   min="0.1"
-                  max={regionHeight > regionWidth ? 1 : regionWidth / regionHeight}
+                  max={
+                    regionHeight > regionWidth ? 1 : regionWidth / regionHeight
+                  }
                   step="0.01"
                   value={selectedDesign?.width?.toFixed(2)}
                   onChange={(e) => {
@@ -251,7 +259,6 @@ function TabPanel({
                         getBoundingBox,
                         regionWidth,
                         regionHeight,
-                        setSizeWarning,
                       );
                     } else {
                       updateSize(
@@ -263,14 +270,13 @@ function TabPanel({
                         getBoundingBox,
                         regionWidth,
                         regionHeight,
-                        setSizeWarning,
                       );
                     }
                   }}
                   style={{
                     width: "80px",
                     marginLeft: "8px",
-                    border: sizeWarning ? "2px solid red" : "1px solid #ccc",
+                    border: "1px solid #ccc",
                   }}
                 />
               </div>
@@ -280,7 +286,9 @@ function TabPanel({
                 <input
                   type="number"
                   min="0.1"
-                  max={regionHeight < regionWidth ? 1 : regionHeight / regionWidth}
+                  max={
+                    regionHeight < regionWidth ? 1 : regionHeight / regionWidth
+                  }
                   step="0.01"
                   value={selectedDesign.height?.toFixed(2)}
                   onChange={(e) => {
@@ -300,7 +308,6 @@ function TabPanel({
                         getBoundingBox,
                         regionWidth,
                         regionHeight,
-                        setSizeWarning,
                       );
                     } else {
                       updateSize(
@@ -312,14 +319,13 @@ function TabPanel({
                         getBoundingBox,
                         regionWidth,
                         regionHeight,
-                        setSizeWarning,
                       );
                     }
                   }}
                   style={{
                     width: "80px",
                     marginLeft: "8px",
-                    border: sizeWarning ? "2px solid red" : "1px solid #ccc",
+                    border: "1px solid #ccc",
                   }}
                 />
               </div>
@@ -352,6 +358,18 @@ function TabPanel({
             </div>
           )}
         </>
+      )}
+
+      {selectedDesignId && selectedDesign && isCropping && (
+        
+<SideBarCropper
+    design={selectedDesign}
+    applyCrop={applyCrop}
+    setIsCropping={setIsCropping}
+    setDesignsByView={setDesignsByView}
+    activePreview={activePreview}
+  />
+
       )}
     </div>
   );

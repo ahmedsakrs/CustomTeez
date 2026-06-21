@@ -136,7 +136,8 @@ export function checkAfterRotation(
 ) {
   let bbox = getBoundingBox(
     selectedDesign.width * Math.min(regionWidth, regionHeight),
-    (selectedDesign.width / selectedDesign.aspect_ratio) * Math.min(regionWidth, regionHeight),
+    (selectedDesign.width / selectedDesign.aspect_ratio) *
+      Math.min(regionWidth, regionHeight),
     angle,
   );
   let posX = selectedDesign.x * regionWidth;
@@ -155,7 +156,10 @@ export function checkAfterRotation(
     const scale = Math.min(widthRatio, heightRatio);
 
     const newWidth = selectedDesign.width * regionWidth * scale;
-    const newHeight = (selectedDesign.width / selectedDesign.aspect_ratio) * regionHeight * scale;
+    const newHeight =
+      (selectedDesign.width / selectedDesign.aspect_ratio) *
+      regionHeight *
+      scale;
 
     bbox = getBoundingBox(newWidth, newHeight, angle);
 
@@ -422,7 +426,8 @@ export function handleToggleAspectLock(
 
         if (posX + newWidthPx > regionWidth) posX = regionWidth - newWidthPx;
         if (posX < 0) posX = 0;
-        if (posY + newHeightPx > regionHeight) posY = regionHeight - newHeightPx;
+        if (posY + newHeightPx > regionHeight)
+          posY = regionHeight - newHeightPx;
         if (posY < 0) posY = 0;
 
         return {
@@ -446,3 +451,50 @@ export function handleToggleAspectLock(
   });
 }
 
+export const applyCrop = async(setDesignsByView, activePreview, selectedDesign, norm) => {
+  const croppedSrc = await generateCroppedImage(selectedDesign.src, norm);
+  const newAspect = norm.width / norm.height;
+
+  setDesignsByView(prev => ({
+    ...prev,
+    [activePreview]: prev[activePreview].map(item =>
+      item.id === selectedDesign.id
+        ? {
+            ...item,
+            croppedSrc: croppedSrc,
+            aspect_ratio: newAspect,
+            crop: norm
+          }
+        : item
+    )
+  }));
+};
+
+const generateCroppedImage = (imageSrc, crop) => {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.src = imageSrc;
+
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      const sx = crop.x * image.width;
+      const sy = crop.y * image.height;
+      const sw = crop.width * image.width;
+      const sh = crop.height * image.height;
+
+      canvas.width = sw;
+      canvas.height = sh;
+
+      ctx.drawImage(
+        image,
+        sx, sy, sw, sh,   // source (crop area)
+        0, 0, sw, sh      // destination
+      );
+
+      resolve(canvas.toDataURL("image/png"));
+    };
+  });
+};
