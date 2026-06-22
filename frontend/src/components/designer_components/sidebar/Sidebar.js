@@ -45,7 +45,7 @@ function Sidebar({
             width: d.width, // already normalized in data
             height: d.height, // already normalized in data
             aspect_ratio: d.width / d.height,
-            croppedAspectRatio: d.width / d.height,
+            originalAspectRatio: d.width / d.height,
             isLocked_aspect_ratio: true,
             type: d.type,
             text: d.text,

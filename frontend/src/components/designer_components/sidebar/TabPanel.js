@@ -368,6 +368,9 @@ function TabPanel({
     setIsCropping={setIsCropping}
     setDesignsByView={setDesignsByView}
     activePreview={activePreview}
+    getBoundingBox={getBoundingBox}
+    regionWidth={regionWidth}
+    regionHeight={regionHeight}
   />
 
       )}

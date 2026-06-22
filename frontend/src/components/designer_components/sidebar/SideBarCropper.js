@@ -6,6 +6,9 @@ export default function SideBarCropper({
   setIsCropping,
   setDesignsByView,
   activePreview,
+  getBoundingBox,
+  regionWidth,
+  regionHeight,
 }) {
   const containerRef = useRef(null);
 
@@ -65,7 +68,7 @@ export default function SideBarCropper({
     const startBox = { ...cropBox };
 
     const handleMove = (ev) => {
-        const container = containerRef.current.getBoundingClientRect();
+      const container = containerRef.current.getBoundingClientRect();
       const dx = (ev.clientX - startX) / container.width;
       const dy = (ev.clientY - startY) / container.height;
 
@@ -130,8 +133,15 @@ export default function SideBarCropper({
 
   // ✅ Apply crop
   const handleApply = () => {
-    console.log(cropBox);
-    applyCrop(setDesignsByView, activePreview, design, cropBox);
+    applyCrop(
+      setDesignsByView,
+      activePreview,
+      design,
+      cropBox,
+      getBoundingBox,
+      regionWidth,
+      regionHeight,
+    );
     setIsCropping(false);
   };
 
@@ -143,7 +153,7 @@ export default function SideBarCropper({
         style={{
           position: "relative",
           width: "100%",
-          aspectRatio: design.originalAspect,
+          aspectRatio: design.originalAspectRatio,
           background: "#111",
           overflow: "hidden",
         }}

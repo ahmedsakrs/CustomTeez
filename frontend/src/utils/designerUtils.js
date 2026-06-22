@@ -451,22 +451,46 @@ export function handleToggleAspectLock(
   });
 }
 
-export const applyCrop = async(setDesignsByView, activePreview, selectedDesign, norm) => {
+export const applyCrop = async (
+  setDesignsByView,
+  activePreview,
+  selectedDesign,
+  norm,
+  getBoundingBox,
+  regionWidth,
+  regionHeight,
+) => {
   const croppedSrc = await generateCroppedImage(selectedDesign.src, norm);
   const newAspect = norm.width / norm.height;
 
-  setDesignsByView(prev => ({
+  const prevHeight = selectedDesign.crop["height"];
+  const prevWidth = selectedDesign.crop["width"];
+
+  const heightScale = norm.height / prevHeight;
+  const widthScale = norm.width / prevWidth;
+  updateSize(
+    selectedDesign.id,
+    selectedDesign.width * widthScale,
+    selectedDesign.height * heightScale,
+    setDesignsByView,
+    activePreview,
+    getBoundingBox,
+    regionWidth,
+    regionHeight,
+  );
+
+  setDesignsByView((prev) => ({
     ...prev,
-    [activePreview]: prev[activePreview].map(item =>
+    [activePreview]: prev[activePreview].map((item) =>
       item.id === selectedDesign.id
         ? {
             ...item,
             croppedSrc: croppedSrc,
             aspect_ratio: newAspect,
-            crop: norm
+            crop: norm,
           }
-        : item
-    )
+        : item,
+    ),
   }));
 };
 
@@ -490,8 +514,14 @@ const generateCroppedImage = (imageSrc, crop) => {
 
       ctx.drawImage(
         image,
-        sx, sy, sw, sh,   // source (crop area)
-        0, 0, sw, sh      // destination
+        sx,
+        sy,
+        sw,
+        sh, // source (crop area)
+        0,
+        0,
+        sw,
+        sh, // destination
       );
 
       resolve(canvas.toDataURL("image/png"));
