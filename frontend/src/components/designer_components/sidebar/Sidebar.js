@@ -9,6 +9,7 @@ function Sidebar({
   designCategories,
   panelRef,
   imgRef,
+  barRef,
   designsByView,
   setDesignsByView,
   activePreview,
@@ -17,6 +18,8 @@ function Sidebar({
   getBoundingBox,
   regionWidth,
   regionHeight,
+  isCropping,
+  setIsCropping
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [textAdded, setTextAdded] = useState(false);
@@ -114,13 +117,16 @@ function Sidebar({
           <br></br>Save Design
         </button>
       </div>
-      <div className="sidebar-tab">
+      <div className="sidebar-tab" ref={panelRef}>
         {activeTab && (
           <TabBar
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
+            setSelectedDesignId={setSelectedDesignId}
+            setIsCropping={setIsCropping}
+            barRef={barRef}
           />
         )}
         <TabPanel
@@ -139,6 +145,8 @@ function Sidebar({
           getBoundingBox={getBoundingBox}
           regionWidth={regionWidth}
           regionHeight={regionHeight}
+          isCropping={isCropping}
+          setIsCropping={setIsCropping}
         />
 
         {/* {activeTab === "default" && (

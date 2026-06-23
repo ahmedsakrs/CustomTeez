@@ -6,19 +6,29 @@ function TabBar({
   setActiveTab,
   selectedCategory,
   setSelectedCategory,
+  setSelectedDesignId,
+  setIsCropping,
+  barRef
 }) {
   return (
-    <div className="tab-bar">
+    <div className="tab-bar"ref={barRef}>
       <button
         className="tab-bar-btn"
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           if (activeTab === "addDesign") {
             if (selectedCategory) {
               setSelectedCategory(null);
             } else {
               setActiveTab(null);
             }
-          } else {
+          } else if (activeTab === "Crop"){
+            setActiveTab("editDesign");
+            setIsCropping(false);
+          }
+          else if(activeTab === "editDesign" || activeTab === "editText"){
+            setActiveTab(null);
+            setSelectedDesignId(null);
           }
         }}
       >
@@ -31,6 +41,12 @@ function TabBar({
           ? "Design Categories"
           : activeTab === "addDesign" && selectedCategory
           ? selectedCategory
+          : activeTab === "Crop"
+          ? "Crop"
+          : activeTab === "editDesign"
+          ? "Edit Design"
+          : activeTab === "editText"
+          ? "Edit Text"
           : ""
         }
       </span>
@@ -40,6 +56,8 @@ function TabBar({
           onClick={() => {
             setActiveTab(null);
             setSelectedCategory(null);
+            setIsCropping(false);
+            setSelectedDesignId(null);
           }}
         >
           <i class="fa fa-times" style={{ fontSize: "17px" }}></i>

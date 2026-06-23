@@ -208,6 +208,7 @@ function ProductDesigner() {
     "R Sleeve": [],
   });
   const [designColor, setDesignColor] = useState("Blue");
+  const [isCropping, setIsCropping] = useState(false);
   const [activePreview, setActivePreview] = useState("Front");
   const [showProductModal, setShowProductModal] = useState(false);
   const [showColorModal, setShowColorModal] = useState(false);
@@ -237,6 +238,7 @@ function ProductDesigner() {
   const previewRef = useRef(null);
   const imgRef = useRef(null);
   const panelRef = useRef(null);
+  const barRef = useRef(null);
   const scrollRef = useRef(null);
   const thumbRefs = {
     Front: useRef(null),
@@ -298,6 +300,10 @@ function ProductDesigner() {
           return;
         }
 
+        if (barRef.current && barRef.current.contains(e.target)) {
+          return;
+        }
+
         if (justFinishedInteraction) {
           // Suppress deselect once
           setJustFinishedInteraction(false);
@@ -309,6 +315,7 @@ function ProductDesigner() {
         if (isResizing || isRotating) return;
         if (selectedDesignId) setActiveTab("default");
         setSelectedDesignId(null);
+        setIsCropping(false);
       };
       window.addEventListener("mousedown", handleClickOutside);
       return () => window.removeEventListener("mousedown", handleClickOutside);
@@ -540,6 +547,7 @@ function ProductDesigner() {
         designCategories={designCategories}
         panelRef={panelRef}
         imgRef={imgRef}
+        barRef={barRef}
         designsByView={designsByView}
         setDesignsByView={setDesignsByView}
         activePreview={activePreview}
@@ -548,6 +556,8 @@ function ProductDesigner() {
         getBoundingBox={getBoundingBox}
         regionWidth={regionWidth}
         regionHeight={regionHeight}
+        isCropping={isCropping}
+        setIsCropping={setIsCropping}
         onClick={(e) => {
           e.stopPropagation();
         }}
@@ -842,7 +852,7 @@ function ProductDesigner() {
                           setSelectedDesignId(d.id);
                           if (d.text) {
                             // ✅ it's a text image
-                            setActiveTab("addText");
+                            setActiveTab("editText");
                           } else {
                             // ✅ it's a normal design image
                             setActiveTab("editDesign");

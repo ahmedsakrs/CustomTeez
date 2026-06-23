@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { Row, Col } from "react-bootstrap";
 import CategoryThumb from "./CategoryThumb";
 import DesignThumb from "./DesignThumb";
-// import Cropper from "react-easy-crop";
-import SideBarCropper from './SideBarCropper'
+import SideBarCropper from "./SideBarCropper";
 import {
   sendToBack,
   bringToFront,
@@ -15,7 +14,7 @@ import {
   updateSize,
   handleToggleAspectLock,
   checkAfterRotation,
-  applyCrop
+  applyCrop,
 } from "../../../utils/designerUtils";
 
 function TabPanel({
@@ -34,12 +33,9 @@ function TabPanel({
   getBoundingBox,
   regionWidth,
   regionHeight,
+  isCropping,
+  setIsCropping
 }) {
-  const [crop, setCrop] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
-  const [isCropping, setIsCropping] = useState(false);
-
   const currentDesigns = designsByView[activePreview] || [];
   const highestZ = Math.max(...currentDesigns.map((d) => d.layer || 1));
   const lowestZ = Math.min(...currentDesigns.map((d) => d.layer || 0));
@@ -78,7 +74,7 @@ function TabPanel({
         </>
       )}
 
-      {selectedDesignId && selectedDesign && !isCropping &&(
+      {selectedDesignId && selectedDesign && !isCropping && (
         <>
           {activeTab === "editDesign" && selectedDesignId && (
             <div className="tab-content">
@@ -114,8 +110,11 @@ function TabPanel({
 
               {/* 2. Crop */}
               <div className="edit-row">
-                <button onClick={() => setIsCropping(true)}>
-                  Crop
+                <button onClick={() =>{
+                  setIsCropping(true);
+                  setActiveTab("Crop");
+                }}>
+                  <i class="fa-solid fa-crop-simple" style={{fontSize: "15px bold"}}></i>
                 </button>
               </div>
 
@@ -361,18 +360,17 @@ function TabPanel({
       )}
 
       {selectedDesignId && selectedDesign && isCropping && (
-        
-<SideBarCropper
-    design={selectedDesign}
-    applyCrop={applyCrop}
-    setIsCropping={setIsCropping}
-    setDesignsByView={setDesignsByView}
-    activePreview={activePreview}
-    getBoundingBox={getBoundingBox}
-    regionWidth={regionWidth}
-    regionHeight={regionHeight}
-  />
-
+        <SideBarCropper
+          design={selectedDesign}
+          applyCrop={applyCrop}
+          setIsCropping={setIsCropping}
+          setDesignsByView={setDesignsByView}
+          activePreview={activePreview}
+          getBoundingBox={getBoundingBox}
+          regionWidth={regionWidth}
+          regionHeight={regionHeight}
+          setActiveTab={setActiveTab}
+        />
       )}
     </div>
   );

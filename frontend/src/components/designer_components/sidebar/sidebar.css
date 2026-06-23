@@ -156,6 +156,38 @@
   background: #555;
 }
 
+.crop-actions {
+  display: flex;
+  justify-content: space-between; /* ✅ left + right */
+  padding: 0px 15px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+/* base button */
+.crop-btn {
+  width: 42%;
+  height: 40px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #2c2c2c;
+  color: #eee;
+}
+
+.crop-btn:hover {
+  background-color: #444;
+  transform: translateY(-1px);
+}
+/* optional click feel */
+.crop-btn:active {
+  transform: scale(0.95);
+}
+
+
 /* Responsive rules */
 @media (min-width: 600px) {
   .sidebar {

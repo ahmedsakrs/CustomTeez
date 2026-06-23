@@ -9,6 +9,7 @@ export default function SideBarCropper({
   getBoundingBox,
   regionWidth,
   regionHeight,
+  setActiveTab
 }) {
   const containerRef = useRef(null);
 
@@ -143,6 +144,7 @@ export default function SideBarCropper({
       regionHeight,
     );
     setIsCropping(false);
+    setActiveTab(design.text ? "editText" : "editDesign")
   };
 
   return (
@@ -220,9 +222,19 @@ export default function SideBarCropper({
       </div>
 
       {/* Actions */}
-      <div style={{ marginTop: 10 }}>
-        <button onClick={handleApply}>✅ Apply</button>
-        <button onClick={() => setIsCropping(false)}>❌ Cancel</button>
+      <div className="crop-actions">
+        <button
+          className="crop-btn"
+          onClick={() => {
+            setCropBox({x:0, y:0, width:1, height:1});
+          }}
+        >
+          Reset
+        </button>
+
+        <button className="crop-btn" onClick={handleApply}>
+          Apply
+        </button>
       </div>
     </div>
   );
@@ -283,7 +295,7 @@ const gridVertical = (p) => ({
   bottom: 0,
   left: `${p}%`,
   width: "1.5px",
-  background: "rgba(255,255,255,0.5)",
+  background: "rgba(255,255,255,0.8)",
 });
 
 const gridHorizontal = (p) => ({
@@ -292,5 +304,5 @@ const gridHorizontal = (p) => ({
   right: 0,
   top: `${p}%`,
   height: "1.5px",
-  background: "rgba(255,255,255,0.5)",
+  background: "rgba(255,255,255,0.8)",
 });
