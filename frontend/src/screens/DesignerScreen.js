@@ -93,7 +93,7 @@ const designCategories = {
       designs: [
         {
           id: "element-3",
-          src: "/designs/part1.png",
+          src: "/designs/yashfiny.png",
           x: 0.4,
           y: 0.5,
           width: 0.2,
@@ -101,7 +101,7 @@ const designCategories = {
         },
         {
           id: "element-4",
-          src: "/designs/part2.png",
+          src: "/designs/vinyl.jpg",
           x: 0.6,
           y: 0.5,
           width: 0.15,
@@ -109,7 +109,7 @@ const designCategories = {
         },
         {
           id: "element-5",
-          src: "/designs/part3.png",
+          src: "/designs/star.png",
           x: 0.1,
           y: 0.2,
           width: 0.4,
@@ -207,6 +207,11 @@ function ProductDesigner() {
     "L Sleeve": [],
     "R Sleeve": [],
   });
+
+  const [isWidthBlank, setIsWidthBlank] = useState(false);
+  const [isHeightBlank, setIsHeightBlank] = useState(false);
+  const [isWidthZero, setIsWidthZero] = useState(false);
+  const [isHeightZero, setIsHeightZero] = useState(false);
   const [designColor, setDesignColor] = useState("Blue");
   const [isCropping, setIsCropping] = useState(false);
   const [activePreview, setActivePreview] = useState("Front");
@@ -538,6 +543,10 @@ function ProductDesigner() {
     setShowColorModal(false);
   };
 
+  const selectedDesign = designsByView[activePreview].find(
+    (d) => d.id === selectedDesignId,
+  );
+
   return (
     <div className="designer-container">
       {/* Sidebar */}
@@ -558,6 +567,14 @@ function ProductDesigner() {
         regionHeight={regionHeight}
         isCropping={isCropping}
         setIsCropping={setIsCropping}
+        isHeightZero={isHeightZero}
+        setIsHeightZero={setIsHeightZero}
+        isHeightBlank={isHeightBlank}
+        setIsHeightBlank={setIsHeightBlank}
+        isWidthZero={isWidthZero}
+        setIsWidthZero={setIsWidthZero}
+        isWidthBlank={isWidthBlank}
+        setIsWidthBlank={setIsWidthBlank}
         onClick={(e) => {
           e.stopPropagation();
         }}
@@ -801,18 +818,8 @@ function ProductDesigner() {
                   <div style={style}>
                     {selectedDesignId != null &&
                       isActive &&
-                      Math.abs(
-                        designsByView[activePreview].find(
-                          (d) => d.id === selectedDesignId,
-                        ).x *
-                          regionWidth +
-                          (designsByView[activePreview].find(
-                            (d) => d.id === selectedDesignId,
-                          ).width *
-                            regionWidth) /
-                            2 -
-                          regionWidth / 2,
-                      ) < 10 && (
+                      Math.abs(selectedDesign.x + selectedDesign.width / 2 - 1/2)
+                      < (1 / 20) && (
                         <div
                           style={{
                             position: "absolute",
@@ -831,6 +838,7 @@ function ProductDesigner() {
                         key={d.id}
                         style={{
                           cursor: isRotating || isResizing ? "default" : "grab",
+                          zIndex: d.layer,
                         }}
                         size={getBoundingBox(
                           d.width * Math.min(regionWidth, regionHeight),
@@ -849,6 +857,10 @@ function ProductDesigner() {
                         enableResizing={false}
                         onDragStart={() => {
                           setIsActive(true);
+                          setIsWidthBlank(false);
+                          setIsWidthZero(false);
+                          setIsHeightBlank(false);
+                          setIsHeightZero(false);
                           setSelectedDesignId(d.id);
                           if (d.text) {
                             // ✅ it's a text image
@@ -942,7 +954,6 @@ function ProductDesigner() {
                                           scaleX(${d.horizontalFlip ? -1 : 1})
                                           scaleY(${d.verticalFlip ? -1 : 1})`,
                               transformOrigin: "center center",
-                              zIndex: d.layer,
                             }}
                           >
                             <img
@@ -1035,7 +1046,7 @@ function ProductDesigner() {
                                 pointerEvents: "auto",
                               }}
                               draggable="false"
-                              onMouseDown={(e) => {
+                              onPointerDown={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
                                 setIsRotating(true);
@@ -1101,25 +1112,30 @@ function ProductDesigner() {
                                 };
 
                                 const handleUp = () => {
+                                  setIsWidthBlank(false);
+                                  setIsWidthZero(false);
+                                  setIsHeightBlank(false);
+                                  setIsHeightZero(false);
                                   setSelectedDesignId(d.id);
                                   setJustFinishedInteraction(true);
                                   setIsRotating(false);
                                   setLockedWrapperPos(null);
+
                                   window.removeEventListener(
-                                    "mousemove",
+                                    "pointermove",
                                     handleMove,
                                   );
                                   window.removeEventListener(
-                                    "mouseup",
+                                    "pointerup",
                                     handleUp,
                                   );
                                 };
 
                                 window.addEventListener(
-                                  "mousemove",
+                                  "pointermove",
                                   handleMove,
                                 );
-                                window.addEventListener("mouseup", handleUp);
+                                window.addEventListener("pointerup", handleUp);
                               }}
                             >
                               <i className="bi bi-arrow-clockwise"></i>
@@ -1133,7 +1149,7 @@ function ProductDesigner() {
                                 right: "-30px",
                                 pointerEvents: "auto",
                               }}
-                              onMouseDown={(e) => {
+                              onPointerDown={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
                                 setIsResizing(true);
@@ -1153,13 +1169,13 @@ function ProductDesigner() {
                                   const deltaX = moveEvent.clientX - startX;
                                   const deltaY = moveEvent.clientY - startY;
                                   let newWidth = Math.max(
-                                    50,
+                                    0.05 * regionWidth,
                                     startWidth + deltaX,
                                   );
                                   let newHeight = newWidth / aspectRatio;
                                   if (!d.isLocked_aspect_ratio) {
                                     newHeight = Math.max(
-                                      50,
+                                      0.05 * regionHeight,
                                       startHeight + deltaY,
                                     );
                                   }
@@ -1178,25 +1194,30 @@ function ProductDesigner() {
                                 };
 
                                 const handleUp = () => {
+                                  setIsWidthBlank(false);
+                                  setIsWidthZero(false);
+                                  setIsHeightBlank(false);
+                                  setIsHeightZero(false);
                                   setJustFinishedInteraction(true);
                                   setIsResizing(false);
                                   setLockedWrapperPos(null);
                                   setSelectedDesignId(d.id);
+
                                   window.removeEventListener(
-                                    "mousemove",
+                                    "pointermove",
                                     handleMove,
                                   );
                                   window.removeEventListener(
-                                    "mouseup",
+                                    "pointerup",
                                     handleUp,
                                   );
                                 };
 
                                 window.addEventListener(
-                                  "mousemove",
+                                  "pointermove",
                                   handleMove,
                                 );
-                                window.addEventListener("mouseup", handleUp);
+                                window.addEventListener("pointerup", handleUp);
                               }}
                             >
                               <i
@@ -1336,7 +1357,7 @@ function ProductDesigner() {
                           >
                             <img
                               key={design.id}
-                              src={design.src}
+                              src={design.croppedSrc || design.src}
                               alt="design overlay"
                               className="design-preview-image"
                               draggable="false"

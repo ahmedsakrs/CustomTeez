@@ -178,8 +178,8 @@ export function checkAfterRotation(
               ...item,
               x: posX / regionWidth,
               y: posY / regionHeight,
-              width: newWidth / regionWidth,
-              height: newHeight / regionHeight,
+              width: (newWidth / regionWidth).toFixed(3),
+              height: (newHeight / regionHeight).toFixed(3),
             }
           : item,
       ),
@@ -315,8 +315,8 @@ export function updateSizeClamped(
 
       return {
         ...item,
-        width: finalWidth / regionWidth,
-        height: finalHeight / regionHeight,
+        width: (finalWidth / regionWidth).toFixed(3),
+        height: (finalHeight / regionHeight).toFixed(3),
       };
     });
 
@@ -380,8 +380,8 @@ export function updateSize(
 
       return {
         ...item,
-        width: finalWidth / regionWidth,
-        height: finalHeight / regionHeight,
+        width: (finalWidth / regionWidth).toFixed(3),
+        height: (finalHeight / regionHeight).toFixed(3),
         x: posX / regionWidth,
         y: posY / regionHeight,
       };
@@ -432,8 +432,8 @@ export function handleToggleAspectLock(
 
         return {
           ...item,
-          width: newWidthPx / Math.min(regionWidth, regionHeight),
-          height: newHeightPx / Math.min(regionWidth, regionHeight),
+          width: (newWidthPx / Math.min(regionWidth, regionHeight)).toFixed(3),
+          height: (newHeightPx / Math.min(regionWidth, regionHeight)).toFixed(3),
           x: posX / regionWidth,
           y: posY / regionHeight,
           isLocked_aspect_ratio: newLock, // ✅ update flag here

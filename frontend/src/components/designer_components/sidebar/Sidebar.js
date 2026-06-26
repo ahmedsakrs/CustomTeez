@@ -19,7 +19,15 @@ function Sidebar({
   regionWidth,
   regionHeight,
   isCropping,
-  setIsCropping
+  setIsCropping,
+  isHeightZero,
+        setIsHeightZero,
+        isHeightBlank,
+        setIsHeightBlank,
+        isWidthZero,
+        setIsWidthZero,
+        isWidthBlank,
+        setIsWidthBlank,
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [textAdded, setTextAdded] = useState(false);
@@ -74,7 +82,7 @@ function Sidebar({
     <div className="sidebar">
       <div className="sidebar-buttons">
         <button
-          className={`sidebar-btn ${activeTab === "addDesign" ? "active" : ""}`}
+          className={`sidebar-btn ${activeTab === "addDesign" || activeTab === "editDesign" || activeTab === "Crop" ? "active" : ""}`}
           onClick={() => {
             setActiveTab("addDesign");
             setSelectedCategory(null);
@@ -147,6 +155,14 @@ function Sidebar({
           regionHeight={regionHeight}
           isCropping={isCropping}
           setIsCropping={setIsCropping}
+          isHeightZero={isHeightZero}
+        setIsHeightZero={setIsHeightZero}
+        isHeightBlank={isHeightBlank}
+        setIsHeightBlank={setIsHeightBlank}
+        isWidthZero={isWidthZero}
+        setIsWidthZero={setIsWidthZero}
+        isWidthBlank={isWidthBlank}
+        setIsWidthBlank={setIsWidthBlank}
         />
 
         {/* {activeTab === "default" && (

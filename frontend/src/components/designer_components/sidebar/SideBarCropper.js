@@ -167,7 +167,7 @@ export default function SideBarCropper({
           style={{
             width: "100%",
             height: "100%",
-            objectFit: "contain",
+            objectFit: "fill",
             userSelect: "none",
           }}
         />

@@ -59,7 +59,7 @@
 }
 
 .tab-content {
-    padding: 6px 6px;
+  padding: 6px 6px;
 }
 
 .tab-bar {
@@ -156,6 +156,219 @@
   background: #555;
 }
 
+.size-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  text-align: center;
+}
+
+.rotation-left {
+  font-size: 14px;
+  white-space: nowrap; /* ✅ never wrap */
+  flex-shrink: 0; /* ✅ never shrink */
+  color: black;
+}
+
+.size-left {
+  font-size: 14px;
+  white-space: normal;
+  flex-shrink: 0; /* ✅ never shrink */
+  color: black;
+}
+
+/* RIGHT SIDE GROUP */
+.size-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0; /* ✅ fixed size */
+}
+
+/* INPUTS */
+.size-input {
+  max-width: 60px; /* ✅ fixed width */
+  padding: 4px;
+  text-align: center;
+  font-size: 13px;
+  border-radius: 6px;
+  border: 1px solid black;
+}
+
+.slider {
+  -webkit-appearance: none; /* remove default */
+  appearance: none;
+  height: 3px;
+  background: #ccc;
+  border-radius: 4px;
+  outline: none;
+}
+
+/* Chrome, Safari, Edge */
+.slider::-webkit-slider-runnable-track {
+  height: 3px;
+  background: #bbb;
+  border-radius: 4px;
+}
+
+/* Firefox */
+.slider::-moz-range-track {
+  height: 3px;
+  background: #bbb;
+  border-radius: 4px;
+}
+
+/* Chrome / Safari */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #444;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -6px; /* centers thumb on track */
+}
+
+/* Firefox */
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #444;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -6px; /* centers thumb on track */
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: #666;
+  transform: scale(1.1);
+}
+
+.slider::-moz-range-thumb:hover {
+  background: #666;
+}
+
+/* X symbol */
+.size-x {
+  font-size: 14px;
+  color: #666;
+}
+
+/* LOCK BUTTON */
+.tab-edit-btn {
+  width: 20px;
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+  border: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.tab-edit-btn .tooltip {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  left: -30%;
+  top: 100%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  text-align: center;
+  white-space: pre-wrap;
+  transition: opacity 1s;
+  pointer-events: none;
+  max-width: 200px; /* allow longer names but cap */
+  overflow: hidden;
+  /* text-overflow: ellipsis;    */
+}
+
+.tab-edit-btn:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.edit-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* spread groups */
+  flex-wrap: wrap;
+  width: 100%;
+  column-gap: 2px;
+  row-gap: 10px;
+}
+
+.edit-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* shared group style */
+.edit-group {
+  display: flex;
+}
+
+/* ✅ NO GAP groups (layer + flip) */
+.edit-group.no-gap button {
+  border-radius: 0;
+}
+
+/* first button rounded left */
+.edit-group.no-gap button:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+/* last button rounded right */
+.edit-group.no-gap button:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+/* remove space between buttons */
+.edit-group.no-gap button + button {
+  margin-left: -1px; /* prevents border double gap */
+}
+
+/* ✅ bottom row spacing */
+.edit-group.bottom-row {
+  justify-content: space-between;
+  gap: 6px;
+}
+
+/* buttons styling */
+.edit-group button {
+  flex: 1;
+  height: 36px;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+/* hover */
+.edit-group button:hover {
+  background: #ddd;
+}
+
+.edit-group button.active {
+  background: #bbb;
+}
+
+/* disabled */
+.edit-group button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f5f5f5;
+}
+
 .crop-actions {
   display: flex;
   justify-content: space-between; /* ✅ left + right */
@@ -164,50 +377,45 @@
   margin-top: 12px;
 }
 
-/* base button */
-.crop-btn {
-  width: 42%;
-  height: 40px;
-  padding: 6px 14px;
-  border-radius: 6px;
-  border: none;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background-color: #2c2c2c;
-  color: #eee;
-}
-
-.crop-btn:hover {
-  background-color: #444;
-  transform: translateY(-1px);
-}
-/* optional click feel */
-.crop-btn:active {
-  transform: scale(0.95);
-}
-
-
 /* Responsive rules */
 @media (min-width: 600px) {
   .sidebar {
-    flex: 0 0 300px; /* tablet width */
-    max-width: 300px;
+    flex: 0 0 330px; /* tablet width */
+    max-width: 330px;
   }
 
   .design-grid {
     grid-template-columns: repeat(auto-fill, minmax(48%, 1fr));
   }
+
+  .size-left::before {
+    content: "Size \A (W x H)";
+    white-space: pre-wrap;
+    text-align: center;
+  }
+
+  .slider {
+    max-width: 100px;
+  }
 }
 
 @media (min-width: 992px) {
   .sidebar {
-    flex: 0 0 365px; /* desktop width */
-    max-width: 365px;
+    flex: 0 0 390px; /* desktop width */
+    max-width: 390px;
   }
 
   .design-grid {
     grid-template-columns: repeat(auto-fill, minmax(49%, 1fr));
+  }
+
+  .size-left::before {
+    content: "Size (W x H)"; /* ✅ never shrink */
+  }
+
+  .slider {
+    max-width: 160px;
+    min-width: 160px;
   }
 }
 
@@ -219,5 +427,14 @@
 
   .design-grid {
     grid-template-columns: repeat(auto-fill, minmax(32%, 1fr));
+  }
+
+  .size-left::before {
+    content: "Size (W x H)"; /* ✅ never shrink */
+  }
+
+  .slider {
+    min-width: 230px;
+    max-width: 230px;
   }
 }
