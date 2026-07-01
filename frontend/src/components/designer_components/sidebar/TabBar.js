@@ -10,8 +10,8 @@ function TabBar({
   setIsCropping,
   barRef
 }) {
-  return (
-    <div className="tab-bar"ref={barRef}>
+  return activeTab && (
+    <div className="tab-bar" ref={barRef}>
       <button
         className="tab-bar-btn"
         onClick={(e) => {
@@ -30,6 +30,9 @@ function TabBar({
             setActiveTab(null);
             setSelectedDesignId(null);
           }
+          else if(  activeTab === "changeFont"){
+            setActiveTab("editText");
+          }
         }}
       >
         <i className="fas fa-angle-left" style={{ fontSize: "17px" }}>
@@ -47,6 +50,10 @@ function TabBar({
           ? "Edit Design"
           : activeTab === "editText"
           ? "Edit Text"
+          : activeTab === "addText"
+          ? "Add Text"
+          : activeTab === "changeFont"
+          ? "Change Font"
           : ""
         }
       </span>
@@ -54,7 +61,7 @@ function TabBar({
         <button
           className="tab-bar-btn"
           onClick={() => {
-            setActiveTab(null);
+            setActiveTab("");
             setSelectedCategory(null);
             setIsCropping(false);
             setSelectedDesignId(null);

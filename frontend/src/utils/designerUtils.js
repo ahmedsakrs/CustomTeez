@@ -135,13 +135,13 @@ export function checkAfterRotation(
   angle,
 ) {
   let bbox = getBoundingBox(
-    selectedDesign.width * Math.min(regionWidth, regionHeight),
-    (selectedDesign.width / selectedDesign.aspect_ratio) *
+    selectedDesign?.width * Math.min(regionWidth, regionHeight),
+    (selectedDesign?.width / selectedDesign?.aspect_ratio) *
       Math.min(regionWidth, regionHeight),
     angle,
   );
-  let posX = selectedDesign.x * regionWidth;
-  let posY = selectedDesign.y * regionHeight;
+  let posX = selectedDesign?.x * regionWidth;
+  let posY = selectedDesign?.y * regionHeight;
 
   if (posX < 0) posX = 0;
   if (posY < 0) posY = 0;
@@ -155,9 +155,9 @@ export function checkAfterRotation(
     const heightRatio = regionHeight / bbox.height;
     const scale = Math.min(widthRatio, heightRatio);
 
-    const newWidth = selectedDesign.width * regionWidth * scale;
+    const newWidth = selectedDesign?.width * regionWidth * scale;
     const newHeight =
-      (selectedDesign.width / selectedDesign.aspect_ratio) *
+      (selectedDesign?.width / selectedDesign?.aspect_ratio) *
       regionHeight *
       scale;
 
@@ -173,7 +173,7 @@ export function checkAfterRotation(
     setDesignsByView((prev) => ({
       ...prev,
       [activePreview]: prev[activePreview].map((item) =>
-        item.id === selectedDesign.id
+        item.id === selectedDesign?.id
           ? {
               ...item,
               x: posX / regionWidth,
@@ -188,7 +188,7 @@ export function checkAfterRotation(
     setDesignsByView((prev) => ({
       ...prev,
       [activePreview]: prev[activePreview].map((item) =>
-        item.id === selectedDesign.id
+        item.id === selectedDesign?.id
           ? {
               ...item,
               x: posX / regionWidth,
@@ -198,6 +198,61 @@ export function checkAfterRotation(
       ),
     }));
   }
+}
+
+export function getNewSizePos(
+  getBoundingBox,
+  selectedDesign,
+  activePreview,
+  regionWidth,
+  regionHeight,
+  angle,
+) {
+  let bbox = getBoundingBox(
+    selectedDesign?.width * Math.min(regionWidth, regionHeight),
+    (selectedDesign?.width / selectedDesign?.aspect_ratio) *
+      Math.min(regionWidth, regionHeight),
+    angle,
+  );
+  let posX = selectedDesign?.x * regionWidth;
+  let posY = selectedDesign?.y * regionHeight;
+
+  if (posX < 0) posX = 0;
+  if (posY < 0) posY = 0;
+  if (posX + bbox.width > regionWidth)
+    posX = Math.max(regionWidth - bbox.width, 0);
+  if (posY + bbox.height > regionHeight)
+    posY = Math.max(regionHeight - bbox.height, 0);
+
+  if (bbox.width > regionWidth || bbox.height > regionHeight) {
+    const widthRatio = regionWidth / bbox.width;
+    const heightRatio = regionHeight / bbox.height;
+    const scale = Math.min(widthRatio, heightRatio);
+
+    const newWidth = selectedDesign?.width * regionWidth * scale;
+    const newHeight =
+      (selectedDesign?.width / selectedDesign?.aspect_ratio) *
+      regionHeight *
+      scale;
+
+    bbox = getBoundingBox(newWidth, newHeight, angle);
+
+    if (posX < 0) posX = 0;
+    if (posY < 0) posY = 0;
+    if (posX + bbox.width > regionWidth)
+      posX = Math.max(regionWidth - bbox.width, 0);
+    if (posY + bbox.height > regionHeight)
+      posY = Math.max(regionHeight - bbox.height, 0);
+
+    selectedDesign.x = posX / regionWidth;
+    selectedDesign.y = posX / regionWidth;
+    selectedDesign.width = (newWidth / regionWidth).toFixed(3);
+    selectedDesign.height = (newHeight / regionWidth).toFixed(3);
+  } else {
+    selectedDesign.x = posX / regionWidth;
+    selectedDesign.y = posX / regionWidth;
+  }
+  return selectedDesign;
 }
 
 export function duplicateDesign(
@@ -433,7 +488,9 @@ export function handleToggleAspectLock(
         return {
           ...item,
           width: (newWidthPx / Math.min(regionWidth, regionHeight)).toFixed(3),
-          height: (newHeightPx / Math.min(regionWidth, regionHeight)).toFixed(3),
+          height: (newHeightPx / Math.min(regionWidth, regionHeight)).toFixed(
+            3,
+          ),
           x: posX / regionWidth,
           y: posY / regionHeight,
           isLocked_aspect_ratio: newLock, // ✅ update flag here
@@ -528,3 +585,302 @@ const generateCroppedImage = (imageSrc, crop) => {
     };
   });
 };
+
+export const findFittingFontSize = (
+  text,
+  targetWidthPx,
+  fontFamily = "Arial",
+  isBold = false,
+  isItalic = false,
+) => {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  const lines = text.split("\n");
+  let low = 1;
+  let high = 300;
+  let fittingSize = low;
+
+  const fontWeight = isBold ? "bold" : "normal";
+  const fontStyle = isItalic ? "italic" : "normal";
+
+  while (low <= high) {
+    const mid = (low + high) / 2;
+    ctx.font = `${fontStyle} ${fontWeight} ${mid}px ${fontFamily}`;
+
+    // measure the widest line
+    let maxLineWidth = 0;
+    for (const line of lines) {
+      const metrics = ctx.measureText(line);
+      if (metrics.width > maxLineWidth) {
+        maxLineWidth = metrics.width;
+      }
+    }
+
+    if (maxLineWidth <= targetWidthPx * 15) {
+      fittingSize = mid; // fits, try bigger
+      low = mid + 0.2;
+    } else {
+      high = mid - 0.2; // too big, try smaller
+    }
+  }
+
+  return fittingSize;
+};
+
+const drawCurvedText = (
+  ctx,
+  text,
+  centerX,
+  centerY,
+  radius,
+  fontSizePx,
+  direction = 1
+) => {
+  ctx.save();
+
+  const chars = text.split("");
+
+  // ✅ measure each character
+  const widths = chars.map(char => ctx.measureText(char).width);
+
+  const totalWidth = widths.reduce((a, b) => a + b, 0);
+
+  // ✅ convert width → arc angle
+  let currentAngle = -totalWidth / (2 * radius);
+
+  chars.forEach((char, i) => {
+    const charWidth = widths[i];
+
+    const angle = currentAngle + charWidth / (2 * radius);
+
+    const x = centerX + radius * Math.sin(angle);
+    const y = centerY - direction * radius * Math.cos(angle);
+
+    ctx.save();
+    ctx.translate(x, y);
+
+    // ✅ rotate character along curve
+    ctx.rotate(angle * direction);
+
+    // ✅ vertical offset fix (important)
+    ctx.fillText(char, -charWidth / 2, -fontSizePx * 0.5);
+
+    ctx.restore();
+
+    currentAngle += charWidth / radius;
+  });
+
+  ctx.restore();
+};
+
+export const textToImage = ({
+  text,
+  fontSizePx,
+  fontFamily = "Arial",
+  isBold = false,
+  isItalic = false,
+  lineHeightMultiplier = 1,
+  textAlign,
+  textColor,
+  outlineColor,
+  outlineSize,
+  textShape,
+  shapeIntensity = 0,
+}) => {
+  const lines = text.split("\n");
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  const fontWeight = isBold ? "bold" : "normal";
+  const fontStyle = isItalic ? "italic" : "normal";
+
+  ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
+  const lineHeight = fontSizePx * lineHeightMultiplier;
+
+  // ✅ measure widest line
+  let maxWidth = 0;
+  for (const line of lines) {
+    const width = ctx.measureText(line).width;
+    if (width > maxWidth) maxWidth = width;
+  }
+
+  // ✅ CURVE SAFE AREA
+  const radiusBase = fontSizePx * 2;
+  const curveExtra = Math.abs(shapeIntensity) * 120;
+
+  const extraHeight =
+    textShape === "curve" ? radiusBase + curveExtra + fontSizePx : 0;
+
+  canvas.width = maxWidth + (textShape === "curve" ? fontSizePx * 2 : 0);
+  canvas.height = lineHeight * lines.length + extraHeight;
+
+  // reset font after resize
+  ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = textColor;
+
+  ctx.textAlign = textAlign;
+
+  lines.forEach((line, i) => {
+    let x = 0;
+
+    if (textAlign === "center") {
+      x = canvas.width / 2;
+    } else if (textAlign === "right") {
+      x = canvas.width;
+    } else {
+      x = 0;
+    }
+
+    if (textShape === "curve") {
+      const direction = shapeIntensity >= 0 ? 1 : -1;
+
+      const radius = radiusBase + curveExtra;
+
+      // ✅ CRITICAL FIX: proper vertical center
+      const centerX = canvas.width / 2;
+      const centerY = i * lineHeight + radius + fontSizePx;
+
+      drawCurvedText(
+        ctx,
+        line,
+        centerX,
+        centerY,
+        radius,
+        direction,
+        fontSizePx
+      );
+    } else {
+      ctx.fillText(line, x, i * lineHeight + fontSizePx / 2);
+    }
+  });
+
+  return {
+    img: canvas.toDataURL("image/png"),
+    width: canvas.width,
+    height: canvas.height,
+  };
+};
+
+export function applyNewTextImg(
+  newText,
+  newFontFamily,
+  isBold,
+  isItalic,
+  newFontColor,
+  newOutlineColor,
+  newOutlineSize,
+  newTextAlignment,
+  newTextShape,
+  newShapeIntensity,
+  setDesignsByView,
+  activePreview,
+  selectedDesign,
+  regionWidth,
+  regionHeight,
+  getBoundingBox,
+) {
+  const maxFontSizePx = findFittingFontSize(
+    newText,
+    regionWidth,
+    newFontFamily,
+    isBold,
+    isItalic,
+  );
+
+  const imageData = textToImage({
+    text: newText,
+    fontSizePx: maxFontSizePx,
+    fontFamily: newFontFamily,
+    isBold: isBold,
+    isItalic: isItalic,
+    textAlign: newTextAlignment,
+    textColor: newFontColor,
+    outlineColor: newOutlineColor,
+    outlineSize: newOutlineSize,
+    textShape: newTextShape,
+    shapeIntensity: newShapeIntensity,
+  });
+
+  setDesignsByView((prev) => {
+    const updated = prev[activePreview].map((item) => {
+      if (item.id !== selectedDesign.id) return item;
+
+      let aspect_ratio = imageData.width / imageData.height;
+
+      let finalWidthNorm = item.width;
+      if (finalWidthNorm < 0.05) finalWidthNorm = 0.05;
+
+      let finalHeightNorm = finalWidthNorm / aspect_ratio;
+      if (finalHeightNorm < 0.05) {
+        finalHeightNorm = 0.05;
+        finalWidthNorm = finalHeightNorm * aspect_ratio;
+      }
+
+      let finalWidth = finalWidthNorm * regionWidth;
+      let finalHeight = finalHeightNorm * regionHeight;
+
+      // rotated bounding box for new size
+      let bbox = getBoundingBox(
+        finalWidthNorm * Math.min(regionWidth, regionHeight),
+        finalHeightNorm * Math.min(regionWidth, regionHeight),
+        item.rotation,
+      );
+
+      // current top-left in pixels
+      let posX = item.x * regionWidth;
+      let posY = item.y * regionHeight;
+
+      // clamp size if bbox exceeds region
+      if (bbox.width > regionWidth || bbox.height > regionHeight) {
+        const widthRatio = regionWidth / bbox.width;
+        const heightRatio = regionHeight / bbox.height;
+        const scale = Math.min(widthRatio, heightRatio);
+
+        finalWidth = finalWidth * scale;
+        finalHeight = finalHeight * scale;
+
+        bbox = getBoundingBox(finalWidth, finalHeight, item.rotation);
+      }
+
+      // clamp position so bbox stays inside region
+      if (posX + bbox.width > regionWidth) {
+        posX = regionWidth - bbox.width;
+      }
+      if (posX < 0) {
+        posX = 0;
+      }
+      if (posY + bbox.height > regionHeight) {
+        posY = regionHeight - bbox.height;
+      }
+      if (posY < 0) {
+        posY = 0;
+      }
+
+      return {
+        ...item,
+        text: newText,
+        src: imageData.img,
+        width: (finalWidth / regionWidth).toFixed(3),
+        height: (finalHeight / regionHeight).toFixed(3),
+        aspect_ratio: aspect_ratio,
+        x: posX / regionWidth,
+        y: posY / regionHeight,
+
+        fontFamily: newFontFamily,
+        design_color: newFontColor,
+        outline_color: newOutlineColor,
+        outline_width: newOutlineSize,
+        text_alignment: newTextAlignment,
+        text_shape: newTextShape,
+        shape_intensity: newShapeIntensity,
+        isBold: isBold,
+        isItalic: isItalic,
+      };
+    });
+
+    return { ...prev, [activePreview]: updated };
+  });
+}

@@ -224,7 +224,7 @@ export default function SideBarCropper({
       {/* Actions */}
       <div className="crop-actions">
         <button
-          className="crop-btn"
+          className="panel-btn"
           onClick={() => {
             setCropBox({x:0, y:0, width:1, height:1});
           }}
@@ -232,7 +232,7 @@ export default function SideBarCropper({
           Reset
         </button>
 
-        <button className="crop-btn" onClick={handleApply}>
+        <button className="panel-btn" onClick={handleApply}>
           Apply
         </button>
       </div>

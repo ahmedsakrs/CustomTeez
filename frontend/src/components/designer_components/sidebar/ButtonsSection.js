@@ -5,6 +5,7 @@ import {
   flipHorizontal,
   flipVertical,
   duplicateDesign,
+  applyNewTextImg,
 } from "../../../utils/designerUtils";
 
 function ButtonsSection({
@@ -17,9 +18,10 @@ function ButtonsSection({
   regionHeight,
   setSelectedDesignId,
   designsByView,
+  getBoundingBox,
 }) {
   const currentDesigns = designsByView[activePreview] || [];
-  const highestZ = Math.max(...currentDesigns.map((d) => d.layer || 1));
+  const highestZ = Math.max(...currentDesigns.map((d) => d.layer || 0));
   const lowestZ = Math.min(...currentDesigns.map((d) => d.layer || 0));
   return (
     <div className="edit-container">
@@ -47,6 +49,160 @@ function ButtonsSection({
           </button>
         </div>
         <span className="edit-label">Layer</span>
+      </div>
+
+      {selectedDesign.text && (
+        <div className="edit-block">
+          <div className="edit-group no-gap">
+            <button
+              className={
+                selectedDesign.text_alignment === "left" ? "active" : ""
+              }
+              onClick={(e) => {
+                e.stopPropagation();
+                applyNewTextImg(
+                  selectedDesign.text,
+                  selectedDesign.fontFamily,
+                  selectedDesign.isBold,
+                  selectedDesign.isItalic,
+                  selectedDesign.design_color,
+                  selectedDesign.outline_color,
+                  selectedDesign.outline_width,
+                  "left",
+                  selectedDesign.text_shape,
+                  selectedDesign.shape_intensity,
+                  setDesignsByView,
+                  activePreview,
+                  selectedDesign,
+                  regionWidth,
+                  regionHeight,
+                  getBoundingBox,
+                );
+              }}
+            >
+              <i className="fa-solid fa-align-left"></i>
+            </button>
+
+            <button
+              className={
+                selectedDesign.text_alignment === "center" ? "active" : ""
+              }
+              onClick={(e) => {
+                e.stopPropagation();
+                applyNewTextImg(
+                  selectedDesign.text,
+                  selectedDesign.fontFamily,
+                  selectedDesign.isBold,
+                  selectedDesign.isItalic,
+                  selectedDesign.design_color,
+                  selectedDesign.outline_color,
+                  selectedDesign.outline_width,
+                  "center",
+                  selectedDesign.text_shape,
+                  selectedDesign.shape_intensity,
+                  setDesignsByView,
+                  activePreview,
+                  selectedDesign,
+                  regionWidth,
+                  regionHeight,
+                  getBoundingBox,
+                );
+              }}
+            >
+              <i className="fa-solid fa-align-center"></i>
+            </button>
+
+            <button
+              className={
+                selectedDesign.text_alignment === "right" ? "active" : ""
+              }
+              onClick={(e) => {
+                e.stopPropagation();
+                applyNewTextImg(
+                  selectedDesign.text,
+                  selectedDesign.fontFamily,
+                  selectedDesign.isBold,
+                  selectedDesign.isItalic,
+                  selectedDesign.design_color,
+                  selectedDesign.outline_color,
+                  selectedDesign.outline_width,
+                  "right",
+                  selectedDesign.text_shape,
+                  selectedDesign.shape_intensity,
+                  setDesignsByView,
+                  activePreview,
+                  selectedDesign,
+                  regionWidth,
+                  regionHeight,
+                  getBoundingBox,
+                );
+              }}
+            >
+              <i className="fa-solid fa-align-right"></i>
+            </button>
+          </div>
+          <span className="edit-label">Alignment</span>
+        </div>
+      )}
+
+      {/* 2. Flip */}
+      <div className="edit-block">
+        <div className="edit-group no-gap">
+          <button
+            className={selectedDesign.isBold ? "active" : ""}
+            onClick={(e) => {
+              e.stopPropagation();
+              applyNewTextImg(
+                selectedDesign.text,
+                selectedDesign.fontFamily,
+                !selectedDesign.isBold,
+                selectedDesign.isItalic,
+                selectedDesign.design_color,
+                selectedDesign.outline_color,
+                selectedDesign.outline_width,
+                selectedDesign.text_alignment,
+                selectedDesign.text_shape,
+                selectedDesign.shape_intensity,
+                setDesignsByView,
+                activePreview,
+                selectedDesign,
+                regionWidth,
+                regionHeight,
+                getBoundingBox,
+              );
+            }}
+          >
+            <i className="fa-solid fa-bold"></i>
+          </button>
+
+          <button
+            className={selectedDesign.isItalic ? "active" : ""}
+            onClick={(e) => {
+              e.stopPropagation();
+              applyNewTextImg(
+                selectedDesign.text,
+                selectedDesign.fontFamily,
+                selectedDesign.isBold,
+                !selectedDesign.isItalic,
+                selectedDesign.design_color,
+                selectedDesign.outline_color,
+                selectedDesign.outline_width,
+                selectedDesign.text_alignment,
+                selectedDesign.text_shape,
+                selectedDesign.shape_intensity,
+                setDesignsByView,
+                activePreview,
+                selectedDesign,
+                regionWidth,
+                regionHeight,
+                getBoundingBox,
+              );
+            }}
+          >
+            <i className="fa-solid fa-italic"></i>
+          </button>
+        </div>
+        <span className="edit-label">Style</span>
       </div>
 
       {/* 2. Flip */}
@@ -100,19 +256,21 @@ function ButtonsSection({
         <span className="edit-label">Duplicate</span>
       </div>
 
-      <div className="edit-block">
-        <div className="edit-group no-gap">
-          <button
-            onClick={() => {
-              setIsCropping(true);
-              setActiveTab("Crop");
-            }}
-          >
-            <i className="fa-solid fa-crop-simple"></i>
-          </button>
+      {!selectedDesign.text && (
+        <div className="edit-block">
+          <div className="edit-group no-gap">
+            <button
+              onClick={() => {
+                setIsCropping(true);
+                setActiveTab("Crop");
+              }}
+            >
+              <i className="fa-solid fa-crop-simple"></i>
+            </button>
+          </div>
+          <span className="edit-label">Crop</span>
         </div>
-        <span className="edit-label">Crop</span>
-      </div>
+      )}
     </div>
   );
 }

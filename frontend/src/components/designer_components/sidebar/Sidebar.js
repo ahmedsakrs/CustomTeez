@@ -21,16 +21,15 @@ function Sidebar({
   isCropping,
   setIsCropping,
   isHeightZero,
-        setIsHeightZero,
-        isHeightBlank,
-        setIsHeightBlank,
-        isWidthZero,
-        setIsWidthZero,
-        isWidthBlank,
-        setIsWidthBlank,
+  setIsHeightZero,
+  isHeightBlank,
+  setIsHeightBlank,
+  isWidthZero,
+  setIsWidthZero,
+  isWidthBlank,
+  setIsWidthBlank,
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [textAdded, setTextAdded] = useState(false);
   const [designCounter, setDesignCounter] = useState(0);
 
   const addDesignCollageToActiveView = (collage) => {
@@ -41,7 +40,7 @@ function Sidebar({
     setDesignsByView((prev) => {
       const designs = prev[activePreview] || [];
       const highest = designs.length
-        ? Math.max(...designs.map((d) => d.layer || 0))
+        ? Math.max(...designs.map((d) => d.layer || 1))
         : 0;
       return {
         ...prev,
@@ -49,8 +48,7 @@ function Sidebar({
           ...prev[activePreview],
           ...collage.designs.map((d, idx) => ({
             ...d,
-            id: `design-${designCounter + idx + 1}`,
-            croppedSrc: d.src,
+            id: d.id ? d.id : `design-${designCounter + idx + 1}`,
             x: d.x,
             y: d.y,
             width: d.width, // already normalized in data
@@ -61,9 +59,12 @@ function Sidebar({
             type: d.type,
             text: d.text,
             is_colorable: d.is_colorable,
-            design_color: d.color,
-            design_outline: d.design_outline,
-            font: d.font,
+            design_color: d.design_color,
+            outline_width: d.design_outline,
+            outline_color: d.outline_color,
+            fontFamily: d.fontFamily,
+            isBold: false,
+            isItalic: false,
             text_alignment: d.text_alignment,
             text_shape: d.text_shape,
             shape_intensity: d.shape_intensity,
@@ -71,7 +72,7 @@ function Sidebar({
             horizontalFlip: false,
             verticalFlip: false,
             rotation: 0,
-            layer: highest + idx,
+            layer: highest + idx + 1,
             crop: { x: 0, y: 0, width: 1, height: 1 },
           })),
         ],
@@ -106,7 +107,7 @@ function Sidebar({
         </button>
 
         <button
-          className={`sidebar-btn ${activeTab === "addText" ? "active" : ""}`}
+          className={`sidebar-btn ${activeTab === "addText" || activeTab === "editText" || activeTab === "changeFont" ? "active" : ""}`}
           onClick={() => {
             setActiveTab("addText");
           }}
@@ -156,13 +157,13 @@ function Sidebar({
           isCropping={isCropping}
           setIsCropping={setIsCropping}
           isHeightZero={isHeightZero}
-        setIsHeightZero={setIsHeightZero}
-        isHeightBlank={isHeightBlank}
-        setIsHeightBlank={setIsHeightBlank}
-        isWidthZero={isWidthZero}
-        setIsWidthZero={setIsWidthZero}
-        isWidthBlank={isWidthBlank}
-        setIsWidthBlank={setIsWidthBlank}
+          setIsHeightZero={setIsHeightZero}
+          isHeightBlank={isHeightBlank}
+          setIsHeightBlank={setIsHeightBlank}
+          isWidthZero={isWidthZero}
+          setIsWidthZero={setIsWidthZero}
+          isWidthBlank={isWidthBlank}
+          setIsWidthBlank={setIsWidthBlank}
         />
 
         {/* {activeTab === "default" && (

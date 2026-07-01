@@ -16,7 +16,7 @@ function RotationSection({
 }) {
   return (
     <div className="size-row">
-      <div className="rotation-left">Rotate</div>
+      <div className="rotation-left">Rotation</div>
       <div className="size-right">
         <input
           className="slider"
