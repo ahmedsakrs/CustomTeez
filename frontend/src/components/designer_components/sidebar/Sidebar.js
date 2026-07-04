@@ -28,6 +28,8 @@ function Sidebar({
   setIsWidthZero,
   isWidthBlank,
   setIsWidthBlank,
+  pendingText,
+  setPendingText,
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [designCounter, setDesignCounter] = useState(0);
@@ -107,9 +109,10 @@ function Sidebar({
         </button>
 
         <button
-          className={`sidebar-btn ${activeTab === "addText" || activeTab === "editText" || activeTab === "changeFont" ? "active" : ""}`}
+          className={`sidebar-btn ${activeTab === "addText" || activeTab === "editText" || activeTab === "changeFont" || activeTab === "changeShape" || activeTab === "changeFontColor" || activeTab === "changeFontOutline" ? "active" : ""}`}
           onClick={() => {
             setActiveTab("addText");
+            setPendingText("");
           }}
         >
           <i className="fas fa-font" style={{ fontSize: "30px" }}></i>
@@ -164,6 +167,8 @@ function Sidebar({
           setIsWidthZero={setIsWidthZero}
           isWidthBlank={isWidthBlank}
           setIsWidthBlank={setIsWidthBlank}
+          pendingText={pendingText}
+          setPendingText={setPendingText}
         />
 
         {/* {activeTab === "default" && (

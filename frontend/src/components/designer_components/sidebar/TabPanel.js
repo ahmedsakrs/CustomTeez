@@ -10,6 +10,7 @@ import ButtonsSection from "./ButtonsSection";
 import TextArea from "./TextArea";
 import FontsTab from "./FontsTab";
 import FontShapeTab from "./FontShapeTab";
+import FontColors from "./FontColors";
 
 import {
   handleToggleAspectLock,
@@ -42,6 +43,8 @@ function TabPanel({
   setIsWidthZero,
   isWidthBlank,
   setIsWidthBlank,
+  pendingText,
+  setPendingText,
 }) {
   const selectedDesign = designsByView[activePreview].find(
     (d) => d.id === selectedDesignId,
@@ -164,6 +167,8 @@ function TabPanel({
           getBoundingBox={getBoundingBox}
           activePreview={activePreview}
           designsByView={designsByView}
+          pendingText={pendingText}
+          setPendingText={setPendingText}
         />
       )}
 
@@ -181,6 +186,8 @@ function TabPanel({
             activePreview={activePreview}
             designsByView={designsByView}
             setDesignsByView={setDesignsByView}
+            pendingText={pendingText}
+            setPendingText={setPendingText}
           />
 
           <HorizontalLine marginUp={15} marginDown={15} lineColor={"#333"} />
@@ -189,6 +196,7 @@ function TabPanel({
             <div className="size-right">
               <button
                 className="font-preview"
+                style={{ fontSize: "1rem", padding: "1px 2px"}}
                 onClick={(e) => {
                   e.stopPropagation();
                   setActiveTab("changeFont");
@@ -196,6 +204,74 @@ function TabPanel({
               >
                 AaBbCcDd — {selectedDesign.fontFamily}
               </button>
+            </div>
+          </div>
+
+          <HorizontalLine marginUp={15} marginDown={15} lineColor={"#333"} />
+          <div className="size-row">
+            <div className="rotation-left">Font Color</div>
+            <div className="size-right">
+              <div className="current-color">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveTab("changeFontColor");
+                  }}
+                  className="font-preview"
+                  style={{paddingLeft: "4px", paddingRight: "4px", fontSize: "1rem"}}
+                >
+                  {selectedDesign.design_color.name}
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveTab("changeFontColor");
+                  }}
+                  className="color-swatch"
+                  style={{
+                    backgroundColor: selectedDesign?.design_color.rgb,
+                    height: "30px",
+                    width: "30px",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <HorizontalLine marginUp={15} marginDown={15} lineColor={"#333"} />
+          <div className="size-row">
+            <div className="rotation-left">Outline</div>
+            <div className="size-right">
+              <div className="current-color">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveTab("changeFontOutline");
+                  }}
+                  className="font-preview"
+                  style={{paddingLeft: "4px", paddingRight: "4px", fontSize: "1rem"}}
+                >
+                  {selectedDesign.outline_color
+                    ? selectedDesign.outline_color.name
+                    : "Add Outline"}
+                </button>
+
+                {selectedDesign?.outline_color && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveTab("changeFontOutline");
+                    }}
+                    className="color-swatch"
+                    style={{
+                      backgroundColor: selectedDesign?.outline_color?.rgb,
+                      height: "30px",
+                      width: "30px",
+                    }}
+                  />
+                )}
+              </div>
             </div>
           </div>
 
@@ -289,6 +365,33 @@ function TabPanel({
           regionWidth={regionWidth}
           regionHeight={regionHeight}
           getBoundingBox={getBoundingBox}
+        />
+      )}
+
+      {activeTab === "changeFontColor" && selectedDesign && (
+        <FontColors
+          selectedDesign={selectedDesign}
+          pendingText={selectedDesign.text}
+          setActiveTab={setActiveTab}
+          setDesignsByView={setDesignsByView}
+          activePreview={activePreview}
+          regionWidth={regionWidth}
+          regionHeight={regionHeight}
+          getBoundingBox={getBoundingBox}
+        />
+      )}
+
+      {activeTab === "changeFontOutline" && selectedDesign && (
+        <FontColors
+          selectedDesign={selectedDesign}
+          pendingText={selectedDesign.text}
+          setActiveTab={setActiveTab}
+          setDesignsByView={setDesignsByView}
+          activePreview={activePreview}
+          regionWidth={regionWidth}
+          regionHeight={regionHeight}
+          getBoundingBox={getBoundingBox}
+          isOutline={true}
         />
       )}
     </div>

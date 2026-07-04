@@ -23,7 +23,7 @@ export default function FontShapeTab({
 
   const applyShape = (shape, newIntensity = intensity) => {
     applyNewTextImg(
-      pendingText || selectedDesign.text,
+      selectedDesign.text,
       selectedDesign.fontFamily,
       selectedDesign.isBold,
       selectedDesign.isItalic,

@@ -55,7 +55,7 @@ export default function FontsTab({
           }}
           onClick={() => {
             applyNewTextImg(
-              pendingText || selectedDesign.text,
+              selectedDesign.text,
               font,
               selectedDesign.isBold,
               selectedDesign.isItalic,
@@ -72,14 +72,22 @@ export default function FontsTab({
               regionHeight,
               getBoundingBox,
             );
-
-            // ✅ go back to text tab
-            setActiveTab("editText");
           }}
         >
           AaBbCcDd — {font}
         </button>
       ))}
+
+      <button
+        className="text-add-btn"
+        style={{ marginTop: "10px", height: "45px", width: "80px", fontSize: "14px"}}
+        onClick={(e) => {
+            e.stopPropagation();
+            setActiveTab("editText");
+        }}
+      >
+        Done
+      </button>
 
       {/* ✅ ✅ OPTIONAL: no results */}
       {filteredFonts.length === 0 && (

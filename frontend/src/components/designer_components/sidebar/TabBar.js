@@ -1,4 +1,4 @@
-import React from "react";
+import React, { act } from "react";
 import "./sidebar.css";
 
 function TabBar({
@@ -8,69 +8,74 @@ function TabBar({
   setSelectedCategory,
   setSelectedDesignId,
   setIsCropping,
-  barRef
+  barRef,
 }) {
-  return activeTab && (
-    <div className="tab-bar" ref={barRef}>
-      <button
-        className="tab-bar-btn"
-        onClick={(e) => {
-          e.stopPropagation();
-          if (activeTab === "addDesign") {
-            if (selectedCategory) {
-              setSelectedCategory(null);
-            } else {
-              setActiveTab(null);
-            }
-          } else if (activeTab === "Crop"){
-            setActiveTab("editDesign");
-            setIsCropping(false);
-          }
-          else if(activeTab === "editDesign" || activeTab === "editText"){
-            setActiveTab(null);
-            setSelectedDesignId(null);
-          }
-          else if(  activeTab === "changeFont"){
-            setActiveTab("editText");
-          }
-        }}
-      >
-        <i className="fas fa-angle-left" style={{ fontSize: "17px" }}>
-          {" "}
-        </i>
-      </button>
-      <span className="tab-title">
-        {activeTab === "addDesign" && !selectedCategory
-          ? "Design Categories"
-          : activeTab === "addDesign" && selectedCategory
-          ? selectedCategory
-          : activeTab === "Crop"
-          ? "Crop"
-          : activeTab === "editDesign"
-          ? "Edit Design"
-          : activeTab === "editText"
-          ? "Edit Text"
-          : activeTab === "addText"
-          ? "Add Text"
-          : activeTab === "changeFont"
-          ? "Change Font"
-          : ""
-        }
-      </span>
-      {
+  return (
+    activeTab && (
+      <div className="tab-bar" ref={barRef}>
         <button
           className="tab-bar-btn"
-          onClick={() => {
-            setActiveTab("");
-            setSelectedCategory(null);
-            setIsCropping(false);
-            setSelectedDesignId(null);
+          onClick={(e) => {
+            e.stopPropagation();
+            if (activeTab === "addDesign") {
+              if (selectedCategory) {
+                setSelectedCategory(null);
+              } else {
+                setActiveTab(null);
+              }
+            } else if (activeTab === "Crop") {
+              setActiveTab("editDesign");
+              setIsCropping(false);
+            } else if (activeTab === "editDesign" || activeTab === "editText") {
+              setActiveTab(null);
+              setSelectedDesignId(null);
+            } else if (activeTab === "changeFont" || activeTab === "changeShape" || activeTab === "changeFontColor" || activeTab === "changeFontOutline") {
+              setActiveTab("editText");
+            }
           }}
         >
-          <i class="fa fa-times" style={{ fontSize: "17px" }}></i>
+          <i className="fas fa-angle-left" style={{ fontSize: "17px" }}>
+            {" "}
+          </i>
         </button>
-      }
-    </div>
+        <span className="tab-title">
+          {activeTab === "addDesign" && !selectedCategory
+            ? "Design Categories"
+            : activeTab === "addDesign" && selectedCategory
+              ? selectedCategory
+              : activeTab === "Crop"
+                ? "Crop"
+                : activeTab === "editDesign"
+                  ? "Edit Design"
+                  : activeTab === "editText"
+                    ? "Edit Text"
+                    : activeTab === "addText"
+                      ? "Add Text"
+                      : activeTab === "changeFont"
+                        ? "Change Font"
+                        : activeTab === "changeShape"
+                          ? "Change Shape"
+                          : activeTab === "changeFontColor"
+                            ? "Font Color"
+                            : activeTab === "changeFontOutline"
+                              ? "Font Outline"
+                              : ""}
+        </span>
+        {
+          <button
+            className="tab-bar-btn"
+            onClick={() => {
+              setActiveTab("");
+              setSelectedCategory(null);
+              setIsCropping(false);
+              setSelectedDesignId(null);
+            }}
+          >
+            <i class="fa fa-times" style={{ fontSize: "17px" }}></i>
+          </button>
+        }
+      </div>
+    )
   );
 }
 

@@ -5,7 +5,6 @@ import Sidebar from "../components/designer_components/sidebar/Sidebar";
 import {
   checkAfterRotation,
   handleToggleAspectLock,
-  updateSize,
   updateSizeClamped,
 } from "../utils/designerUtils";
 
@@ -212,7 +211,6 @@ function ProductDesigner() {
   const [isHeightBlank, setIsHeightBlank] = useState(false);
   const [isWidthZero, setIsWidthZero] = useState(false);
   const [isHeightZero, setIsHeightZero] = useState(false);
-  const [designColor, setDesignColor] = useState("Blue");
   const [isCropping, setIsCropping] = useState(false);
   const [activePreview, setActivePreview] = useState("Front");
   const [showProductModal, setShowProductModal] = useState(false);
@@ -229,10 +227,10 @@ function ProductDesigner() {
   const [lockedDesignId, setLockedDesignId] = useState(null);
   const [regionWidth, setRegionWidth] = useState(0);
   const [regionHeight, setRegionHeight] = useState(0);
-  const [pendingText, setPendingText] = useState("");
   const [justFinishedInteraction, setJustFinishedInteraction] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const [pendingText, setPendingText] = useState("");
   const [thumbSizes, setThumbSizes] = useState({
     Front: { w: 0, h: 0 },
     Back: { w: 0, h: 0 },
@@ -318,7 +316,7 @@ function ProductDesigner() {
         if (isActive) return;
 
         if (isResizing || isRotating) return;
-        if (selectedDesignId) setActiveTab("default");
+        setActiveTab("");
         setSelectedDesignId(null);
         setIsCropping(false);
       };
@@ -391,81 +389,6 @@ function ProductDesigner() {
   const filteredOptions = productOptions.filter((opt) =>
     opt.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
-
-  const findFittingFontSize = (text, targetWidthPx, fontFamily = "Arial") => {
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-
-    const lines = text.split("\n");
-    let low = 1;
-    let high = 300;
-    let fittingSize = low;
-
-    while (low <= high) {
-      const mid = (low + high) / 2;
-      ctx.font = `${mid}px ${fontFamily}`;
-
-      // measure the widest line
-      let maxLineWidth = 0;
-      for (const line of lines) {
-        const metrics = ctx.measureText(line);
-        if (metrics.width > maxLineWidth) {
-          maxLineWidth = metrics.width;
-        }
-      }
-
-      if (maxLineWidth <= targetWidthPx) {
-        fittingSize = mid; // fits, try bigger
-        low = mid + 0.2;
-      } else {
-        high = mid - 0.2; // too big, try smaller
-      }
-    }
-
-    return fittingSize;
-  };
-
-  const textToImage = (
-    text,
-    fontSizePx = 24,
-    fontFamily = "Arial",
-    lineHeightMultiplier = 1,
-  ) => {
-    const lines = text.split("\n");
-
-    // Create canvas
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-
-    ctx.font = `${fontSizePx}px ${fontFamily}`;
-    const lineHeight = fontSizePx * lineHeightMultiplier;
-
-    // Measure widest line
-    let maxWidth = 0;
-    for (const line of lines) {
-      const width = ctx.measureText(line).width;
-      if (width > maxWidth) maxWidth = width;
-    }
-
-    // Set canvas size based on text
-    canvas.width = maxWidth;
-    canvas.height = lineHeight * lines.length;
-
-    // Draw text
-    ctx.font = `${fontSizePx}px ${fontFamily}`;
-    ctx.textBaseline = "top";
-    ctx.fillStyle = "black"; // text color
-    lines.forEach((line, i) => {
-      ctx.fillText(line, 0, i * lineHeight);
-    });
-
-    // Export as image
-    return {
-      img: canvas.toDataURL("image/png"),
-      width: maxWidth,
-      height: lineHeight * lines.length,
-    };
-  };
 
   const toggleOutlineSelectedText = () => {
     setDesignsByView((prev) => ({
@@ -575,6 +498,8 @@ function ProductDesigner() {
         setIsWidthZero={setIsWidthZero}
         isWidthBlank={isWidthBlank}
         setIsWidthBlank={setIsWidthBlank}
+        pendingText={pendingText}
+        setPendingText={setPendingText}
         onClick={(e) => {
           e.stopPropagation();
         }}
@@ -755,7 +680,7 @@ function ProductDesigner() {
                         key={c}
                         title={c}
                         onClick={() => !isDuplicate && changeProductColor(c)}
-                        className={`color-swatch ${isDuplicate ? "disabled" : ""} ${activeProduct?.color === c ? "active" : ""}`}
+                        className={`color-swatch-product ${isDuplicate ? "disabled" : ""} ${activeProduct?.color === c ? "active" : ""}`}
                         style={{ backgroundColor: c.toLowerCase() }}
                       />
                     );
@@ -818,8 +743,10 @@ function ProductDesigner() {
                   <div style={style}>
                     {selectedDesignId != null &&
                       isActive &&
-                      Math.abs(selectedDesign.x + selectedDesign.width / 2 - 1/2)
-                      < (1 / 20) && (
+                      Math.abs(
+                        selectedDesign.x + selectedDesign.width / 2 - 1 / 2,
+                      ) <
+                        1 / 35 && (
                         <div
                           style={{
                             position: "absolute",
@@ -836,6 +763,7 @@ function ProductDesigner() {
                     {designsByView[activePreview].map((d) => (
                       <Rnd
                         key={d.id}
+                        enableUserSelectHack={false}
                         style={{
                           cursor: isRotating || isResizing ? "default" : "grab",
                           zIndex: d.layer,
@@ -855,7 +783,8 @@ function ProductDesigner() {
                         bounds="parent"
                         // disableDragging={isRotating || isResizing}
                         enableResizing={false}
-                        onDragStart={() => {
+                        onDragStart={(e) => {
+                          e.preventDefault();
                           setIsActive(true);
                           setIsWidthBlank(false);
                           setIsWidthZero(false);
@@ -869,40 +798,37 @@ function ProductDesigner() {
                             // ✅ it's a normal design image
                             setActiveTab("editDesign");
                           }
+                          setPendingText(d?.text);
                         }}
                         onDrag={(e, data) => {
                           if (isRotating || isResizing) return;
 
-                          const rawW =
-                            d.width * Math.min(regionWidth, regionHeight);
-                          const centerX = data.x + rawW / 2;
+                          let newX = data.x;
+                          let newY = data.y;
+
+                          const widthPx = d.width * regionWidth;
+
+                          const centerX = newX + widthPx / 2;
                           const regionCenterX = regionWidth / 2;
-                          const threshold = 0.03 * regionWidth; // px tolerance
+                          const threshold = regionWidth / 20;
 
-                          let normX = data.x;
-                          const normY = data.y;
+                          // ✅ SNAP
+                          if (Math.abs(centerX - regionCenterX) < threshold) {
+                            newX = regionCenterX - widthPx / 2;
 
-                          const distance = centerX - regionCenterX;
-
-                          if (Math.abs(distance) < threshold) {
-                            // use a quadratic easing curve for smoother pull
-                            const strength =
-                              0.35 *
-                              Math.pow(1 - Math.abs(distance) / threshold, 2);
-                            const targetX = regionCenterX - rawW / 2;
-
-                            // blend drag position toward center
-                            normX =
-                              data.x * (1 - strength) + targetX * strength;
+                            // ✅ KEY FIX: override Rnd internal position
+                            data.x = newX;
                           }
+
+                          // ✅ update state
                           setDesignsByView((prev) => ({
                             ...prev,
                             [activePreview]: prev[activePreview].map((item) =>
                               item.id === d.id
                                 ? {
                                     ...item,
-                                    x: normX / regionWidth,
-                                    y: normY / regionHeight,
+                                    x: newX / regionWidth,
+                                    y: newY / regionHeight,
                                   }
                                 : item,
                             ),
@@ -921,7 +847,7 @@ function ProductDesigner() {
                             setSelectedDesignId(d.id);
                             if (d.text) {
                               // ✅ it's a text image
-                              setActiveTab("addText");
+                              setActiveTab("editText");
                             } else {
                               // ✅ it's a normal design image
                               setActiveTab("editDesign");
@@ -1021,7 +947,7 @@ function ProductDesigner() {
                               onMouseDown={(e) => e.stopPropagation()}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setActiveTab("default");
+                                setActiveTab("");
                                 setDesignsByView((prev) => ({
                                   ...prev,
                                   [activePreview]: prev[activePreview].filter(
@@ -1178,6 +1104,9 @@ function ProductDesigner() {
                                       0.05 * regionHeight,
                                       startHeight + deltaY,
                                     );
+                                  } else if(newHeight < 0.05 * regionHeight) {
+                                    newHeight = 0.05 * regionHeight;
+                                    newWidth = newHeight * aspectRatio;
                                   }
 
                                   updateSizeClamped(

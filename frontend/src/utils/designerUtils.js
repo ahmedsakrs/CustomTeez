@@ -1,3 +1,6 @@
+import ReactDOMServer from "react-dom/server";
+import ReactCurvedText from "react-curved-text";
+
 export function bringToFront(
   activePreview,
   selectedDesignId,
@@ -628,65 +631,86 @@ export const findFittingFontSize = (
   return fittingSize;
 };
 
-const drawCurvedText = (
-  ctx,
+export const curvedTextToImage = async ({
   text,
-  centerX,
-  centerY,
-  radius,
   fontSizePx,
-  direction = 1
-) => {
-  ctx.save();
+  fontFamily,
+  textColor,
+  shapeIntensity,
+  isBold,
+  isItalic,
+}) => {
+  const width = 1000;
+  const height = 500;
 
-  const chars = text.split("");
+  const radius = 150 + Math.abs(shapeIntensity) * 200;
 
-  // ✅ measure each character
-  const widths = chars.map(char => ctx.measureText(char).width);
+  const svgString = ReactDOMServer.renderToStaticMarkup(
+    <ReactCurvedText
+      width={width}
+      height={height}
+      cx={width / 2}
+      cy={height / 2 + 50}
+      rx={radius}
+      ry={radius}
+      startOffset={0}
+      reversed={shapeIntensity < 0}
+      text={text}
+      textProps={{
+        style: {
+          fill: textColor,
+          fontFamily: fontFamily,
+          fontSize: fontSizePx,
+          fontWeight: isBold ? "bold" : "normal",
+          fontStyle: isItalic ? "italic" : "normal",
+        },
+      }}
+    />,
+  );
 
-  const totalWidth = widths.reduce((a, b) => a + b, 0);
-
-  // ✅ convert width → arc angle
-  let currentAngle = -totalWidth / (2 * radius);
-
-  chars.forEach((char, i) => {
-    const charWidth = widths[i];
-
-    const angle = currentAngle + charWidth / (2 * radius);
-
-    const x = centerX + radius * Math.sin(angle);
-    const y = centerY - direction * radius * Math.cos(angle);
-
-    ctx.save();
-    ctx.translate(x, y);
-
-    // ✅ rotate character along curve
-    ctx.rotate(angle * direction);
-
-    // ✅ vertical offset fix (important)
-    ctx.fillText(char, -charWidth / 2, -fontSizePx * 0.5);
-
-    ctx.restore();
-
-    currentAngle += charWidth / radius;
+  const svgBlob = new Blob([svgString], {
+    type: "image/svg+xml;charset=utf-8",
   });
 
-  ctx.restore();
+  const url = URL.createObjectURL(svgBlob);
+
+  const img = new Image();
+
+  return new Promise((resolve) => {
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext("2d");
+
+      ctx.drawImage(img, 0, 0);
+
+      URL.revokeObjectURL(url);
+
+      resolve({
+        img: canvas.toDataURL("image/png"),
+        width,
+        height,
+      });
+    };
+
+    img.src = url;
+  });
 };
 
-export const textToImage = ({
+export const textToImage = async ({
   text,
   fontSizePx,
   fontFamily = "Arial",
   isBold = false,
   isItalic = false,
   lineHeightMultiplier = 1,
-  textAlign,
+  textAlign = "center",
   textColor,
   outlineColor,
-  outlineSize,
-  textShape,
-  shapeIntensity = 0,
+  outlineSize = 0,
 }) => {
   const lines = text.split("\n");
 
@@ -697,64 +721,135 @@ export const textToImage = ({
   const fontStyle = isItalic ? "italic" : "normal";
 
   ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
+
   const lineHeight = fontSizePx * lineHeightMultiplier;
 
-  // ✅ measure widest line
   let maxWidth = 0;
+  let maxAscent = 0;
+  let maxDescent = 0;
+
   for (const line of lines) {
-    const width = ctx.measureText(line).width;
-    if (width > maxWidth) maxWidth = width;
+    const metrics = ctx.measureText(line);
+
+    maxWidth = Math.max(
+      maxWidth,
+      metrics.actualBoundingBoxLeft +
+        metrics.actualBoundingBoxRight
+    );
+
+    maxAscent = Math.max(
+      maxAscent,
+      metrics.actualBoundingBoxAscent
+    );
+
+    maxDescent = Math.max(
+      maxDescent,
+      metrics.actualBoundingBoxDescent
+    );
   }
 
-  // ✅ CURVE SAFE AREA
-  const radiusBase = fontSizePx * 2;
-  const curveExtra = Math.abs(shapeIntensity) * 120;
+  const outlinePx =
+    outlineSize > 0
+      ? (outlineSize * fontSizePx) / 12
+      : 0;
 
-  const extraHeight =
-    textShape === "curve" ? radiusBase + curveExtra + fontSizePx : 0;
+  const padding = Math.max(
+    6,
+    Math.ceil(outlinePx)
+  );
 
-  canvas.width = maxWidth + (textShape === "curve" ? fontSizePx * 2 : 0);
-  canvas.height = lineHeight * lines.length + extraHeight;
+  const topMargin = Math.ceil(fontSizePx * 0.2);
+  const bottomMargin = Math.ceil(fontSizePx * 0.2);
 
-  // reset font after resize
+  canvas.width = Math.ceil(
+    maxWidth +
+      padding * 2 +
+      outlinePx * 2
+  );
+
+  canvas.height = Math.ceil(
+    lines.length * lineHeight +
+      padding * 2 +
+      topMargin +
+      bottomMargin +
+      outlinePx * 2
+  );
+
+  // Canvas resize resets settings
   ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = textColor;
-
   ctx.textAlign = textAlign;
+  ctx.textBaseline = "alphabetic";
+
+  const getX = () => {
+    switch (textAlign) {
+      case "center":
+        return canvas.width / 2;
+
+      case "right":
+        return canvas.width - padding - outlinePx;
+
+      default:
+        return padding + outlinePx;
+    }
+  };
+
+  // --------------------------
+  // PASS 1: Draw all outlines
+  // --------------------------
+  if (outlinePx > 0) {
+    ctx.fillStyle = outlineColor.rgb;
+
+    const radius = Math.max(
+      1,
+      Math.round(outlinePx)
+    );
+
+    lines.forEach((line, i) => {
+      const x = getX();
+
+      const y =
+        padding +
+        topMargin +
+        outlinePx +
+        maxAscent +
+        i * lineHeight;
+
+      for (let dx = -radius; dx <= radius; dx++) {
+        for (let dy = -radius; dy <= radius; dy++) {
+          if (dx === 0 && dy === 0) continue;
+
+          const distance = Math.sqrt(
+            dx * dx + dy * dy
+          );
+
+          if (distance > radius) continue;
+
+          ctx.fillText(
+            line,
+            x + dx,
+            y + dy
+          );
+        }
+      }
+    });
+  }
+
+  // --------------------------
+  // PASS 2: Draw all fills
+  // --------------------------
+  ctx.fillStyle = textColor.rgb;
 
   lines.forEach((line, i) => {
-    let x = 0;
+    const x = getX();
 
-    if (textAlign === "center") {
-      x = canvas.width / 2;
-    } else if (textAlign === "right") {
-      x = canvas.width;
-    } else {
-      x = 0;
-    }
+    const y =
+      padding +
+      topMargin +
+      outlinePx +
+      maxAscent +
+      i * lineHeight;
 
-    if (textShape === "curve") {
-      const direction = shapeIntensity >= 0 ? 1 : -1;
-
-      const radius = radiusBase + curveExtra;
-
-      // ✅ CRITICAL FIX: proper vertical center
-      const centerX = canvas.width / 2;
-      const centerY = i * lineHeight + radius + fontSizePx;
-
-      drawCurvedText(
-        ctx,
-        line,
-        centerX,
-        centerY,
-        radius,
-        direction,
-        fontSizePx
-      );
-    } else {
-      ctx.fillText(line, x, i * lineHeight + fontSizePx / 2);
-    }
+    ctx.fillText(line, x, y);
   });
 
   return {
@@ -764,7 +859,7 @@ export const textToImage = ({
   };
 };
 
-export function applyNewTextImg(
+export async function applyNewTextImg(
   newText,
   newFontFamily,
   isBold,
@@ -790,7 +885,7 @@ export function applyNewTextImg(
     isItalic,
   );
 
-  const imageData = textToImage({
+  const imageData = await textToImage({
     text: newText,
     fontSizePx: maxFontSizePx,
     fontFamily: newFontFamily,

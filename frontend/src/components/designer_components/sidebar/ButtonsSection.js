@@ -58,9 +58,9 @@ function ButtonsSection({
               className={
                 selectedDesign.text_alignment === "left" ? "active" : ""
               }
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                applyNewTextImg(
+                await applyNewTextImg(
                   selectedDesign.text,
                   selectedDesign.fontFamily,
                   selectedDesign.isBold,
@@ -87,9 +87,9 @@ function ButtonsSection({
               className={
                 selectedDesign.text_alignment === "center" ? "active" : ""
               }
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                applyNewTextImg(
+                await applyNewTextImg(
                   selectedDesign.text,
                   selectedDesign.fontFamily,
                   selectedDesign.isBold,
@@ -116,9 +116,9 @@ function ButtonsSection({
               className={
                 selectedDesign.text_alignment === "right" ? "active" : ""
               }
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                applyNewTextImg(
+                await applyNewTextImg(
                   selectedDesign.text,
                   selectedDesign.fontFamily,
                   selectedDesign.isBold,
@@ -146,13 +146,13 @@ function ButtonsSection({
       )}
 
       {/* 2. Flip */}
-      <div className="edit-block">
+      {selectedDesign.text && (<div className="edit-block">
         <div className="edit-group no-gap">
           <button
             className={selectedDesign.isBold ? "active" : ""}
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
-              applyNewTextImg(
+              await applyNewTextImg(
                 selectedDesign.text,
                 selectedDesign.fontFamily,
                 !selectedDesign.isBold,
@@ -177,9 +177,9 @@ function ButtonsSection({
 
           <button
             className={selectedDesign.isItalic ? "active" : ""}
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
-              applyNewTextImg(
+              await applyNewTextImg(
                 selectedDesign.text,
                 selectedDesign.fontFamily,
                 selectedDesign.isBold,
@@ -204,6 +204,7 @@ function ButtonsSection({
         </div>
         <span className="edit-label">Style</span>
       </div>
+      )}
 
       {/* 2. Flip */}
       <div className="edit-block">

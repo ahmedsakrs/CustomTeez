@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   findFittingFontSize,
   textToImage,
@@ -18,10 +18,9 @@ function TextArea({
   activePreview,
   designsByView,
   setDesignsByView,
+  pendingText,
+  setPendingText,
 }) {
-  const [pendingText, setPendingText] = useState(
-    activeTab === "addText" ? "" : selectedDesign.text,
-  );
   return (
     <div className="text-panel">
       <textarea
@@ -54,7 +53,7 @@ function TextArea({
       <button
         className="text-update-btn"
         disabled={!pendingText.trim()}
-        onClick={(e) => {
+        onClick={async(e) => {
           if (activeTab === "addText") {
             e.stopPropagation();
 
@@ -65,7 +64,7 @@ function TextArea({
                 "Arial",
               );
 
-              const imageData = textToImage({
+              const imageData = await textToImage({
                 text: pendingText,
                 fontSizePx: maxFontSizePx,
                 fontFamily: "Arial",
@@ -89,7 +88,8 @@ function TextArea({
                 fontFamily: "Arial",
                 isLocked_aspect_ratio: true,
                 type: "text",
-                design_color: "black",
+                design_color: {rgb: "#000000", name: "Black"},
+                design_color_name: "Black",
                 outline_width: 0,
                 outline_color: null,
                 text_alignment: "center",
@@ -109,8 +109,6 @@ function TextArea({
                   ),
                 ],
               });
-
-              setPendingText("");
               setSelectedDesignId(id);
               if (activeTab === "addText") {
                 setActiveTab("editText");
@@ -120,7 +118,7 @@ function TextArea({
             e.stopPropagation();
 
             if (pendingText.trim() !== "") {
-              applyNewTextImg(
+              await applyNewTextImg(
                 pendingText,
                 selectedDesign.fontFamily,
                 selectedDesign.isBold,
