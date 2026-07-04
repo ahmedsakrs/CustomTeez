@@ -734,17 +734,17 @@ export const textToImage = async ({
     maxWidth = Math.max(
       maxWidth,
       metrics.actualBoundingBoxLeft +
-        metrics.actualBoundingBoxRight
+        metrics.actualBoundingBoxRight,
     );
 
     maxAscent = Math.max(
       maxAscent,
-      metrics.actualBoundingBoxAscent
+      metrics.actualBoundingBoxAscent,
     );
 
     maxDescent = Math.max(
       maxDescent,
-      metrics.actualBoundingBoxDescent
+      metrics.actualBoundingBoxDescent,
     );
   }
 
@@ -755,7 +755,7 @@ export const textToImage = async ({
 
   const padding = Math.max(
     6,
-    Math.ceil(outlinePx)
+    Math.ceil(outlinePx),
   );
 
   const topMargin = Math.ceil(fontSizePx * 0.2);
@@ -764,7 +764,7 @@ export const textToImage = async ({
   canvas.width = Math.ceil(
     maxWidth +
       padding * 2 +
-      outlinePx * 2
+      outlinePx * 2,
   );
 
   canvas.height = Math.ceil(
@@ -772,10 +772,10 @@ export const textToImage = async ({
       padding * 2 +
       topMargin +
       bottomMargin +
-      outlinePx * 2
+      outlinePx * 2,
   );
 
-  // Canvas resize resets settings
+  // canvas resize resets settings
   ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
   ctx.textAlign = textAlign;
   ctx.textBaseline = "alphabetic";
@@ -801,7 +801,7 @@ export const textToImage = async ({
 
     const radius = Math.max(
       1,
-      Math.round(outlinePx)
+      Math.round(outlinePx),
     );
 
     lines.forEach((line, i) => {
@@ -819,7 +819,7 @@ export const textToImage = async ({
           if (dx === 0 && dy === 0) continue;
 
           const distance = Math.sqrt(
-            dx * dx + dy * dy
+            dx * dx + dy * dy,
           );
 
           if (distance > radius) continue;
@@ -827,7 +827,7 @@ export const textToImage = async ({
           ctx.fillText(
             line,
             x + dx,
-            y + dy
+            y + dy,
           );
         }
       }
@@ -852,10 +852,93 @@ export const textToImage = async ({
     ctx.fillText(line, x, y);
   });
 
+  // --------------------------
+  // AUTO-CROP TRANSPARENT AREA
+  // --------------------------
+  const imageData = ctx.getImageData(
+    0,
+    0,
+    canvas.width,
+    canvas.height,
+  );
+
+  const data = imageData.data;
+
+  let minX = canvas.width;
+  let minY = canvas.height;
+  let maxX = 0;
+  let maxY = 0;
+
+  for (let y = 0; y < canvas.height; y++) {
+    for (let x = 0; x < canvas.width; x++) {
+      const alpha =
+        data[(y * canvas.width + x) * 4 + 3];
+
+      if (alpha > 0) {
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+  }
+
+  // empty text safety
+  if (minX > maxX || minY > maxY) {
+    return {
+      img: canvas.toDataURL("image/png"),
+      width: canvas.width,
+      height: canvas.height,
+    };
+  }
+
+  const cropPadding = 2;
+
+  const cropX = Math.max(
+    0,
+    minX - cropPadding,
+  );
+
+  const cropY = Math.max(
+    0,
+    minY - cropPadding,
+  );
+
+  const cropWidth = Math.min(
+    canvas.width - cropX,
+    maxX - minX + 1 + cropPadding * 2,
+  );
+
+  const cropHeight = Math.min(
+    canvas.height - cropY,
+    maxY - minY + 1 + cropPadding * 2,
+  );
+
+  const croppedCanvas =
+    document.createElement("canvas");
+
+  croppedCanvas.width = cropWidth;
+  croppedCanvas.height = cropHeight;
+
+  const croppedCtx =
+    croppedCanvas.getContext("2d");
+
+  croppedCtx.drawImage(
+    canvas,
+    cropX,
+    cropY,
+    cropWidth,
+    cropHeight,
+    0,
+    0,
+    cropWidth,
+    cropHeight,
+  );
+
   return {
-    img: canvas.toDataURL("image/png"),
-    width: canvas.width,
-    height: canvas.height,
+    img: croppedCanvas.toDataURL("image/png"),
+    width: croppedCanvas.width,
+    height: croppedCanvas.height,
   };
 };
 

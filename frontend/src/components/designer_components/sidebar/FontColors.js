@@ -179,22 +179,6 @@ function FontColors({
         </div>
       )}
 
-      {/* <button
-        className="text-add-btn"
-        style={{
-          marginTop: "10px",
-          height: "45px",
-          width: "80px",
-          fontSize: "14px",
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setActiveTab("editText");
-        }}
-      >
-        Done
-      </button> */}
-
       <div className="crop-actions" style={{ minWidth: "100%" }}>
         <button
           className="panel-btn"
