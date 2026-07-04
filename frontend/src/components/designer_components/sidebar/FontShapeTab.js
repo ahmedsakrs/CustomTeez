@@ -33,6 +33,7 @@ export default function FontShapeTab({
       selectedDesign.text_alignment,
       shape,
       newIntensity,
+      selectedDesign.lineSpacing,
       setDesignsByView,
       activePreview,
       selectedDesign,

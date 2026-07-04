@@ -382,16 +382,10 @@ height: 100%;
 .crop-actions {
   display: flex;
   justify-content: space-between; /* ✅ left + right */
-  padding: 0px 15px;
   align-items: center;
   margin-top: 12px;
-}
-
-.crop-actions {
-  display: flex;
-  justify-content: space-between; /* ✅ left + right */
-  align-items: center;
-  margin-top: 12px;
+  width: 100%;
+  min-width: 100%;
 }
 
 /* base button */

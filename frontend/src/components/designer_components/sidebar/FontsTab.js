@@ -65,6 +65,7 @@ export default function FontsTab({
               selectedDesign.text_alignment,
               selectedDesign.text_shape,
               selectedDesign.shape_intensity,
+              selectedDesign.lineSpacing,
               setDesignsByView,
               activePreview,
               selectedDesign,

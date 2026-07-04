@@ -796,7 +796,7 @@ export const textToImage = async ({
   // --------------------------
   // PASS 1: Draw all outlines
   // --------------------------
-  if (outlinePx > 0) {
+  if (outlinePx && outlineColor) {
     ctx.fillStyle = outlineColor.rgb;
 
     const radius = Math.max(
@@ -870,6 +870,7 @@ export async function applyNewTextImg(
   newTextAlignment,
   newTextShape,
   newShapeIntensity,
+  newLineSpacing,
   setDesignsByView,
   activePreview,
   selectedDesign,
@@ -897,6 +898,7 @@ export async function applyNewTextImg(
     outlineSize: newOutlineSize,
     textShape: newTextShape,
     shapeIntensity: newShapeIntensity,
+    lineHeightMultiplier: newLineSpacing,
   });
 
   setDesignsByView((prev) => {
@@ -971,6 +973,7 @@ export async function applyNewTextImg(
         text_alignment: newTextAlignment,
         text_shape: newTextShape,
         shape_intensity: newShapeIntensity,
+        lineSpacing: newLineSpacing,
         isBold: isBold,
         isItalic: isItalic,
       };

@@ -93,6 +93,7 @@ function FontColors({
                   selectedDesign.text_alignment,
                   selectedDesign.text_shape,
                   selectedDesign.shape_intensity,
+                  selectedDesign.lineSpacing,
                   setDesignsByView,
                   activePreview,
                   selectedDesign,
@@ -112,6 +113,7 @@ function FontColors({
                   selectedDesign.text_alignment,
                   selectedDesign.text_shape,
                   selectedDesign.shape_intensity,
+                  selectedDesign.lineSpacing,
                   setDesignsByView,
                   activePreview,
                   selectedDesign,
@@ -125,7 +127,7 @@ function FontColors({
         ))}
       </div>
 
-      {isOutline && (
+      {isOutline && selectedDesign?.outline_color && (
         <div style={{ position: "relative", marginTop: "10px" }}>
           <span
             className="color-grid-title"
@@ -158,6 +160,7 @@ function FontColors({
                 selectedDesign.text_alignment,
                 selectedDesign.text_shape,
                 selectedDesign.shape_intensity,
+                selectedDesign.lineSpacing,
                 setDesignsByView,
                 activePreview,
                 selectedDesign,
@@ -176,7 +179,7 @@ function FontColors({
         </div>
       )}
 
-      <button
+      {/* <button
         className="text-add-btn"
         style={{
           marginTop: "10px",
@@ -190,7 +193,61 @@ function FontColors({
         }}
       >
         Done
-      </button>
+      </button> */}
+
+      <div className="crop-actions" style={{ minWidth: "100%" }}>
+        <button
+          className="panel-btn"
+          style={{
+            padding: "0px 0px",
+            marginLeft: "0px",
+            marginTop: "10px",
+            height: "45px",
+            width: "120px",
+            fontSize: "13px",
+          }}
+          onClick={() => {
+            applyNewTextImg(
+              selectedDesign.text,
+              selectedDesign.fontFamily,
+              selectedDesign.isBold,
+              selectedDesign.isItalic,
+              selectedDesign.design_color,
+              null,
+              0,
+              selectedDesign.text_alignment,
+              selectedDesign.text_shape,
+              selectedDesign.shape_intensity,
+              selectedDesign.lineSpacing,
+              setDesignsByView,
+              activePreview,
+              selectedDesign,
+              regionWidth,
+              regionHeight,
+              getBoundingBox,
+            );
+          }}
+        >
+          Remove Outline
+        </button>
+
+        <button
+          className="panel-btn"
+          style={{
+            padding: "0px 0px",
+            marginLeft: "0px",
+            marginTop: "10px",
+            height: "45px",
+            width: "120px",
+            fontSize: "13px",
+          }}
+          onClick={() => {
+            setActiveTab("editText");
+          }}
+        >
+          Done
+        </button>
+      </div>
     </div>
   );
 }

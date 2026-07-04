@@ -11,6 +11,7 @@ import TextArea from "./TextArea";
 import FontsTab from "./FontsTab";
 import FontShapeTab from "./FontShapeTab";
 import FontColors from "./FontColors";
+import LineSpacer from "./LineSpacer";
 
 import {
   handleToggleAspectLock,
@@ -276,6 +277,50 @@ function TabPanel({
           </div>
 
           <HorizontalLine marginUp={15} marginDown={15} lineColor={"#333"} />
+          <div className="size-row">
+            <div className="rotation-left">Font Shape</div>
+            <div className="size-right">
+              <button
+                className="font-preview"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveTab("changeShape");
+                }}
+              >
+                {selectedDesign.text_shape === "normal"
+                  ? "Normal"
+                  : selectedDesign.text_shape === "curve"
+                    ? "Curve"
+                    : "Unknown"}
+              </button>
+            </div>
+          </div>
+
+          <HorizontalLine marginUp={15} marginDown={15} lineColor={"#333"} />
+          <LineSpacer
+            selectedDesign={selectedDesign}
+            setDesignsByView={setDesignsByView}
+            activePreview={activePreview}
+            getBoundingBox={getBoundingBox}
+            regionWidth={regionWidth}
+            regionHeight={regionHeight}
+          />
+
+          <HorizontalLine marginUp={15} marginDown={15} lineColor={"#333"} />
+          <ButtonsSection
+            selectedDesign={selectedDesign}
+            activePreview={activePreview}
+            setDesignsByView={setDesignsByView}
+            setIsCropping={setIsCropping}
+            setActiveTab={setActiveTab}
+            regionWidth={regionWidth}
+            regionHeight={regionHeight}
+            setSelectedDesignId={setSelectedDesignId}
+            designsByView={designsByView}
+            getBoundingBox={getBoundingBox}
+          />
+
+          <HorizontalLine marginUp={15} marginDown={15} lineColor={"#333"} />
           <SizeSection
             regionWidth={regionWidth}
             regionHeight={regionHeight}
@@ -306,39 +351,6 @@ function TabPanel({
             setIsWidthZero={setIsWidthZero}
             setIsWidthBlank={setIsWidthBlank}
           />
-          <HorizontalLine marginUp={15} marginDown={15} lineColor={"#333"} />
-          <ButtonsSection
-            selectedDesign={selectedDesign}
-            activePreview={activePreview}
-            setDesignsByView={setDesignsByView}
-            setIsCropping={setIsCropping}
-            setActiveTab={setActiveTab}
-            regionWidth={regionWidth}
-            regionHeight={regionHeight}
-            setSelectedDesignId={setSelectedDesignId}
-            designsByView={designsByView}
-            getBoundingBox={getBoundingBox}
-          />
-
-          <HorizontalLine marginUp={15} marginDown={15} lineColor={"#333"} />
-          <div className="size-row">
-            <div className="rotation-left">Font Shape</div>
-            <div className="size-right">
-              <button
-                className="font-preview"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveTab("changeShape");
-                }}
-              >
-                {selectedDesign.text_shape === "normal"
-                  ? "Normal"
-                  : selectedDesign.text_shape === "curve"
-                    ? "Curve"
-                    : "Unknown"}
-              </button>
-            </div>
-          </div>
         </div>
       )}
 

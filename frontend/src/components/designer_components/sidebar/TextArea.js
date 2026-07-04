@@ -95,6 +95,7 @@ function TextArea({
                 text_alignment: "center",
                 text_shape: "normal",
                 shape_intensity: 0,
+                lineSpacing: 1,
               };
 
               addDesignCollageToActiveView({
@@ -129,6 +130,7 @@ function TextArea({
                 selectedDesign.text_alignment,
                 selectedDesign.text_shape,
                 selectedDesign.shape_intensity,
+                selectedDesign.lineSpacing,
                 setDesignsByView,
                 activePreview,
                 selectedDesign,
