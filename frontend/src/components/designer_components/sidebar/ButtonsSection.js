@@ -55,6 +55,7 @@ function ButtonsSection({
         <div className="edit-block">
           <div className="edit-group no-gap">
             <button
+            disabled={selectedDesign.text_shape !== "normal"}
               className={
                 selectedDesign.text_alignment === "left" ? "active" : ""
               }
@@ -85,6 +86,7 @@ function ButtonsSection({
             </button>
 
             <button
+            disabled={selectedDesign.text_shape !== "normal"}
               className={
                 selectedDesign.text_alignment === "center" ? "active" : ""
               }
@@ -115,6 +117,7 @@ function ButtonsSection({
             </button>
 
             <button
+            disabled={selectedDesign.text_shape !== "normal"}
               className={
                 selectedDesign.text_alignment === "right" ? "active" : ""
               }

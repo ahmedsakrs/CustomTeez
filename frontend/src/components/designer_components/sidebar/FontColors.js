@@ -109,7 +109,7 @@ function FontColors({
                   selectedDesign.isItalic,
                   selectedDesign.design_color,
                   color,
-                  2,
+                  selectedDesign.outline_width || 2,
                   selectedDesign.text_alignment,
                   selectedDesign.text_shape,
                   selectedDesign.shape_intensity,
@@ -179,8 +179,10 @@ function FontColors({
         </div>
       )}
 
-      <div className="crop-actions" style={{ minWidth: "100%" }}>
+      {isOutline && (
+        <div className="crop-actions" style={{ minWidth: "100%" }}>
         <button
+          disabled={!selectedDesign.outline_color}
           className="panel-btn"
           style={{
             padding: "0px 0px",
@@ -232,6 +234,18 @@ function FontColors({
           Done
         </button>
       </div>
+      )}
+      {!isOutline && (
+        <button
+        className="text-add-btn"
+        style={{ marginTop: "10px", height: "45px", width: "80px", fontSize: "14px"}}
+        onClick={() => {
+            setActiveTab("editText");
+          }}
+      >
+        Done
+      </button>
+      )}
     </div>
   );
 }
