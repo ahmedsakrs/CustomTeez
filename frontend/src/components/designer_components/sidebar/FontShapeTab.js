@@ -20,7 +20,7 @@ export default function FontShapeTab({
   getBoundingBox,
 }) {
   const currentShape = selectedDesign?.text_shape || "normal";
-  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 300), []);
+  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 120), []);
   const [shapeIntensity, setShapeIntensity] = useState(
     selectedDesign?.shape_intensity === 0
       ? 0.25

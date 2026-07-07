@@ -25,7 +25,7 @@ function FontColors({
   setActiveTab,
   isOutline = false,
 }) {
-  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 300), []);
+  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 120), []);
   const [outlineWidth, setOutlineWidth] = useState(
     selectedDesign?.outline_width === 0 || isNaN(selectedDesign?.outline_width)
       ? 2

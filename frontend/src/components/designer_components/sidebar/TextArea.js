@@ -1,10 +1,6 @@
 import React from "react";
-import {
-  findFittingFontSize,
-  textToImage,
-  getNewSizePos,
-  applyNewTextImg,
-} from "../../../utils/designerUtils";
+import { getNewSizePos, applyNewTextImg } from "../../../utils/designerUtils";
+import { findFittingFontSize, textToImage } from "../../../utils/textRenderer";
 
 function TextArea({
   addDesignCollageToActiveView,
@@ -53,7 +49,7 @@ function TextArea({
       <button
         className="text-update-btn"
         disabled={!pendingText.trim()}
-        onClick={async(e) => {
+        onClick={async (e) => {
           if (activeTab === "addText") {
             e.stopPropagation();
 
@@ -88,7 +84,7 @@ function TextArea({
                 fontFamily: "Arial",
                 isLocked_aspect_ratio: true,
                 type: "text",
-                design_color: {rgb: "#000000", name: "Black"},
+                design_color: { rgb: "#000000", name: "Black" },
                 design_color_name: "Black",
                 outline_width: 0,
                 outline_color: null,

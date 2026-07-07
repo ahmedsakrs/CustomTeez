@@ -10,7 +10,7 @@ function LineSpacer({
   regionWidth,
   regionHeight,
 }) {
-  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 200), []);
+  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 120), []);
   const [lineHeight, setLineHeight] = useState(
     selectedDesign?.lineSpacing || 1,
   );
