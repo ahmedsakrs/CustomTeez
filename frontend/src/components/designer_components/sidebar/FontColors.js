@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
+import debounce from "lodash.debounce";
 import { applyNewTextImg } from "../../../utils/designerUtils";
 
 const availableColors = [
@@ -24,6 +25,12 @@ function FontColors({
   setActiveTab,
   isOutline = false,
 }) {
+  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 300), []);
+  const [outlineWidth, setOutlineWidth] = useState(
+    selectedDesign?.outline_width === 0 || isNaN(selectedDesign?.outline_width)
+      ? 2
+      : selectedDesign?.outline_width,
+  );
   return (
     <div className="vinyl-colors-tab">
       <div className="selected-color-header">
@@ -144,12 +151,13 @@ function FontColors({
               zIndex: 2,
             }}
             type="range"
-            min="0"
+            min="0.5"
             max="4"
             step={0.5}
-            value={selectedDesign?.outline_width || 0}
-            onChange={(e) =>
-              applyNewTextImg(
+            value={outlineWidth}
+            onChange={(e) => {
+              setOutlineWidth(e.target.value);
+              debouncedUpdate(
                 selectedDesign.text,
                 selectedDesign.fontFamily,
                 selectedDesign.isBold,
@@ -167,12 +175,12 @@ function FontColors({
                 regionWidth,
                 regionHeight,
                 getBoundingBox,
-              )
-            }
+              );
+            }}
           />
 
           <div className="slider-ticks">
-            {Array.from({ length: 9 }).map((_, i) => (
+            {Array.from({ length: 8 }).map((_, i) => (
               <span key={i} />
             ))}
           </div>
@@ -181,51 +189,68 @@ function FontColors({
 
       {isOutline && (
         <div className="crop-actions" style={{ minWidth: "100%" }}>
-        <button
-          disabled={!selectedDesign.outline_color}
-          className="panel-btn"
-          style={{
-            padding: "0px 0px",
-            marginLeft: "0px",
-            marginTop: "10px",
-            height: "45px",
-            width: "120px",
-            fontSize: "13px",
-          }}
-          onClick={() => {
-            applyNewTextImg(
-              selectedDesign.text,
-              selectedDesign.fontFamily,
-              selectedDesign.isBold,
-              selectedDesign.isItalic,
-              selectedDesign.design_color,
-              null,
-              0,
-              selectedDesign.text_alignment,
-              selectedDesign.text_shape,
-              selectedDesign.shape_intensity,
-              selectedDesign.lineSpacing,
-              setDesignsByView,
-              activePreview,
-              selectedDesign,
-              regionWidth,
-              regionHeight,
-              getBoundingBox,
-            );
-          }}
-        >
-          Remove Outline
-        </button>
+          <button
+            disabled={!selectedDesign.outline_color}
+            className="panel-btn"
+            style={{
+              padding: "0px 0px",
+              marginLeft: "0px",
+              marginTop: "10px",
+              height: "45px",
+              width: "120px",
+              fontSize: "13px",
+            }}
+            onClick={() => {
+              applyNewTextImg(
+                selectedDesign.text,
+                selectedDesign.fontFamily,
+                selectedDesign.isBold,
+                selectedDesign.isItalic,
+                selectedDesign.design_color,
+                null,
+                0,
+                selectedDesign.text_alignment,
+                selectedDesign.text_shape,
+                selectedDesign.shape_intensity,
+                selectedDesign.lineSpacing,
+                setDesignsByView,
+                activePreview,
+                selectedDesign,
+                regionWidth,
+                regionHeight,
+                getBoundingBox,
+              );
+            }}
+          >
+            Remove Outline
+          </button>
 
+          <button
+            className="panel-btn"
+            style={{
+              padding: "0px 0px",
+              marginLeft: "0px",
+              marginTop: "10px",
+              height: "45px",
+              width: "120px",
+              fontSize: "13px",
+            }}
+            onClick={() => {
+              setActiveTab("editText");
+            }}
+          >
+            Done
+          </button>
+        </div>
+      )}
+      {!isOutline && (
         <button
-          className="panel-btn"
+          className="text-add-btn"
           style={{
-            padding: "0px 0px",
-            marginLeft: "0px",
             marginTop: "10px",
             height: "45px",
-            width: "120px",
-            fontSize: "13px",
+            width: "80px",
+            fontSize: "14px",
           }}
           onClick={() => {
             setActiveTab("editText");
@@ -233,18 +258,6 @@ function FontColors({
         >
           Done
         </button>
-      </div>
-      )}
-      {!isOutline && (
-        <button
-        className="text-add-btn"
-        style={{ marginTop: "10px", height: "45px", width: "80px", fontSize: "14px"}}
-        onClick={() => {
-            setActiveTab("editText");
-          }}
-      >
-        Done
-      </button>
       )}
     </div>
   );

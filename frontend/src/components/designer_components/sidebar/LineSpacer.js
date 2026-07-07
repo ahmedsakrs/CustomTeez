@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
+import debounce from "lodash.debounce";
 import { applyNewTextImg } from "../../../utils/designerUtils";
 
 function LineSpacer({
@@ -9,6 +10,11 @@ function LineSpacer({
   regionWidth,
   regionHeight,
 }) {
+  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 200), []);
+  const [lineHeight, setLineHeight] = useState(
+    selectedDesign?.lineSpacing || 1,
+  );
+
   return (
     <div className="size-row">
       <div className="rotation-left">Line Spacing</div>
@@ -19,9 +25,10 @@ function LineSpacer({
           min="0.8"
           max="1.5"
           step={0.1}
-          value={selectedDesign?.lineSpacing || 1}
-          onChange={(e) =>
-            applyNewTextImg(
+          value={lineHeight}
+          onChange={(e) => {
+            setLineHeight(parseFloat(e.target.value));
+            debouncedUpdate(
               selectedDesign.text,
               selectedDesign.fontFamily,
               selectedDesign.isBold,
@@ -39,8 +46,8 @@ function LineSpacer({
               regionWidth,
               regionHeight,
               getBoundingBox,
-            )
-          }
+            );
+          }}
         />
       </div>
     </div>

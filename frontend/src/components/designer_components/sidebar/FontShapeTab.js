@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
+import debounce from "lodash.debounce";
 import { applyNewTextImg } from "../../../utils/designerUtils";
 
 const shapes = [
@@ -19,12 +20,14 @@ export default function FontShapeTab({
   getBoundingBox,
 }) {
   const currentShape = selectedDesign?.text_shape || "normal";
-  const intensity =
+  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 300), []);
+  const [shapeIntensity, setShapeIntensity] = useState(
     selectedDesign?.shape_intensity === 0
       ? 0.25
-      : selectedDesign?.shape_intensity;
+      : selectedDesign?.shape_intensity,
+  );
 
-  const applyShape = (shape, newIntensity = intensity) => {
+  const applyShape = (shape, newIntensity = shapeIntensity) => {
     applyNewTextImg(
       selectedDesign.text,
       selectedDesign.fontFamily,
@@ -71,10 +74,31 @@ export default function FontShapeTab({
             min="-0.45"
             max="0.45"
             step="0.1"
-            value={intensity}
+            value={shapeIntensity}
             onChange={(e) => {
               const newVal = parseFloat(e.target.value);
-              applyShape(currentShape, newVal);
+              setShapeIntensity(newVal);
+              debouncedUpdate(
+                selectedDesign.text,
+                selectedDesign.fontFamily,
+                selectedDesign.isBold,
+                selectedDesign.isItalic,
+                selectedDesign.design_color,
+                selectedDesign.outline_color,
+                selectedDesign.outline_width,
+                currentShape === "normal"
+                  ? selectedDesign.text_alignment
+                  : "center",
+                currentShape,
+                newVal,
+                selectedDesign.lineSpacing,
+                setDesignsByView,
+                activePreview,
+                selectedDesign,
+                regionWidth,
+                regionHeight,
+                getBoundingBox,
+              );
             }}
             className="slider"
             style={{ minWidth: "100%" }}

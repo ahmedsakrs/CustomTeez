@@ -1230,6 +1230,7 @@ function ProductDesigner() {
                               ),
                             design.rotation,
                           ).height,
+                          zIndex: design.layer
                         }}
                       >
                         <div
