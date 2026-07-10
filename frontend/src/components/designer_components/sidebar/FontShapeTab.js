@@ -5,7 +5,7 @@ import { applyNewTextImg } from "../../../utils/designerUtils";
 const shapes = [
   { key: "normal", label: "Normal" },
   { key: "curve", label: "Curve" },
-  { key: "arc", label: "Arc" },
+  { key: "arch", label: "Arch" },
   { key: "wave", label: "Wave" },
 ];
 
@@ -20,7 +20,7 @@ export default function FontShapeTab({
   getBoundingBox,
 }) {
   const currentShape = selectedDesign?.text_shape || "normal";
-  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 120), []);
+  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 200), []);
   const [shapeIntensity, setShapeIntensity] = useState(
     selectedDesign?.shape_intensity === 0
       ? 0.25
@@ -71,8 +71,8 @@ export default function FontShapeTab({
         <div className="shape-slider-wrapper">
           <input
             type="range"
-            min="-0.45"
-            max="0.45"
+            min="-0.65"
+            max="0.65"
             step="0.1"
             value={shapeIntensity}
             onChange={(e) => {
@@ -128,7 +128,7 @@ export default function FontShapeTab({
               selectedDesign.outline_color,
               selectedDesign.outline_width,
               selectedDesign.text_alignment,
-              null,
+              "normal",
               0,
               selectedDesign.lineSpacing,
               setDesignsByView,

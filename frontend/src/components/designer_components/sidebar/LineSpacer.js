@@ -10,7 +10,7 @@ function LineSpacer({
   regionWidth,
   regionHeight,
 }) {
-  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 120), []);
+  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 200), []);
   const [lineHeight, setLineHeight] = useState(
     selectedDesign?.lineSpacing || 1,
   );
@@ -22,7 +22,7 @@ function LineSpacer({
         <input
           className="slider"
           type="range"
-          min="0.8"
+          min="0.6"
           max="1.5"
           step={0.1}
           value={lineHeight}

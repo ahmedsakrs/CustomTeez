@@ -197,7 +197,7 @@ function TabPanel({
             <div className="size-right">
               <button
                 className="font-preview"
-                style={{ fontSize: "1rem", padding: "1px 2px"}}
+                style={{ fontSize: "1rem", padding: "1px 2px" }}
                 onClick={(e) => {
                   e.stopPropagation();
                   setActiveTab("changeFont");
@@ -219,7 +219,11 @@ function TabPanel({
                     setActiveTab("changeFontColor");
                   }}
                   className="font-preview"
-                  style={{paddingLeft: "4px", paddingRight: "4px", fontSize: "1rem"}}
+                  style={{
+                    paddingLeft: "4px",
+                    paddingRight: "4px",
+                    fontSize: "1rem",
+                  }}
                 >
                   {selectedDesign.design_color.name}
                 </button>
@@ -251,7 +255,11 @@ function TabPanel({
                     setActiveTab("changeFontOutline");
                   }}
                   className="font-preview"
-                  style={{paddingLeft: "4px", paddingRight: "4px", fontSize: "1rem"}}
+                  style={{
+                    paddingLeft: "4px",
+                    paddingRight: "4px",
+                    fontSize: "1rem",
+                  }}
                 >
                   {selectedDesign.outline_color
                     ? selectedDesign.outline_color.name
@@ -291,7 +299,9 @@ function TabPanel({
                   ? "Normal"
                   : selectedDesign.text_shape === "curve"
                     ? "Curve"
-                    : "Unknown"}
+                    : selectedDesign.text_shape === "arch"
+                      ? "Arch"
+                      : " Unknown"}
               </button>
             </div>
           </div>

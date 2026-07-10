@@ -175,7 +175,11 @@ function findTForLength(lookup, targetLength) {
   return lookup[Math.min(low, lookup.length - 1)].t;
 }
 
-function drawEllipticalText(
+function getCenterNormal(reverseCurve) {
+  return reverseCurve ? { x: 0, y: -1 } : { x: 0, y: 1 };
+}
+
+function buildEllipticalGlyphs(
   ctx,
   text,
   cx,
@@ -184,9 +188,6 @@ function drawEllipticalText(
   fontSizePx,
   curveIntensity,
   reverseCurve,
-  textColor,
-  outlineColor,
-  outlinePx,
 ) {
   const chars = text.split("");
 
@@ -222,7 +223,6 @@ function drawEllipticalText(
 
     let angle = ellipseTangentAngle(rx, ry, t, reverseCurve);
 
-    // keep characters upright
     if (angle > Math.PI / 2 || angle < -Math.PI / 2) {
       angle += Math.PI;
     }
@@ -238,34 +238,36 @@ function drawEllipticalText(
     currentLength += width;
   });
 
-  // ==========================
-  // PASS 1 - DRAW OUTLINES
-  // ==========================
-  if (outlinePx && outlineColor) {
-    ctx.fillStyle = outlineColor.rgb;
+  return glyphs;
+}
 
-    const radius = Math.max(1, Math.round(outlinePx));
-
-    const offsets = getOutlineOffsets(radius);
-
-    glyphs.forEach((glyph) => {
-      ctx.save();
-
-      ctx.translate(glyph.x, glyph.y);
-
-      ctx.rotate(glyph.angle);
-
-      offsets.forEach(({ dx, dy }) => {
-        ctx.fillText(glyph.char, -glyph.width / 2 + dx, dy);
-      });
-
-      ctx.restore();
-    });
+function drawGlyphOutlines(ctx, glyphs, outlineColor, outlinePx) {
+  if (!outlinePx || !outlineColor) {
+    return;
   }
 
-  // ==========================
-  // PASS 2 - DRAW FILLS
-  // ==========================
+  ctx.fillStyle = outlineColor.rgb;
+
+  const radius = Math.max(1, Math.round(outlinePx));
+
+  const offsets = getOutlineOffsets(radius);
+
+  glyphs.forEach((glyph) => {
+    ctx.save();
+
+    ctx.translate(glyph.x, glyph.y);
+
+    ctx.rotate(glyph.angle);
+
+    offsets.forEach(({ dx, dy }) => {
+      ctx.fillText(glyph.char, -glyph.width / 2 + dx, dy);
+    });
+
+    ctx.restore();
+  });
+}
+
+function drawGlyphFills(ctx, glyphs, textColor) {
   ctx.fillStyle = textColor.rgb;
 
   glyphs.forEach((glyph) => {
@@ -422,29 +424,50 @@ export async function textToImage({
 
     canvas.width = rx * 2 + fontSizePx * 4 + outlinePx * 4;
 
+    const topPadding = reverseCurve ? ry : fontSizePx;
+
+    const baseCurveY = topPadding + ry + fontSizePx;
+
     canvas.height =
-      ry + lines.length * lineSpacing + fontSizePx * 4 + outlinePx * 4;
+      topPadding +
+      ry * 2 +
+      fontSizePx * 4 +
+      outlinePx * 4 +
+      (lines.length - 1) * lineSpacing * 2;
 
     ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
     ctx.textBaseline = "middle";
 
+    const allGlyphs = [];
+
     lines.forEach((line, index) => {
-      drawEllipticalText(
+      const lineGlyphs = buildEllipticalGlyphs(
         ctx,
         line,
         canvas.width / 2,
-        ry + fontSizePx + index * lineSpacing,
-
+        baseCurveY + index * lineSpacing * 0.15,
         widestLineWidth,
         fontSizePx,
         shapeIntensity,
         reverseCurve,
-
-        textColor,
-        outlineColor,
-        outlinePx,
       );
+
+      const centerNormal = getCenterNormal(reverseCurve);
+
+      lineGlyphs.forEach((glyph) => {
+        glyph.x += centerNormal.x * index * lineSpacing;
+
+        glyph.y += centerNormal.y * index * lineSpacing;
+      });
+
+      allGlyphs.push(...lineGlyphs);
     });
+
+    // ALL OUTLINES FIRST
+    drawGlyphOutlines(ctx, allGlyphs, outlineColor, outlinePx);
+
+    // THEN ALL FILLS
+    drawGlyphFills(ctx, allGlyphs, textColor);
 
     return await canvasToResult(canvas);
   }

@@ -25,7 +25,7 @@ function FontColors({
   setActiveTab,
   isOutline = false,
 }) {
-  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 120), []);
+  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 200), []);
   const [outlineWidth, setOutlineWidth] = useState(
     selectedDesign?.outline_width === 0 || isNaN(selectedDesign?.outline_width)
       ? 2
@@ -152,7 +152,7 @@ function FontColors({
             }}
             type="range"
             min="0.5"
-            max="4"
+            max="5"
             step={0.5}
             value={outlineWidth}
             onChange={(e) => {
@@ -180,7 +180,7 @@ function FontColors({
           />
 
           <div className="slider-ticks">
-            {Array.from({ length: 8 }).map((_, i) => (
+            {Array.from({ length: 10 }).map((_, i) => (
               <span key={i} />
             ))}
           </div>
