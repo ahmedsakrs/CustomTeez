@@ -732,6 +732,48 @@
   background-color: #888;
 }
 
+.start-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+}
+
+.start-title {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.start-card {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  gap: 12px;
+
+  width: 100%;
+  min-height: 90px;
+
+  border: 1px solid #bbb;
+  border-radius: 10px;
+
+  background: white;
+  cursor: pointer;
+
+  padding: 12px;
+
+  transition: 0.2s;
+}
+
+.start-card:hover {
+  background: #f2f2f2;
+  transform: translateY(-1px);
+}
+
+.start-card svg {
+  font-size: 34px;
+}
+
 /* Responsive rules */
 @media (min-width: 600px) {
   .sidebar {

@@ -30,6 +30,7 @@ function Sidebar({
   setIsWidthBlank,
   pendingText,
   setPendingText,
+  sideRef
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [designCounter, setDesignCounter] = useState(0);
@@ -84,7 +85,7 @@ function Sidebar({
   };
   return (
     <div className="sidebar">
-      <div className="sidebar-buttons">
+      <div className="sidebar-buttons" ref={sideRef}>
         <button
           className={`sidebar-btn ${activeTab === "addDesign" || activeTab === "editDesign" || activeTab === "Crop" ? "active" : ""}`}
           onClick={() => {

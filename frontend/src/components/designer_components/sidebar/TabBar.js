@@ -29,7 +29,9 @@ function TabBar({
             } else if (
               activeTab === "editDesign" ||
               activeTab === "editText" ||
-              activeTab === "editUpload"
+              activeTab === "editUpload" ||
+              activeTab === "addText" ||
+              activeTab === "uploadDesign"
             ) {
               setActiveTab(null);
               setSelectedDesignId(null);

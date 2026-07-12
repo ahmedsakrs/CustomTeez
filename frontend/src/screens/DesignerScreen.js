@@ -241,6 +241,7 @@ function ProductDesigner() {
   const previewRef = useRef(null);
   const imgRef = useRef(null);
   const panelRef = useRef(null);
+  const sideRef = useRef(null);
   const barRef = useRef(null);
   const scrollRef = useRef(null);
   const thumbRefs = {
@@ -307,6 +308,10 @@ function ProductDesigner() {
           return;
         }
 
+        if (sideRef.current && sideRef.current.contains(e.target)) {
+          return;
+        }
+
         if (justFinishedInteraction) {
           // Suppress deselect once
           setJustFinishedInteraction(false);
@@ -316,7 +321,7 @@ function ProductDesigner() {
         if (isActive) return;
 
         if (isResizing || isRotating) return;
-        setActiveTab("");
+        setActiveTab(null);
         setSelectedDesignId(null);
         setIsCropping(false);
       };
@@ -500,6 +505,7 @@ function ProductDesigner() {
         setIsWidthBlank={setIsWidthBlank}
         pendingText={pendingText}
         setPendingText={setPendingText}
+        sideRef={sideRef}
         onClick={(e) => {
           e.stopPropagation();
         }}

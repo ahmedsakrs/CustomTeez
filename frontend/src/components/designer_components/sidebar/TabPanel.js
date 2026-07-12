@@ -13,6 +13,7 @@ import FontShapeTab from "./FontShapeTab";
 import FontColors from "./FontColors";
 import LineSpacer from "./LineSpacer";
 import UploaderTab from "./UploaderTab";
+import MainTab from './MainTab'
 
 import {
   handleToggleAspectLock,
@@ -53,6 +54,10 @@ function TabPanel({
   );
   return (
     <div className="tab-content" ref={panelRef}>
+      {activeTab === null && (
+        <MainTab setActiveTab={setActiveTab}/>
+      )}
+
       {!selectedCategory && activeTab === "addDesign" && (
         <>
           <Row xl={2}>
