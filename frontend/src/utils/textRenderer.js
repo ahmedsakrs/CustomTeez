@@ -179,6 +179,138 @@ function getCenterNormal(reverseCurve) {
   return reverseCurve ? { x: 0, y: -1 } : { x: 0, y: 1 };
 }
 
+function buildArchGlyphs(
+  ctx,
+  text,
+  cx,
+  cy,
+  lineOffset,
+  fontSizePx,
+  shapeIntensity,
+  reverseCurve,
+) {
+  const chars = text.split("");
+
+  const widths = chars.map((c) => ctx.measureText(c).width);
+
+  const totalTextWidth = widths.reduce((a, b) => a + b, 0);
+
+  const radius = Math.max(
+    totalTextWidth / (Math.max(shapeIntensity, 0.15) * Math.PI * 1.5),
+    fontSizePx * 2.5,
+  );
+
+  const totalAngle = shapeIntensity * Math.PI;
+
+  let currentOffset = -totalTextWidth / 2;
+
+  const glyphs = [];
+
+  chars.forEach((char, index) => {
+    const width = widths[index];
+
+    const centerOffset = currentOffset + width / 2;
+
+    let angle = 0;
+
+    if (totalTextWidth > 0) {
+      angle = totalAngle * (centerOffset / totalTextWidth);
+    }
+
+    const drawAngle = reverseCurve ? -angle : angle;
+
+    const x = cx + radius * Math.sin(drawAngle);
+
+    const y = cy - radius * Math.cos(drawAngle);
+
+    const t = totalAngle === 0 ? 0 : angle / (totalAngle / 2);
+
+    const rotation = drawAngle * 0.35;
+
+    const scaleX = 1 + Math.abs(t) * shapeIntensity * 0.2;
+
+    glyphs.push({
+      char,
+      width,
+      x,
+      y: y + lineOffset,
+      t,
+      rotation,
+    });
+
+    currentOffset += width * scaleX + fontSizePx * 0.1;
+  });
+
+  return {
+    glyphs,
+    radius,
+  };
+}
+
+function drawArchGlyphOutlines(
+  ctx,
+  glyphs,
+  outlineColor,
+  outlinePx,
+  shapeIntensity,
+) {
+  if (!outlinePx || !outlineColor) {
+    return;
+  }
+
+  ctx.fillStyle = outlineColor.rgb;
+
+  const radius = Math.max(1, Math.round(outlinePx));
+
+  const offsets = getOutlineOffsets(radius);
+
+  glyphs.forEach((glyph) => {
+    ctx.save();
+
+    ctx.translate(glyph.x, glyph.y);
+
+    ctx.rotate(glyph.rotation);
+
+    const skewAmount = glyph.t * shapeIntensity * 0.35;
+
+    const scaleX = 1 + Math.abs(glyph.t) * shapeIntensity * 0.2;
+
+    ctx.transform(1, 0, skewAmount, 1, 0, 0);
+
+    ctx.scale(scaleX, 1);
+
+    offsets.forEach(({ dx, dy }) => {
+      ctx.fillText(glyph.char, -glyph.width / 2 + dx, dy);
+    });
+
+    ctx.restore();
+  });
+}
+
+function drawArchGlyphFills(ctx, glyphs, textColor, shapeIntensity) {
+  ctx.fillStyle = textColor.rgb;
+
+  glyphs.forEach((glyph) => {
+    ctx.save();
+
+    ctx.translate(glyph.x, glyph.y);
+
+    ctx.rotate(glyph.rotation);
+
+    const skewAmount = glyph.t * shapeIntensity * 0.35;
+
+    const scaleX = 1 + Math.abs(glyph.t) * shapeIntensity * 0.2;
+
+    ctx.transform(1, 0, skewAmount, 1, 0, 0);
+
+    ctx.scale(scaleX, 1);
+
+    ctx.fillText(glyph.char, -glyph.width / 2, 0);
+
+    ctx.restore();
+  });
+}
+
 function buildEllipticalGlyphs(
   ctx,
   text,
@@ -468,6 +600,89 @@ export async function textToImage({
 
     // THEN ALL FILLS
     drawGlyphFills(ctx, allGlyphs, textColor);
+
+    return await canvasToResult(canvas);
+  }
+
+  if (textShape === "arch") {
+    let reverseCurve = false;
+
+    if (shapeIntensity < 0) {
+      shapeIntensity = -shapeIntensity;
+
+      reverseCurve = true;
+    }
+
+    const canvas = new OffscreenCanvas(1, 1);
+
+    const ctx = canvas.getContext("2d");
+
+    const fontWeight = isBold ? "bold" : "normal";
+
+    const fontStyle = isItalic ? "italic" : "normal";
+
+    ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
+
+    const outlinePx = outlineSize > 0 ? (outlineSize * fontSizePx) / 12 : 0;
+
+    const lineHeight = fontSizePx * lineHeightMultiplier;
+
+    const lineSpacing = lineHeight + fontSizePx * 0.5;
+
+    let widestLineWidth = 0;
+
+    lines.forEach((line) => {
+      widestLineWidth = Math.max(widestLineWidth, ctx.measureText(line).width);
+    });
+
+    const radius = Math.max(
+      widestLineWidth / (Math.max(shapeIntensity, 0.15) * Math.PI * 1.5),
+      fontSizePx * 2.5,
+    );
+
+    const curveHeight =
+      Math.max(
+        fontSizePx,
+        radius * (1 - Math.cos((shapeIntensity * Math.PI) / 2)),
+      ) * 0.8;
+
+    canvas.width = widestLineWidth + fontSizePx * 8 + outlinePx * 4;
+
+    canvas.height =
+      curveHeight +
+      fontSizePx * 6 +
+      outlinePx * 4 +
+      (lines.length - 1) * lineSpacing;
+
+    ctx.font = `${fontStyle} ${fontWeight} ${fontSizePx}px ${fontFamily}`;
+    ctx.textBaseline = "middle";
+
+    const allGlyphs = [];
+
+    lines.forEach((line, index) => {
+      const { glyphs } = buildArchGlyphs(
+        ctx,
+        line,
+        canvas.width / 2,
+        radius + fontSizePx,
+        index * lineSpacing,
+        fontSizePx,
+        shapeIntensity,
+        reverseCurve,
+      );
+
+      allGlyphs.push(...glyphs);
+    });
+
+    drawArchGlyphOutlines(
+      ctx,
+      allGlyphs,
+      outlineColor,
+      outlinePx,
+      shapeIntensity,
+    );
+
+    drawArchGlyphFills(ctx, allGlyphs, textColor, shapeIntensity);
 
     return await canvasToResult(canvas);
   }
