@@ -26,10 +26,19 @@ function TabBar({
             } else if (activeTab === "Crop") {
               setActiveTab("editDesign");
               setIsCropping(false);
-            } else if (activeTab === "editDesign" || activeTab === "editText") {
+            } else if (
+              activeTab === "editDesign" ||
+              activeTab === "editText" ||
+              activeTab === "editUpload"
+            ) {
               setActiveTab(null);
               setSelectedDesignId(null);
-            } else if (activeTab === "changeFont" || activeTab === "changeShape" || activeTab === "changeFontColor" || activeTab === "changeFontOutline") {
+            } else if (
+              activeTab === "changeFont" ||
+              activeTab === "changeShape" ||
+              activeTab === "changeFontColor" ||
+              activeTab === "changeFontOutline"
+            ) {
               setActiveTab("editText");
             }
           }}
@@ -59,7 +68,11 @@ function TabBar({
                             ? "Font Color"
                             : activeTab === "changeFontOutline"
                               ? "Font Outline"
-                              : ""}
+                              : activeTab === "uploadDesign"
+                                ? "Upload Images"
+                                : activeTab === "editUpload"
+                                  ? "Edit Upload"
+                                  : ""}
         </span>
         {
           <button

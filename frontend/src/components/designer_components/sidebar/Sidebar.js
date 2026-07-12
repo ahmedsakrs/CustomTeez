@@ -97,7 +97,7 @@ function Sidebar({
         </button>
 
         <button
-          className={`sidebar-btn ${activeTab === "uploadDesign" ? "active" : ""}`}
+          className={`sidebar-btn ${activeTab === "uploadDesign" || activeTab === "editUpload" ? "active" : ""}`}
           onClick={() => {
             setActiveTab("uploadDesign");
           }}

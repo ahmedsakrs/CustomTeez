@@ -794,9 +794,11 @@ function ProductDesigner() {
                           if (d.text) {
                             // ✅ it's a text image
                             setActiveTab("editText");
-                          } else {
+                          } else if (d.type !== "upload") {
                             // ✅ it's a normal design image
                             setActiveTab("editDesign");
+                          } else {
+                            setActiveTab("editUpload");
                           }
                           setPendingText(d?.text);
                         }}
@@ -848,9 +850,11 @@ function ProductDesigner() {
                             if (d.text) {
                               // ✅ it's a text image
                               setActiveTab("editText");
-                            } else {
+                            } else if (d.type !== "upload") {
                               // ✅ it's a normal design image
                               setActiveTab("editDesign");
+                            } else {
+                              setActiveTab("editUpload");
                             }
                           }}
                           draggable="false"
@@ -1104,7 +1108,7 @@ function ProductDesigner() {
                                       0.05 * regionHeight,
                                       startHeight + deltaY,
                                     );
-                                  } else if(newHeight < 0.05 * regionHeight) {
+                                  } else if (newHeight < 0.05 * regionHeight) {
                                     newHeight = 0.05 * regionHeight;
                                     newWidth = newHeight * aspectRatio;
                                   }
@@ -1230,7 +1234,7 @@ function ProductDesigner() {
                               ),
                             design.rotation,
                           ).height,
-                          zIndex: design.layer
+                          zIndex: design.layer,
                         }}
                       >
                         <div
@@ -1288,7 +1292,7 @@ function ProductDesigner() {
                             <img
                               key={design.id}
                               src={design.croppedSrc || design.src}
-                              alt="design overlay"
+                              alt=""
                               className="design-preview-image"
                               draggable="false"
                               style={{

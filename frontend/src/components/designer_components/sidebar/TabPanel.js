@@ -12,6 +12,7 @@ import FontsTab from "./FontsTab";
 import FontShapeTab from "./FontShapeTab";
 import FontColors from "./FontColors";
 import LineSpacer from "./LineSpacer";
+import UploaderTab from "./UploaderTab";
 
 import {
   handleToggleAspectLock,
@@ -82,7 +83,7 @@ function TabPanel({
         </>
       )}
 
-      {activeTab === "editDesign" && (
+      {(activeTab === "editDesign" || activeTab === "editUpload") && (
         <div className="tab-content">
           {/* 1. Layer order */}
           <SizeSection
@@ -414,6 +415,18 @@ function TabPanel({
           regionHeight={regionHeight}
           getBoundingBox={getBoundingBox}
           isOutline={true}
+        />
+      )}
+
+      {activeTab === "uploadDesign" && (
+        <UploaderTab
+          addDesignCollageToActiveView={addDesignCollageToActiveView}
+          setSelectedDesignId={setSelectedDesignId}
+          setActiveTab={setActiveTab}
+          getBoundingBox={getBoundingBox}
+          activePreview={activePreview}
+          regionWidth={regionWidth}
+          regionHeight={regionHeight}
         />
       )}
     </div>
