@@ -5,6 +5,7 @@ import {
   flipHorizontal,
   flipVertical,
   duplicateDesign,
+  center,
   applyNewTextImg,
 } from "../../../utils/designerUtils";
 
@@ -55,7 +56,7 @@ function ButtonsSection({
         <div className="edit-block">
           <div className="edit-group no-gap">
             <button
-            disabled={selectedDesign.text_shape !== "normal"}
+              disabled={selectedDesign.text_shape !== "normal"}
               className={
                 selectedDesign.text_alignment === "left" ? "active" : ""
               }
@@ -86,7 +87,7 @@ function ButtonsSection({
             </button>
 
             <button
-            disabled={selectedDesign.text_shape !== "normal"}
+              disabled={selectedDesign.text_shape !== "normal"}
               className={
                 selectedDesign.text_alignment === "center" ? "active" : ""
               }
@@ -117,7 +118,7 @@ function ButtonsSection({
             </button>
 
             <button
-            disabled={selectedDesign.text_shape !== "normal"}
+              disabled={selectedDesign.text_shape !== "normal"}
               className={
                 selectedDesign.text_alignment === "right" ? "active" : ""
               }
@@ -152,66 +153,67 @@ function ButtonsSection({
       )}
 
       {/* 2. Flip */}
-      {selectedDesign.text && (<div className="edit-block">
-        <div className="edit-group no-gap">
-          <button
-            className={selectedDesign.isBold ? "active" : ""}
-            onClick={async (e) => {
-              e.stopPropagation();
-              await applyNewTextImg(
-                selectedDesign.text,
-                selectedDesign.fontFamily,
-                !selectedDesign.isBold,
-                selectedDesign.isItalic,
-                selectedDesign.design_color,
-                selectedDesign.outline_color,
-                selectedDesign.outline_width,
-                selectedDesign.text_alignment,
-                selectedDesign.text_shape,
-                selectedDesign.shape_intensity,
-                selectedDesign.lineSpacing,
-                setDesignsByView,
-                activePreview,
-                selectedDesign,
-                regionWidth,
-                regionHeight,
-                getBoundingBox,
-              );
-            }}
-          >
-            <i className="fa-solid fa-bold"></i>
-          </button>
+      {selectedDesign.text && (
+        <div className="edit-block">
+          <div className="edit-group no-gap">
+            <button
+              className={selectedDesign.isBold ? "active" : ""}
+              onClick={async (e) => {
+                e.stopPropagation();
+                await applyNewTextImg(
+                  selectedDesign.text,
+                  selectedDesign.fontFamily,
+                  !selectedDesign.isBold,
+                  selectedDesign.isItalic,
+                  selectedDesign.design_color,
+                  selectedDesign.outline_color,
+                  selectedDesign.outline_width,
+                  selectedDesign.text_alignment,
+                  selectedDesign.text_shape,
+                  selectedDesign.shape_intensity,
+                  selectedDesign.lineSpacing,
+                  setDesignsByView,
+                  activePreview,
+                  selectedDesign,
+                  regionWidth,
+                  regionHeight,
+                  getBoundingBox,
+                );
+              }}
+            >
+              <i className="fa-solid fa-bold"></i>
+            </button>
 
-          <button
-            className={selectedDesign.isItalic ? "active" : ""}
-            onClick={async (e) => {
-              e.stopPropagation();
-              await applyNewTextImg(
-                selectedDesign.text,
-                selectedDesign.fontFamily,
-                selectedDesign.isBold,
-                !selectedDesign.isItalic,
-                selectedDesign.design_color,
-                selectedDesign.outline_color,
-                selectedDesign.outline_width,
-                selectedDesign.text_alignment,
-                selectedDesign.text_shape,
-                selectedDesign.shape_intensity,
-                selectedDesign.lineSpacing,
-                setDesignsByView,
-                activePreview,
-                selectedDesign,
-                regionWidth,
-                regionHeight,
-                getBoundingBox,
-              );
-            }}
-          >
-            <i className="fa-solid fa-italic"></i>
-          </button>
+            <button
+              className={selectedDesign.isItalic ? "active" : ""}
+              onClick={async (e) => {
+                e.stopPropagation();
+                await applyNewTextImg(
+                  selectedDesign.text,
+                  selectedDesign.fontFamily,
+                  selectedDesign.isBold,
+                  !selectedDesign.isItalic,
+                  selectedDesign.design_color,
+                  selectedDesign.outline_color,
+                  selectedDesign.outline_width,
+                  selectedDesign.text_alignment,
+                  selectedDesign.text_shape,
+                  selectedDesign.shape_intensity,
+                  selectedDesign.lineSpacing,
+                  setDesignsByView,
+                  activePreview,
+                  selectedDesign,
+                  regionWidth,
+                  regionHeight,
+                  getBoundingBox,
+                );
+              }}
+            >
+              <i className="fa-solid fa-italic"></i>
+            </button>
+          </div>
+          <span className="edit-label">Style</span>
         </div>
-        <span className="edit-label">Style</span>
-      </div>
       )}
 
       {/* 2. Flip */}
@@ -280,6 +282,27 @@ function ButtonsSection({
           <span className="edit-label">Crop</span>
         </div>
       )}
+
+      <div className="edit-block">
+        <div className="edit-group no-gap">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              center(
+                selectedDesign.id,
+                setDesignsByView,
+                activePreview,
+                getBoundingBox,
+                regionWidth,
+                regionHeight,
+              );
+            }}
+          >
+            <i className="bi bi-align-center" style={{fontWeight:"bold", fontSize:"17px"}}></i>
+          </button>
+        </div>
+        <span className="edit-label">Center</span>
+      </div>
     </div>
   );
 }

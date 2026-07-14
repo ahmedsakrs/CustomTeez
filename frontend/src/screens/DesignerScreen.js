@@ -747,25 +747,6 @@ function ProductDesigner() {
 
                 return (
                   <div style={style}>
-                    {selectedDesignId != null &&
-                      isActive &&
-                      Math.abs(
-                        selectedDesign.x + selectedDesign.width / 2 - 1 / 2,
-                      ) <
-                        1 / 35 && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            left: regionWidth / 2,
-                            top: 0,
-                            bottom: 0,
-                            width: 1,
-                            borderLeft: "2px dashed gray",
-                            pointerEvents: "none",
-                            zIndex: 0,
-                          }}
-                        />
-                      )}
                     {designsByView[activePreview].map((d) => (
                       <Rnd
                         key={d.id}
@@ -784,7 +765,10 @@ function ProductDesigner() {
                           lockedWrapperPos &&
                           lockedDesignId === d.id
                             ? lockedWrapperPos
-                            : { x: d.x * regionWidth, y: d.y * regionHeight }
+                            : {
+                                x: d.x * regionWidth,
+                                y: d.y * regionHeight,
+                              }
                         }
                         bounds="parent"
                         // disableDragging={isRotating || isResizing}
@@ -810,23 +794,8 @@ function ProductDesigner() {
                         }}
                         onDrag={(e, data) => {
                           if (isRotating || isResizing) return;
-
                           let newX = data.x;
                           let newY = data.y;
-
-                          const widthPx = d.width * regionWidth;
-
-                          const centerX = newX + widthPx / 2;
-                          const regionCenterX = regionWidth / 2;
-                          const threshold = regionWidth / 20;
-
-                          // ✅ SNAP
-                          if (Math.abs(centerX - regionCenterX) < threshold) {
-                            newX = regionCenterX - widthPx / 2;
-
-                            // ✅ KEY FIX: override Rnd internal position
-                            data.x = newX;
-                          }
 
                           // ✅ update state
                           setDesignsByView((prev) => ({

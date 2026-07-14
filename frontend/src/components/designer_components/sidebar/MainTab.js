@@ -3,7 +3,7 @@ import React from "react";
 function MainTab({setActiveTab}) {
   return (
     <div className="start-tab">
-      <h2 className="start-title">Bring Your Design to Life</h2>
+      <h2 className="start-title">Bring Your Ideas to Life</h2>
 
       <button className="start-card" onClick={() => setActiveTab("addDesign")}>
         {/* <CollectionsIcon /> */}

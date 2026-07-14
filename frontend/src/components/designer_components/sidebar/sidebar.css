@@ -729,7 +729,7 @@
 }
 
 .upload-actions button:hover {
-  background-color: #888;
+  background-color: #ccc;
 }
 
 .start-tab {
@@ -766,7 +766,7 @@
 }
 
 .start-card:hover {
-  background: #f2f2f2;
+  background: #ccc;
   transform: translateY(-1px);
 }
 

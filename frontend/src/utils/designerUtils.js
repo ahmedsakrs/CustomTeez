@@ -449,6 +449,42 @@ export function updateSize(
   });
 }
 
+export function center(
+  designId,
+  setDesignsByView,
+  activePreview,
+  getBoundingBox,
+  regionWidth,
+  regionHeight,
+) {
+  setDesignsByView((prev) => {
+    const updated = prev[activePreview].map((item) => {
+      if (item.id !== designId) return item;
+
+      const bbox = getBoundingBox(
+        item.width *
+          Math.min(regionWidth, regionHeight),
+        item.height *
+          Math.min(regionWidth, regionHeight),
+        item.rotation,
+      );
+
+      const centeredX =
+        (regionWidth - bbox.width) / 2;
+
+      return {
+        ...item,
+        x: centeredX / regionWidth,
+      };
+    });
+
+    return {
+      ...prev,
+      [activePreview]: updated,
+    };
+  });
+}
+
 export function handleToggleAspectLock(
   selectedDesign,
   activePreview,
