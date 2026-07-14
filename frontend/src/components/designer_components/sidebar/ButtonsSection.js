@@ -258,6 +258,7 @@ function ButtonsSection({
                 regionWidth,
                 regionHeight,
                 setSelectedDesignId,
+                getBoundingBox,
               );
             }}
           >
@@ -298,7 +299,10 @@ function ButtonsSection({
               );
             }}
           >
-            <i className="bi bi-align-center" style={{fontWeight:"bold", fontSize:"17px"}}></i>
+            <i
+              className="bi bi-align-center"
+              style={{ fontWeight: "bold", fontSize: "17px" }}
+            ></i>
           </button>
         </div>
         <span className="edit-label">Center</span>

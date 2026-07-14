@@ -181,8 +181,8 @@ export function checkAfterRotation(
               ...item,
               x: posX / regionWidth,
               y: posY / regionHeight,
-              width: (newWidth / regionWidth).toFixed(3),
-              height: (newHeight / regionHeight).toFixed(3),
+              width: Math.round((newWidth / regionWidth) * 1000) / 1000,
+              height: Math.round((newHeight / regionHeight) * 1000) / 1000,
             }
           : item,
       ),
@@ -249,8 +249,9 @@ export function getNewSizePos(
 
     selectedDesign.x = posX / regionWidth;
     selectedDesign.y = posX / regionWidth;
-    selectedDesign.width = (newWidth / regionWidth).toFixed(3);
-    selectedDesign.height = (newHeight / regionWidth).toFixed(3);
+    selectedDesign.width = Math.round((newWidth / regionWidth) * 1000) / 1000;
+    selectedDesign.height =
+      Math.round((newHeight / regionHeight) * 1000) / 1000;
   } else {
     selectedDesign.x = posX / regionWidth;
     selectedDesign.y = posX / regionWidth;
@@ -265,6 +266,7 @@ export function duplicateDesign(
   regionWidth,
   regionHeight,
   setSelectedDesignId,
+  getBoundingBox,
 ) {
   setDesignsByView((prev) => {
     const designs = prev[activeView] || [];
@@ -281,23 +283,27 @@ export function duplicateDesign(
     let offsetX = 10 / regionWidth;
     let offsetY = 10 / regionHeight;
 
-    // check boundaries for X
-    if (original.x + offsetX + original.width > 1) {
-      // would overflow to the right, flip offset left
+    const bbox = getBoundingBox(
+      original.width * Math.min(regionWidth, regionHeight),
+      original.height * Math.min(regionWidth, regionHeight),
+      original.rotation,
+    );
+    const bboxWidthNorm = bbox.width / regionWidth;
+    const bboxHeightNorm = bbox.height / regionHeight;
+    // Right overflow
+    if (original.x + offsetX + bboxWidthNorm > 1) {
       offsetX = -10 / regionWidth;
     }
+    // Left overflow
     if (original.x + offsetX < 0) {
-      // would overflow to the left, reset to 0
       offsetX = 0;
     }
-
-    // check boundaries for Y
-    if (original.y + offsetY + original.height > 1) {
-      // would overflow bottom, flip offset up
+    // Bottom overflow
+    if (original.y + offsetY + bboxHeightNorm > 1) {
       offsetY = -10 / regionHeight;
     }
+    // Top overflow
     if (original.y + offsetY < 0) {
-      // would overflow top, reset to 0
       offsetY = 0;
     }
 
@@ -373,8 +379,8 @@ export function updateSizeClamped(
 
       return {
         ...item,
-        width: (finalWidth / regionWidth).toFixed(3),
-        height: (finalHeight / regionHeight).toFixed(3),
+        width: Math.round((finalWidth / regionWidth) * 1000) / 1000,
+        height: Math.round((finalHeight / regionHeight) * 1000) / 1000,
       };
     });
 
@@ -438,8 +444,8 @@ export function updateSize(
 
       return {
         ...item,
-        width: (finalWidth / regionWidth).toFixed(3),
-        height: (finalHeight / regionHeight).toFixed(3),
+        width: Math.round((finalWidth / regionWidth) * 1000) / 1000,
+        height: Math.round((finalHeight / regionHeight) * 1000) / 1000,
         x: posX / regionWidth,
         y: posY / regionHeight,
       };
@@ -533,10 +539,8 @@ export function handleToggleAspectLock(
 
         return {
           ...item,
-          width: (newWidthPx / Math.min(regionWidth, regionHeight)).toFixed(3),
-          height: (newHeightPx / Math.min(regionWidth, regionHeight)).toFixed(
-            3,
-          ),
+          width: Math.round((newWidthPx / regionWidth) * 1000) / 1000,
+          height: Math.round((newHeightPx / regionHeight) * 1000) / 1000,
           x: posX / regionWidth,
           y: posY / regionHeight,
           isLocked_aspect_ratio: newLock, // ✅ update flag here
@@ -733,8 +737,8 @@ export async function applyNewTextImg(
         ...item,
         text: newText,
         src: imageData.img,
-        width: (finalWidth / regionWidth).toFixed(3),
-        height: (finalHeight / regionHeight).toFixed(3),
+        width: Math.round((finalWidth / regionHeight) * 1000) / 1000,
+        height: Math.round((finalHeight / regionHeight) * 1000) / 1000,
         aspect_ratio: aspect_ratio,
         x: posX / regionWidth,
         y: posY / regionHeight,

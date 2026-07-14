@@ -30,13 +30,20 @@ function Sidebar({
   setIsWidthBlank,
   pendingText,
   setPendingText,
-  sideRef
+  sideRef,
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [designCounter, setDesignCounter] = useState(0);
 
   const addDesignCollageToActiveView = (collage) => {
     if (!imgRef.current) return;
+
+    const lastDesign = collage.designs[collage.designs.length - 1];
+
+    const lastDesignId =
+      lastDesign?.id ?? `design-${designCounter + collage.designs.length}`;
+
+    setSelectedDesignId(lastDesignId);
 
     setDesignCounter((prev) => prev + collage.designs.length);
 

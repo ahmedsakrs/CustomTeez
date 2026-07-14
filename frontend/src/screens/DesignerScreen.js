@@ -358,7 +358,7 @@ function ProductDesigner() {
     return () => {
       Object.values(observers).forEach((observer) => observer.disconnect());
     };
-  }, []);
+  });
 
   useEffect(() => {
     if (!previewRef.current) return;
@@ -394,17 +394,6 @@ function ProductDesigner() {
   const filteredOptions = productOptions.filter((opt) =>
     opt.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
-
-  const toggleOutlineSelectedText = () => {
-    setDesignsByView((prev) => ({
-      ...prev,
-      [activePreview]: prev[activePreview].map((item) =>
-        item.id === selectedDesignId
-          ? { ...item, outline: !item.outline }
-          : item,
-      ),
-    }));
-  };
 
   function getBoundingBox(w, h, angle) {
     const cos = Math.abs(Math.cos(angle));
@@ -470,10 +459,6 @@ function ProductDesigner() {
     }
     setShowColorModal(false);
   };
-
-  const selectedDesign = designsByView[activePreview].find(
-    (d) => d.id === selectedDesignId,
-  );
 
   return (
     <div className="designer-container">

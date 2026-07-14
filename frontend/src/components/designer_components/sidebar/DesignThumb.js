@@ -7,7 +7,7 @@ function DesignThumb({d, addDesignCollageToActiveView, setActiveTab}) {
       className="design-thumb"
       onClick={() => {
         addDesignCollageToActiveView(d);
-        setActiveTab(null);
+        setActiveTab("editDesign");
       }}
     >
       <span className="design-name">

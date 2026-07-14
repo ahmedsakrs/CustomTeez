@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { updateSize } from "../../../utils/designerUtils";
+import { updateSize, radToDeg } from "../../../utils/designerUtils";
 
 export default function SizeSection({
   regionWidth,
@@ -56,8 +56,8 @@ export default function SizeSection({
                 setIsWidthBlank(false);
                 setIsWidthZero(false);
               }
-              newWidthNorm = Math.max(0.05, newWidthNorm).toFixed(3);
-              setLocalWidth(newWidthNorm);
+              newWidthNorm = Math.max(0.05, newWidthNorm);
+              setLocalWidth((newWidthNorm * 1000) / 1000);
 
               if (selectedDesign?.isLocked_aspect_ratio) {
                 const aspect = selectedDesign?.aspect_ratio;
@@ -65,8 +65,8 @@ export default function SizeSection({
                 if (newHeightNorm < 0.05) {
                   newHeightNorm = 0.05;
                   newWidthNorm = newHeightNorm * aspect;
-                  setLocalHeight(newHeightNorm.toFixed(3));
-                  setLocalWidth(newWidthNorm.toFixed(3));
+                  setLocalHeight((newHeightNorm * 1000) / 1000);
+                  setLocalWidth((newWidthNorm * 1000) / 1000);
                 }
                 updateSize(
                   selectedDesign?.id,
@@ -106,18 +106,18 @@ export default function SizeSection({
               setIsWidthBlank(false);
               setIsWidthZero(false);
             }
-            newWidthNorm = Math.max(0.05, newWidthNorm).toFixed(3);
-            setLocalWidth(newWidthNorm);
+            newWidthNorm = Math.max(0.05, newWidthNorm);
+            setLocalWidth((newWidthNorm * 1000) / 1000);
 
             if (selectedDesign?.isLocked_aspect_ratio) {
               const aspect = selectedDesign?.aspect_ratio;
               let newHeightNorm = newWidthNorm / aspect;
-                if (newHeightNorm < 0.05) {
-                  newHeightNorm = 0.05;
-                  newWidthNorm = newHeightNorm * aspect;
-                  setLocalHeight(newHeightNorm.toFixed(3));
-                  setLocalWidth(newWidthNorm.toFixed(3));
-                }
+              if (newHeightNorm < 0.05) {
+                newHeightNorm = 0.05;
+                newWidthNorm = newHeightNorm * aspect;
+                setLocalHeight((newHeightNorm * 1000) / 1000);
+                setLocalWidth((newWidthNorm * 1000) / 1000);
+              }
               updateSize(
                 selectedDesign?.id,
                 newWidthNorm,
@@ -169,8 +169,8 @@ export default function SizeSection({
               setIsHeightBlank(false);
               setIsHeightZero(false);
             }
-            newHeightNorm = Math.max(0.05, newHeightNorm).toFixed(3);
-            setLocalHeight(newHeightNorm);
+            newHeightNorm = Math.max(0.05, newHeightNorm);
+            setLocalHeight((newHeightNorm * 1000) / 1000);
 
             if (selectedDesign?.isLocked_aspect_ratio) {
               const aspect = selectedDesign.aspect_ratio;
@@ -178,8 +178,8 @@ export default function SizeSection({
               if (newWidthNorm < 0.05) {
                 newWidthNorm = 0.05;
                 newHeightNorm = newWidthNorm / aspect;
-                setLocalHeight(newHeightNorm.toFixed(3));
-                setLocalWidth(newWidthNorm.toFixed(3));
+                setLocalHeight((newHeightNorm * 1000) / 1000);
+                setLocalWidth((newWidthNorm * 1000) / 1000);
               }
               updateSize(
                 selectedDesign?.id,
@@ -219,8 +219,8 @@ export default function SizeSection({
                 setIsHeightBlank(false);
                 setIsHeightZero(false);
               }
-              newHeightNorm = Math.max(0.05, newHeightNorm).toFixed(3);
-              setLocalHeight(newHeightNorm);
+              newHeightNorm = Math.max(0.05, newHeightNorm);
+              setLocalHeight((newHeightNorm * 1000) / 1000);
 
               if (selectedDesign?.isLocked_aspect_ratio) {
                 const aspect = selectedDesign.aspect_ratio;
@@ -228,8 +228,8 @@ export default function SizeSection({
                 if (newWidthNorm < 0.05) {
                   newWidthNorm = 0.05;
                   newHeightNorm = newWidthNorm / aspect;
-                  setLocalHeight(newHeightNorm.toFixed(3));
-                  setLocalWidth(newWidthNorm.toFixed(3));
+                  setLocalHeight((newHeightNorm * 1000) / 1000);
+                  setLocalWidth((newWidthNorm * 1000) / 1000);
                 }
                 updateSize(
                   selectedDesign?.id,
@@ -272,7 +272,7 @@ export default function SizeSection({
           }
           disabled={
             selectedDesign?.isLocked_aspect_ratio &&
-            selectedDesign?.rotation !== 0
+            Math.round(radToDeg(selectedDesign?.rotation)) !== 0
           }
         >
           {selectedDesign?.isLocked_aspect_ratio ? (
