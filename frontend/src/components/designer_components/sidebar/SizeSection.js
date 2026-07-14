@@ -61,7 +61,13 @@ export default function SizeSection({
 
               if (selectedDesign?.isLocked_aspect_ratio) {
                 const aspect = selectedDesign?.aspect_ratio;
-                const newHeightNorm = newWidthNorm / aspect;
+                let newHeightNorm = newWidthNorm / aspect;
+                if (newHeightNorm < 0.05) {
+                  newHeightNorm = 0.05;
+                  newWidthNorm = newHeightNorm * aspect;
+                  setLocalHeight(newHeightNorm.toFixed(3));
+                  setLocalWidth(newWidthNorm.toFixed(3));
+                }
                 updateSize(
                   selectedDesign?.id,
                   newWidthNorm,
@@ -105,7 +111,13 @@ export default function SizeSection({
 
             if (selectedDesign?.isLocked_aspect_ratio) {
               const aspect = selectedDesign?.aspect_ratio;
-              const newHeightNorm = newWidthNorm / aspect;
+              let newHeightNorm = newWidthNorm / aspect;
+                if (newHeightNorm < 0.05) {
+                  newHeightNorm = 0.05;
+                  newWidthNorm = newHeightNorm * aspect;
+                  setLocalHeight(newHeightNorm.toFixed(3));
+                  setLocalWidth(newWidthNorm.toFixed(3));
+                }
               updateSize(
                 selectedDesign?.id,
                 newWidthNorm,
@@ -162,7 +174,13 @@ export default function SizeSection({
 
             if (selectedDesign?.isLocked_aspect_ratio) {
               const aspect = selectedDesign.aspect_ratio;
-              const newWidthNorm = newHeightNorm * aspect;
+              let newWidthNorm = newHeightNorm * aspect;
+              if (newWidthNorm < 0.05) {
+                newWidthNorm = 0.05;
+                newHeightNorm = newWidthNorm / aspect;
+                setLocalHeight(newHeightNorm.toFixed(3));
+                setLocalWidth(newWidthNorm.toFixed(3));
+              }
               updateSize(
                 selectedDesign?.id,
                 newWidthNorm,
@@ -187,49 +205,56 @@ export default function SizeSection({
             }
           }}
           onKeyDown={(e) => {
-            if (e.key === "Enter"){
-            let newHeightNorm = parseFloat(localHeight);
-            if (isNaN(newHeightNorm)) {
-              setIsHeightBlank(true);
-              setIsHeightZero(false);
-              return;
-            } else if (newHeightNorm === 0) {
-              setIsHeightBlank(false);
-              setIsHeightZero(true);
-              return;
-            } else {
-              setIsHeightBlank(false);
-              setIsHeightZero(false);
-            }
-            newHeightNorm = Math.max(0.05, newHeightNorm).toFixed(3);
-            setLocalHeight(newHeightNorm);
+            if (e.key === "Enter") {
+              let newHeightNorm = parseFloat(localHeight);
+              if (isNaN(newHeightNorm)) {
+                setIsHeightBlank(true);
+                setIsHeightZero(false);
+                return;
+              } else if (newHeightNorm === 0) {
+                setIsHeightBlank(false);
+                setIsHeightZero(true);
+                return;
+              } else {
+                setIsHeightBlank(false);
+                setIsHeightZero(false);
+              }
+              newHeightNorm = Math.max(0.05, newHeightNorm).toFixed(3);
+              setLocalHeight(newHeightNorm);
 
-            if (selectedDesign?.isLocked_aspect_ratio) {
-              const aspect = selectedDesign.aspect_ratio;
-              const newWidthNorm = newHeightNorm * aspect;
-              updateSize(
-                selectedDesign?.id,
-                newWidthNorm,
-                newHeightNorm,
-                setDesignsByView,
-                activePreview,
-                getBoundingBox,
-                regionWidth,
-                regionHeight,
-              );
-            } else {
-              updateSize(
-                selectedDesign?.id,
-                selectedDesign?.width,
-                newHeightNorm,
-                setDesignsByView,
-                activePreview,
-                getBoundingBox,
-                regionWidth,
-                regionHeight,
-              );
+              if (selectedDesign?.isLocked_aspect_ratio) {
+                const aspect = selectedDesign.aspect_ratio;
+                let newWidthNorm = newHeightNorm * aspect;
+                if (newWidthNorm < 0.05) {
+                  newWidthNorm = 0.05;
+                  newHeightNorm = newWidthNorm / aspect;
+                  setLocalHeight(newHeightNorm.toFixed(3));
+                  setLocalWidth(newWidthNorm.toFixed(3));
+                }
+                updateSize(
+                  selectedDesign?.id,
+                  newWidthNorm,
+                  newHeightNorm,
+                  setDesignsByView,
+                  activePreview,
+                  getBoundingBox,
+                  regionWidth,
+                  regionHeight,
+                );
+              } else {
+                updateSize(
+                  selectedDesign?.id,
+                  selectedDesign?.width,
+                  newHeightNorm,
+                  setDesignsByView,
+                  activePreview,
+                  getBoundingBox,
+                  regionWidth,
+                  regionHeight,
+                );
+              }
             }
-          }}}
+          }}
         />
 
         {/* Aspect Ratio Toggle */}

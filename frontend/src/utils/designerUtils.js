@@ -462,15 +462,12 @@ export function center(
       if (item.id !== designId) return item;
 
       const bbox = getBoundingBox(
-        item.width *
-          Math.min(regionWidth, regionHeight),
-        item.height *
-          Math.min(regionWidth, regionHeight),
+        item.width * Math.min(regionWidth, regionHeight),
+        item.height * Math.min(regionWidth, regionHeight),
         item.rotation,
       );
 
-      const centeredX =
-        (regionWidth - bbox.width) / 2;
+      const centeredX = (regionWidth - bbox.width) / 2;
 
       return {
         ...item,
@@ -504,6 +501,16 @@ export function handleToggleAspectLock(
         const aspect = item.aspect_ratio;
         let newWidthPx = item.width * Math.min(regionWidth, regionHeight);
         let newHeightPx = newWidthPx / aspect;
+
+        if (newWidthPx / regionWidth < 0.05) {
+          newWidthPx = 0.05 * Math.min(regionWidth, regionHeight);
+          newHeightPx = newWidthPx / aspect;
+        }
+
+        if (newHeightPx / regionHeight < 0.05) {
+          newHeightPx = 0.05 * Math.min(regionWidth, regionHeight);
+          newWidthPx = newHeightPx * aspect;
+        }
 
         // clamp both dimensions simultaneously
         if (newWidthPx > regionWidth || newHeightPx > regionHeight) {
