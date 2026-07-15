@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Rnd } from "react-rnd";
 import "./ProductDesigner.css"; // responsive styles
 import Sidebar from "../components/designer_components/sidebar/Sidebar";
+import HeaderBar from "../components/designer_components/headerBar/HeaderBar";
 import {
   checkAfterRotation,
   handleToggleAspectLock,
@@ -213,12 +214,7 @@ function ProductDesigner() {
   const [isHeightZero, setIsHeightZero] = useState(false);
   const [isCropping, setIsCropping] = useState(false);
   const [activePreview, setActivePreview] = useState("Front");
-  const [showProductModal, setShowProductModal] = useState(false);
-  const [showColorModal, setShowColorModal] = useState(false);
   const [activeTab, setActiveTab] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [pendingProductType, setPendingProductType] = useState(null);
-  const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [selectedDesignId, setSelectedDesignId] = useState(null);
   const [isRotating, setIsRotating] = useState(false);
@@ -228,8 +224,6 @@ function ProductDesigner() {
   const [regionWidth, setRegionWidth] = useState(0);
   const [regionHeight, setRegionHeight] = useState(0);
   const [justFinishedInteraction, setJustFinishedInteraction] = useState(false);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
   const [pendingText, setPendingText] = useState("");
   const [thumbSizes, setThumbSizes] = useState({
     Front: { w: 0, h: 0 },
@@ -243,39 +237,12 @@ function ProductDesigner() {
   const panelRef = useRef(null);
   const sideRef = useRef(null);
   const barRef = useRef(null);
-  const scrollRef = useRef(null);
   const thumbRefs = {
     Front: useRef(null),
     Back: useRef(null),
     "L Sleeve": useRef(null),
     "R Sleeve": useRef(null),
   };
-
-  const checkScroll = () => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 0);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
-  };
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (el) {
-      el.scrollTo({ left: el.scrollWidth, behavior: "smooth" });
-    }
-  }, [allProducts]); // runs every time a product is added/removed
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    checkScroll();
-    el.addEventListener("scroll", checkScroll);
-    window.addEventListener("resize", checkScroll);
-    return () => {
-      el.removeEventListener("scroll", checkScroll);
-      window.removeEventListener("resize", checkScroll);
-    };
-  }, []);
 
   const activeProduct = allProducts.find((p) => p.id === activeProductId);
 
@@ -391,10 +358,6 @@ function ProductDesigner() {
     return { w: width, h: height };
   };
 
-  const filteredOptions = productOptions.filter((opt) =>
-    opt.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
-
   function getBoundingBox(w, h, angle) {
     const cos = Math.abs(Math.cos(angle));
     const sin = Math.abs(Math.sin(angle));
@@ -403,62 +366,6 @@ function ProductDesigner() {
       height: w * sin + h * cos,
     };
   }
-
-  const addProduct = () => {
-    setIsAddingProduct(true);
-    setShowProductModal(true);
-  };
-
-  const deleteProduct = (id) => {
-    const updated = allProducts.filter((p) => p.id !== id);
-    setAllProducts(updated);
-    if (id === activeProductId && updated.length > 0) {
-      setActiveProductId(updated[updated.length - 1].id);
-    }
-  };
-
-  const changeProductType = (newType) => {
-    setPendingProductType(newType);
-    setShowProductModal(false);
-    setShowColorModal(true);
-  };
-
-  const changeProductColor = (newColor) => {
-    if (isAddingProduct && pendingProductType) {
-      const newId = Date.now();
-      const newProduct = {
-        id: newId,
-        productType: pendingProductType,
-        name: pendingProductType,
-        color: newColor,
-      };
-      setAllProducts([...allProducts, newProduct]);
-      setActiveProductId(newId);
-      setIsAddingProduct(false);
-      setPendingProductType(null);
-    } else if (pendingProductType) {
-      setAllProducts(
-        allProducts.map((p) =>
-          p.id === activeProductId
-            ? {
-                ...p,
-                productType: pendingProductType,
-                color: newColor,
-                name: pendingProductType,
-              }
-            : p,
-        ),
-      );
-      setPendingProductType(null);
-    } else {
-      setAllProducts(
-        allProducts.map((p) =>
-          p.id === activeProductId ? { ...p, color: newColor } : p,
-        ),
-      );
-    }
-    setShowColorModal(false);
-  };
 
   return (
     <div className="designer-container">
@@ -498,188 +405,14 @@ function ProductDesigner() {
 
       {/* Main content */}
       <div className="main-content">
-        {/* Product bar */}
-        <div className="header-bar">
-          <button onClick={addProduct} className="add-product">
-            {" "}
-            <i className="fa-solid fa-circle-plus"></i> Add Product
-          </button>
-
-          <div
-            className="product-thumbnails-container"
-            style={{
-              maxWidth:
-                allProducts.length === 1
-                  ? "55px"
-                  : allProducts.length === 2
-                    ? "115px"
-                    : "120px",
-            }}
-          >
-            {/* Left fade + button */}
-            <div className={`fade-left ${!canScrollLeft ? "hidden" : ""}`} />
-            <button
-              className={`scroll-btn left ${!canScrollLeft ? "hidden" : ""}`}
-              onClick={() =>
-                scrollRef.current.scrollBy({ left: -40, behavior: "smooth" })
-              }
-            >
-              ‹
-            </button>
-
-            {/* Scrollable thumbnails */}
-            <div className="product-thumbnails-scroll" ref={scrollRef}>
-              {allProducts.map((p) => (
-                <div
-                  key={p.id}
-                  className={`thumbnail ${p.id === activeProductId ? "active" : ""}`}
-                  onClick={() => setActiveProductId(p.id)}
-                >
-                  {p.id === activeProductId && allProducts.length > 1 && (
-                    <button
-                      className="delete-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteProduct(p.id);
-                      }}
-                    >
-                      <i class="fa fa-times"></i>
-                    </button>
-                  )}
-                  <img
-                    src={
-                      productOptions.find((opt) => opt.id === p.productType)
-                        ?.viewImages[p.color]["Front"]
-                    }
-                    alt={p.name}
-                    className="preview-image"
-                  />
-                  {/* Tooltip on hover */}
-                  <div className="tooltip">{p.name}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Right fade + button */}
-            <div className={`fade-right ${!canScrollRight ? "hidden" : ""}`} />
-            <button
-              className={`scroll-btn right ${!canScrollRight ? "hidden" : ""}`}
-              onClick={() =>
-                scrollRef.current.scrollBy({ left: 40, behavior: "smooth" })
-              }
-            >
-              ›
-            </button>
-          </div>
-
-          <button
-            onClick={() => setShowProductModal(true)}
-            className="add-product"
-          >
-            {" "}
-            <i className="fa-solid fa-arrows-rotate"></i>
-            Change Product
-          </button>
-          <button
-            className="color-button"
-            style={{ backgroundColor: activeProduct.color }}
-            onClick={() => setShowColorModal(true)}
-          >
-            <div className="tooltip">{activeProduct.color}</div>
-          </button>
-        </div>
-
-        {/* Product modal */}
-        {showProductModal && (
-          <div className="modal-overlay">
-            <div className="modal-content">
-              <button
-                className="close-btn"
-                onClick={() => {
-                  setShowProductModal(false);
-                  setIsAddingProduct(false);
-                  setPendingProductType(null);
-                }}
-              >
-                <i class="fa fa-times"></i>
-              </button>
-
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                }}
-                autoFocus
-              />
-
-              <div className="modal-grid">
-                {filteredOptions.map((opt) => (
-                  <div
-                    key={opt.id}
-                    onClick={() => changeProductType(opt.id)}
-                    className={`modal-option ${activeProduct?.productType === opt.id ? "active" : ""}`}
-                  >
-                    <div className="modal-option-content">
-                      <img
-                        src={opt.viewImages[opt.productColors[0]].Front}
-                        alt={opt.name}
-                        className="modal-option-img"
-                      />
-                      <div className="option-name">{opt.name}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Product color modal */}
-        {showColorModal && (
-          <div className="modal-overlay">
-            <div className="modal-content small">
-              <button
-                className="close-btn"
-                onClick={() => {
-                  setShowColorModal(false);
-                  setIsAddingProduct(false);
-                  setPendingProductType(null);
-                }}
-              >
-                <i class="fa fa-times"></i>
-              </button>
-
-              <h3>Select Product Color</h3>
-              <div className="color-grid">
-                {productOptions
-                  .find(
-                    (opt) =>
-                      opt.id ===
-                      (pendingProductType || activeProduct?.productType),
-                  )
-                  ?.productColors.map((c) => {
-                    const isDuplicate = allProducts.some(
-                      (p) =>
-                        p.productType ===
-                          (pendingProductType || activeProduct?.productType) &&
-                        p.color === c,
-                    );
-                    return (
-                      <div
-                        key={c}
-                        title={c}
-                        onClick={() => !isDuplicate && changeProductColor(c)}
-                        className={`color-swatch-product ${isDuplicate ? "disabled" : ""} ${activeProduct?.color === c ? "active" : ""}`}
-                        style={{ backgroundColor: c.toLowerCase() }}
-                      />
-                    );
-                  })}
-              </div>
-            </div>
-          </div>
-        )}
+        <HeaderBar
+          allProducts={allProducts}
+          setAllProducts={setAllProducts}
+          productOptions={productOptions}
+          activeProductId={activeProductId}
+          setActiveProductId={setActiveProductId}
+          activeProduct={activeProduct}
+        />
 
         {/* Right preview area */}
         <div className="preview-area">
