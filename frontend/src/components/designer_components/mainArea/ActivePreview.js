@@ -33,12 +33,16 @@ function ActivePreview({
   selectedDesignId,
   setIsRotating,
   setIsResizing,
+  updateDesignsByView,
 }) {
   const [lockedWrapperPos, setLockedWrapperPos] = useState(null);
   const [lockedDesignId, setLockedDesignId] = useState(null);
   const [keyboardMoving, setKeyboardMoving] = useState(false);
 
   const previewRef = useRef(null);
+  const dragStartPosRef = useRef(null);
+  const dragMovedRef = useRef(false);
+  const dragHistorySavedRef = useRef(false);
 
   useEffect(() => {
     if (!previewRef.current) return;
@@ -89,7 +93,7 @@ function ActivePreview({
 
       e.preventDefault();
 
-      setDesignsByView((prev) => ({
+      updateDesignsByView((prev) => ({
         ...prev,
         [activePreview]: prev[activePreview].map((item) => {
           if (item.id !== selectedDesignId) {
@@ -131,7 +135,7 @@ function ActivePreview({
     regionHeight,
     isRotating,
     isResizing,
-    setDesignsByView,
+    updateDesignsByView,
     getBoundingBox,
     setIsActive,
   ]);
@@ -201,7 +205,10 @@ function ActivePreview({
           top: imgRef.current.offsetTop + region.yStart * h,
           width: regionWidth,
           height: regionHeight,
-          border: isActive || keyboardMoving ? "1.5px dashed #333" : "1.5px dashed transparent",
+          border:
+            isActive || keyboardMoving
+              ? "1.5px dashed #333"
+              : "1.5px dashed transparent",
           backgroundColor: isActive ? "rgba(0,0,0,0.05)" : "transparent",
         };
 
@@ -241,6 +248,12 @@ function ActivePreview({
                   setIsHeightBlank(false);
                   setIsHeightZero(false);
                   setSelectedDesignId(d.id);
+                  dragMovedRef.current = false;
+                  dragHistorySavedRef.current = false;
+                  dragStartPosRef.current = {
+                    x: d.x,
+                    y: d.y,
+                  };
                   if (d.text) {
                     // ✅ it's a text image
                     setActiveTab("editText");
@@ -251,13 +264,20 @@ function ActivePreview({
                     setActiveTab("editUpload");
                   }
                   setPendingText(d?.text);
+                  // updateDesignsByView(designsByView);
                 }}
                 onDrag={(e, data) => {
                   if (isRotating || isResizing) return;
-                  let newX = data.x;
-                  let newY = data.y;
 
-                  // ✅ update state
+                  // Save PRE-DRAG state exactly once
+                  if (!dragHistorySavedRef.current) {
+                    updateDesignsByView(designsByView); // save current state BEFORE editing
+                    dragHistorySavedRef.current = true;
+                  }
+
+                  const newX = data.x;
+                  const newY = data.y;
+
                   setDesignsByView((prev) => ({
                     ...prev,
                     [activePreview]: prev[activePreview].map((item) =>
@@ -274,6 +294,8 @@ function ActivePreview({
                 onDragStop={() => {
                   setIsActive(false);
                   setSelectedDesignId(d.id);
+
+                  dragHistorySavedRef.current = false;
                 }}
               >
                 {/* Outer wrapper */}
@@ -385,7 +407,7 @@ function ActivePreview({
                       onClick={(e) => {
                         e.stopPropagation();
                         setActiveTab("");
-                        setDesignsByView((prev) => ({
+                        updateDesignsByView((prev) => ({
                           ...prev,
                           [activePreview]: prev[activePreview].filter(
                             (item) => item.id !== d.id,
@@ -415,6 +437,8 @@ function ActivePreview({
                           x: d.x * regionWidth,
                           y: d.y * regionHeight,
                         });
+
+                        updateDesignsByView(designsByView);
 
                         const rect = e.target.getBoundingClientRect();
                         const centerX = rect.left + rect.width / 2;
@@ -508,6 +532,7 @@ function ActivePreview({
                           x: d.x * regionWidth,
                           y: d.y * regionHeight,
                         });
+                        updateDesignsByView(designsByView);
 
                         const startX = e.clientX;
                         const startY = e.clientY;

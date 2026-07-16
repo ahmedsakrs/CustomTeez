@@ -774,6 +774,43 @@
   font-size: 34px;
 }
 
+.undo-redo-controls {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  /* border-top: 1px solid #ddd; */
+}
+
+.undo-redo-btn {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #ccc;
+  border-radius: 6px;
+
+  background: white;
+  cursor: pointer;
+
+  font-size: 20px;
+
+  transition: 0.15s;
+}
+
+.undo-redo-btn:hover:not(:disabled) {
+  background: #f0f0f0;
+}
+
+.undo-redo-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* Responsive rules */
 @media (min-width: 600px) {
   .sidebar {

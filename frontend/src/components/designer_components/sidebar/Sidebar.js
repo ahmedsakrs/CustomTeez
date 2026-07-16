@@ -2,6 +2,7 @@ import "./sidebar.css";
 import React, { useState } from "react";
 import TabBar from "./TabBar";
 import TabPanel from "./TabPanel";
+import UndoRedoControls from './UndoRedoControls';
 
 function Sidebar({
   activeTab,
@@ -31,6 +32,11 @@ function Sidebar({
   pendingText,
   setPendingText,
   sideRef,
+  updateDesignsByView,
+  canUndo,
+  canRedo,
+  undo,
+  redo,
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [designCounter, setDesignCounter] = useState(0);
@@ -180,191 +186,12 @@ function Sidebar({
           setPendingText={setPendingText}
         />
 
-        {/* {activeTab === "default" && (
-          <>
-            <h3>Designs</h3>
-            <h3>Upload Design</h3>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onload = (ev) => {
-                    const img = new Image();
-                    img.onload = () => {
-                      const aspectRatio = img.width / img.height;
-
-                      // pick a base normalized width
-                      const baseWidth = 0.2;
-                      const baseHeight = baseWidth / aspectRatio;
-
-                      addDesignCollageToActiveView({
-                        id: `upload-${Date.now()}`,
-                        name: file.name,
-                        designs: [
-                          {
-                            id: `element-${Date.now()}`,
-                            src: ev.target.result,
-                            x: 0.25,
-                            y: 0.25,
-                            width: baseWidth,
-                            height: baseHeight, // ✅ preserves aspect ratio
-                          },
-                        ],
-                      });
-                    };
-                    img.src = ev.target.result;
-                  };
-                  reader.readAsDataURL(file);
-                }
-              }}
-            />
-
-            <h3>Add Text</h3>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                // setActivePanelTab("addText");
-                setTextAdded(false);
-              }}
-            >
-              📝 Add Text
-            </button>
-          </>
-        )} */}
-
-        {/* {activeTab === "editDesign" && (
-          <>
-            <h3>Edit Design</h3>
-            <div ref={panelRef} className="edit-panel">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                //   flipSelected("horizontal");
-                }}
-              >
-                Flip Horizontal
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                //   flipSelected("vertical");
-                }}
-              >
-                Flip Vertical
-              </button> */}
-        {/* <input
-                type="color"
-                value={designColor}
-                onChange={(e) => {
-                  e.stopPropagation();
-                  setDesignColor(e.target.value);
-                }}
-              />
-              <button
-                onClick={() => {
-                  setActivePanelTab("default");
-                  setSelectedDesignId(null);
-                }}
-              >
-                ⬅ Back
-              </button> */}
-        {/* </div>
-          </>
-        )} */}
-
-        {/* {activePanelTab === "addText" && (
-          <>
-            <h3>Add Text</h3>
-            <div ref={textPanelRef} className="text-panel">
-              <textarea
-                placeholder="Type your text here..."
-                rows={1}
-                style={{ width: "100%", padding: "0.5rem" }}
-                value={pendingText}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => setPendingText(e.target.value)}
-              />
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (pendingText.trim() !== "") {
-                    const maxFontSizePx = findFittingFontSize(
-                      pendingText,
-                      regionWidth,
-                      "Arial",
-                    );
-                    const imageData = textToImage(
-                      pendingText,
-                      maxFontSizePx,
-                      "Arial",
-                      1,
-                      "black",
-                    );
-                    const id = `text-${Date.now()}`;
-
-                    addDesignCollageToActiveView({
-                      id: id,
-                      name: "Text Image",
-                      designs: [
-                        {
-                          id: `element-${Date.now()}`,
-                          src: imageData.img, // ✅ high-res image
-                          text: pendingText,
-                          x: 0,
-                          y: 0,
-                          width: 0.5, // normalized to full region
-                          height: (imageData.height * 0.5) / imageData.width,
-                          rotation: 0,
-                          fontFamily: "Arial",
-                          color: "black",
-                          lineSpacing: 1,
-                        },
-                      ],
-                    });
-
-                    setPendingText("");
-                    setSelectedDesignId(id);
-                    setTextAdded(true);
-                    setActivePanelTab("addText");
-                  }
-                }}
-              >
-                ➕ Add Text
-              </button> */}
-
-        {/* ✅ Only show options if textAdded is true */}
-        {/* {textAdded && (
-                <>
-                  <h4>Text Options</h4>
-                  <input
-                    type="color"
-                    value={designColor}
-                    onChange={(e) => setDesignColor(e.target.value)}
-                  />
-                  <button onClick={() => centerSelectedText()}>
-                    Center Text
-                  </button>
-                  <button onClick={() => toggleOutlineSelectedText()}>
-                    Toggle Outline
-                  </button>
-                </>
-              )}
-
-              <button
-                onClick={() => {
-                  setActivePanelTab("default");
-                  setSelectedDesignId(null);
-                }}
-              >
-                ⬅ Back
-              </button>
-            </div>
-          </>
-        )} */}
+        <UndoRedoControls
+          canUndo={canUndo}
+          canRedo={canRedo}
+          onUndo={undo}
+          onRedo={redo}
+        />
       </div>
     </div>
   );

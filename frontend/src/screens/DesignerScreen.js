@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import "../components/designer_components/mainArea/mainArea.css"; // responsive styles
 import Sidebar from "../components/designer_components/sidebar/Sidebar";
 import HeaderBar from "../components/designer_components/headerBar/HeaderBar";
@@ -203,6 +203,8 @@ function ProductDesigner() {
     "L Sleeve": [],
     "R Sleeve": [],
   });
+  const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
 
   const [isWidthBlank, setIsWidthBlank] = useState(false);
   const [isHeightBlank, setIsHeightBlank] = useState(false);
@@ -294,6 +296,61 @@ function ProductDesigner() {
     };
   }
 
+  const pushHistory = (currentState) => {
+    setUndoStack((prev) => [...prev, structuredClone(currentState)]);
+
+    setRedoStack([]);
+  };
+
+  const updateDesignsByView = (updater) => {
+    setDesignsByView((current) => {
+      pushHistory(current);
+      return typeof updater === "function" ? updater(current) : updater;
+    });
+  };
+
+  const undo = useCallback(() => {
+    if (!undoStack.length) return;
+
+    const previous = undoStack[undoStack.length - 1];
+    setRedoStack((redo) => [...redo, structuredClone(designsByView)]);
+    setDesignsByView(previous);
+    setUndoStack((prev) => prev.slice(0, -1));
+  }, [undoStack, designsByView, setDesignsByView]);
+
+  const redo = useCallback(() => {
+    if (!redoStack.length) return;
+
+    const next = redoStack[redoStack.length - 1];
+    setUndoStack((undo) => [...undo, structuredClone(designsByView)]);
+    setDesignsByView(next);
+    setRedoStack((prev) => prev.slice(0, -1));
+  }, [redoStack, designsByView, setDesignsByView]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const ctrl = e.ctrlKey || e.metaKey;
+
+      if (ctrl && e.key.toLowerCase() === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+
+      if (
+        ctrl &&
+        (e.key.toLowerCase() === "y" ||
+          (e.key.toLowerCase() === "z" && e.shiftKey))
+      ) {
+        e.preventDefault();
+        redo();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [undo, redo]);
+
   return (
     <div className="designer-container">
       {/* Sidebar */}
@@ -325,6 +382,11 @@ function ProductDesigner() {
         pendingText={pendingText}
         setPendingText={setPendingText}
         sideRef={sideRef}
+        updateDesignsByView={updateDesignsByView}
+        undo={undo}
+        redo={redo}
+        canUndo={undoStack.length > 0}
+        canRedo={redoStack.length > 0}
         onClick={(e) => {
           e.stopPropagation();
         }}
@@ -372,6 +434,7 @@ function ProductDesigner() {
               selectedDesignId={selectedDesignId}
               setIsRotating={setIsRotating}
               setIsResizing={setIsResizing}
+              updateDesignsByView={updateDesignsByView}
             />
             {/* Column 2: Thumbnails stacked */}
             <ViewThumbnails
