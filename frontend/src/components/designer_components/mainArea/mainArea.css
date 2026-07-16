@@ -1,0 +1,221 @@
+/* Container layout */
+.designer-container {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  height: 100vh;
+  box-sizing: border-box;
+  gap: 0.3rem;
+  flex: 1fr 1.5fr;
+}
+
+/* Main content (right side) */
+.main-content {
+  flex: 2 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* prevents overflow */
+  max-width: 100%;
+}
+
+/* Preview area */
+.preview-area {
+  flex: 1 1 auto;
+  padding: 0.6rem;
+  max-height: calc(100vh - 130px); /* fill viewport */
+  overflow-y: hidden; /* no vertical scroll */
+  box-sizing: border-box;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: 1fr 9.2vw;
+  gap: 2%;
+  height: 100%; /* take full height of parent */
+  overflow: hidden; /* no vertical overflow */
+}
+
+.preview-image-wrapper {
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  padding: 1%;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.design-preview-image {
+  max-width: 100%;
+  max-height: 100%; /* ✅ scale to container */
+  object-fit: fill;
+  user-select: none;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 100%; /* ✅ scale to container */
+  object-fit: contain;
+  user-select: none;
+}
+
+.design-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.design-wrapper {
+  position: absolute;
+  align-items: center;
+  object-fit: contain;
+  /* existing x, y, width, height */
+}
+
+.bounding-box-overlay {
+  position: absolute;
+}
+
+.designer-container .control-btn {
+  width: 28px; /* ✅ square size */
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px; /* small rounding */
+  cursor: pointer;
+  font-size: 16px; /* icon size */
+}
+
+.view-thumbnails {
+  display: grid;
+  flex-direction: column;
+  max-width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2wh; /* space for scrollbar */
+  position: relative;
+  /* gap:1vh; */
+}
+
+.view-thumbnails::before,
+.view-thumbnails::after {
+  content: "";
+  position: sticky;
+  left: 0;
+  right: 0;
+  height: 20px;
+  pointer-events: none; /* don’t block clicks */
+  z-index: 2;
+}
+
+.view-thumbnails::before {
+  top: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 1),
+    rgba(255, 255, 255, 0)
+  );
+}
+
+.view-thumbnails::after {
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 1),
+    rgba(255, 255, 255, 0)
+  );
+}
+
+.view-thumbnails::-webkit-scrollbar {
+  width: 1.5wh;
+}
+
+.view-thumbnails::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.view-thumbnails .view-thumbnail {
+  width: 100%; /* fill column width */
+  height: 100%;
+  padding: 0 0;
+  gap: 1rem;
+  text-align: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.view-thumbnails .view-thumbnail.active {
+  border: 2px solid #007bff;
+  border-radius: 4px;
+  background-color: rgba(175, 175, 175, 0.25);
+}
+
+.view-thumbnails .view-thumbnail img {
+  max-width: 100%; /* scale to column */
+  max-height: 100%;
+}
+
+.region-overlay {
+  border: 2px dashed #333;
+  pointer-events: none; /* overlay is visible but doesn’t block dragging */
+}
+
+/* Base font size for body */
+body {
+  font-family: Arial, sans-serif;
+  font-size: clamp(14px, 1.2vw, 18px); /* scales between 14px and 18px */
+  line-height: 1.5;
+}
+
+/* Headings */
+h1 {
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: bold;
+}
+
+h2 {
+  font-size: clamp(20px, 2.5vw, 30px);
+  font-weight: bold;
+}
+
+h3 {
+  font-size: clamp(12px, 1.5vw, 18px);
+  font-weight: bold;
+}
+
+/* Sidebar text */
+.sidebar {
+  font-size: clamp(14px, 1.1vw, 16px);
+}
+
+/* Buttons */
+button {
+  font-size: clamp(14px, 1.2vw, 16px);
+  padding: 0.5rem 1rem;
+}
+
+/* Labels and small text */
+.option-name,
+.active-label {
+  font-size: clamp(12px, 1vw, 14px);
+}
+
+/* Responsive rules */
+@media (min-width: 600px) {
+  .designer-container {
+    flex-wrap: nowrap;
+  }
+}

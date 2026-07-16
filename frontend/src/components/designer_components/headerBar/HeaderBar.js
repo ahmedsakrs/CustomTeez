@@ -107,7 +107,8 @@ function HeaderBar({
       <div className="header-bar">
         <button onClick={addProduct} className="add-product">
           {" "}
-          <i className="fa-solid fa-circle-plus"></i> Add Product
+          {/* <i className="fa-solid fa-circle-plus"></i>  */}
+          Add Product
         </button>
 
         <div
@@ -182,7 +183,7 @@ function HeaderBar({
           className="add-product"
         >
           {" "}
-          <i className="fa-solid fa-arrows-rotate"></i>
+          {/* <i className="fa-solid fa-arrows-rotate"></i> */}
           Change Product
         </button>
         <button
