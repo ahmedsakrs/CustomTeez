@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Rnd } from "react-rnd";
 import {
   checkAfterRotation,
@@ -32,10 +32,11 @@ function ActivePreview({
   isActive,
   selectedDesignId,
   setIsRotating,
-  setIsResizing
+  setIsResizing,
 }) {
   const [lockedWrapperPos, setLockedWrapperPos] = useState(null);
   const [lockedDesignId, setLockedDesignId] = useState(null);
+  const [keyboardMoving, setKeyboardMoving] = useState(false);
 
   const previewRef = useRef(null);
 
@@ -53,6 +54,114 @@ function ActivePreview({
     observer.observe(previewRef.current);
     return () => observer.disconnect();
   }, [setRegionWidth, setRegionHeight]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!selectedDesignId || isRotating || isResizing) {
+        return;
+      }
+
+      const STEP_PX = e.shiftKey ? 10 : 1;
+
+      let dx = 0;
+      let dy = 0;
+
+      switch (e.key) {
+        case "ArrowLeft":
+          dx = -STEP_PX / regionWidth;
+          break;
+
+        case "ArrowRight":
+          dx = STEP_PX / regionWidth;
+          break;
+
+        case "ArrowUp":
+          dy = -STEP_PX / regionHeight;
+          break;
+
+        case "ArrowDown":
+          dy = STEP_PX / regionHeight;
+          break;
+
+        default:
+          return;
+      }
+
+      e.preventDefault();
+
+      setDesignsByView((prev) => ({
+        ...prev,
+        [activePreview]: prev[activePreview].map((item) => {
+          if (item.id !== selectedDesignId) {
+            return item;
+          }
+
+          const bbox = getBoundingBox(
+            item.width * Math.min(regionWidth, regionHeight),
+            item.height * Math.min(regionWidth, regionHeight),
+            item.rotation,
+          );
+
+          const bboxWidthNorm = bbox.width / regionWidth;
+
+          const bboxHeightNorm = bbox.height / regionHeight;
+
+          const newX = Math.min(Math.max(0, item.x + dx), 1 - bboxWidthNorm);
+
+          const newY = Math.min(Math.max(0, item.y + dy), 1 - bboxHeightNorm);
+
+          return {
+            ...item,
+            x: newX,
+            y: newY,
+          };
+        }),
+      }));
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [
+    selectedDesignId,
+    activePreview,
+    regionWidth,
+    regionHeight,
+    isRotating,
+    isResizing,
+    setDesignsByView,
+    getBoundingBox,
+    setIsActive,
+  ]);
+
+  useEffect(() => {
+    const arrowKeys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
+
+    const handleKeyDown = (e) => {
+      if (arrowKeys.includes(e.key)) {
+        setKeyboardMoving(true);
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      if (arrowKeys.includes(e.key)) {
+        setKeyboardMoving(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    window.addEventListener("keyup", handleKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, []);
+
   return (
     <div
       className="preview-image-wrapper"
@@ -92,7 +201,7 @@ function ActivePreview({
           top: imgRef.current.offsetTop + region.yStart * h,
           width: regionWidth,
           height: regionHeight,
-          border: isActive ? "1.5px dashed #333" : "none",
+          border: isActive || keyboardMoving ? "1.5px dashed #333" : "1.5px dashed transparent",
           backgroundColor: isActive ? "rgba(0,0,0,0.05)" : "transparent",
         };
 
