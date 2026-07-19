@@ -53,7 +53,7 @@ function Sidebar({
 
     setDesignCounter((prev) => prev + collage.designs.length);
 
-    setDesignsByView((prev) => {
+    updateDesignsByView((prev) => {
       const designs = prev[activePreview] || [];
       const highest = designs.length
         ? Math.max(...designs.map((d) => d.layer || 1))
@@ -104,6 +104,7 @@ function Sidebar({
           onClick={() => {
             setActiveTab("addDesign");
             setSelectedCategory(null);
+            setSelectedDesignId(null);
           }}
         >
           <i className="bi bi-brush-fill" style={{ fontSize: "25px" }}></i>{" "}
@@ -114,6 +115,7 @@ function Sidebar({
           className={`sidebar-btn ${activeTab === "uploadDesign" || activeTab === "editUpload" ? "active" : ""}`}
           onClick={() => {
             setActiveTab("uploadDesign");
+            setSelectedDesignId(null);
           }}
         >
           <i
@@ -128,6 +130,7 @@ function Sidebar({
           onClick={() => {
             setActiveTab("addText");
             setPendingText("");
+            setSelectedDesignId(null);
           }}
         >
           <i className="fas fa-font" style={{ fontSize: "30px" }}></i>
@@ -138,6 +141,7 @@ function Sidebar({
           className={`sidebar-btn ${activeTab === "saveDesign" ? "active" : ""}`}
           onClick={() => {
             setActiveTab("saveDesign");
+            setSelectedDesignId(null);
           }}
         >
           <i className="bi bi-floppy-fill" style={{ fontSize: "30px" }}></i>
@@ -168,6 +172,7 @@ function Sidebar({
           activePreview={activePreview}
           designsByView={designsByView}
           setDesignsByView={setDesignsByView}
+          updateDesignsByView={updateDesignsByView}
           panelRef={panelRef}
           getBoundingBox={getBoundingBox}
           regionWidth={regionWidth}

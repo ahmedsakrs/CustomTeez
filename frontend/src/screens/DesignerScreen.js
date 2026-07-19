@@ -287,6 +287,14 @@ function ProductDesigner() {
     ],
   );
 
+  useEffect(() => {
+    const designs = designsByView[activePreview] || [];
+
+    if (selectedDesignId && !designs.some((d) => d.id === selectedDesignId)) {
+      setSelectedDesignId(null);
+    }
+  }, [designsByView, activePreview, selectedDesignId]);
+
   function getBoundingBox(w, h, angle) {
     const cos = Math.abs(Math.cos(angle));
     const sin = Math.abs(Math.sin(angle));
@@ -296,15 +304,22 @@ function ProductDesigner() {
     };
   }
 
-  const pushHistory = (currentState) => {
-    setUndoStack((prev) => [...prev, structuredClone(currentState)]);
+  const pushHistory = (currentDesigns, currentSelectedDesignId) => {
+    setUndoStack((prev) => [
+      ...prev,
+      {
+        designsByView: structuredClone(currentDesigns),
+        selectedDesignId: currentSelectedDesignId,
+      },
+    ]);
 
     setRedoStack([]);
   };
 
   const updateDesignsByView = (updater) => {
     setDesignsByView((current) => {
-      pushHistory(current);
+      pushHistory(current, selectedDesignId);
+
       return typeof updater === "function" ? updater(current) : updater;
     });
   };
@@ -313,19 +328,45 @@ function ProductDesigner() {
     if (!undoStack.length) return;
 
     const previous = undoStack[undoStack.length - 1];
-    setRedoStack((redo) => [...redo, structuredClone(designsByView)]);
-    setDesignsByView(previous);
+
+    setRedoStack((redo) => [
+      ...redo,
+      {
+        designsByView: structuredClone(designsByView),
+        selectedDesignId,
+      },
+    ]);
+
+    setDesignsByView(previous.designsByView);
+
+    // setSelectedDesignId(previous.selectedDesignId);
+    if (previous.selectedDesignId === null) {
+      setActiveTab(null);
+    }
+      
+
     setUndoStack((prev) => prev.slice(0, -1));
-  }, [undoStack, designsByView, setDesignsByView]);
+  }, [undoStack, designsByView, selectedDesignId]);
 
   const redo = useCallback(() => {
     if (!redoStack.length) return;
 
     const next = redoStack[redoStack.length - 1];
-    setUndoStack((undo) => [...undo, structuredClone(designsByView)]);
-    setDesignsByView(next);
+
+    setUndoStack((undo) => [
+      ...undo,
+      {
+        designsByView: structuredClone(designsByView),
+        selectedDesignId,
+      },
+    ]);
+
+    setDesignsByView(next.designsByView);
+
+    // setSelectedDesignId(next.selectedDesignId);
+
     setRedoStack((prev) => prev.slice(0, -1));
-  }, [redoStack, designsByView, setDesignsByView]);
+  }, [redoStack, designsByView, selectedDesignId]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {

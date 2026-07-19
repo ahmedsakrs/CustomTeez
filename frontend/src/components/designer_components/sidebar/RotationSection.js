@@ -3,7 +3,9 @@ import { radToDeg, rotate } from "../../../utils/designerUtils";
 
 function RotationSection({
   selectedDesign,
+  designsByView,
   setDesignsByView,
+  updateDesignsByView,
   activePreview,
   getBoundingBox,
   regionWidth,
@@ -25,26 +27,29 @@ function RotationSection({
           max="180"
           step={1}
           value={Math.floor(radToDeg(selectedDesign?.rotation))}
+          onPointerDown={() => {
+            updateDesignsByView(designsByView);
+          }}
           onChange={(e) =>
             rotate(
               selectedDesign,
               setDesignsByView,
               activePreview,
               (parseInt(e.target.value) * Math.PI) / 180,
-              getBoundingBox,
               regionWidth,
               regionHeight,
+              getBoundingBox
             )
           }
-          onMouseUp={(e) => {
+          onPointerUp={(e) => {
             rotate(
               selectedDesign,
               setDesignsByView,
               activePreview,
               selectedDesign.rotation,
-              getBoundingBox,
               regionWidth,
               regionHeight,
+              getBoundingBox,
               true,
             );
             setIsWidthBlank(false);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Rnd } from "react-rnd";
 import {
-  checkAfterRotation,
+  getRotationAdjustedValues,
   handleToggleAspectLock,
   updateSizeClamped,
 } from "../../../utils/designerUtils";
@@ -403,10 +403,10 @@ function ActivePreview({
                         right: "-30px",
                         pointerEvents: "auto",
                       }}
-                      onMouseDown={(e) => e.stopPropagation()}
+                      onPointerDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setActiveTab("");
+                        setActiveTab(null);
                         updateDesignsByView((prev) => ({
                           ...prev,
                           [activePreview]: prev[activePreview].filter(
@@ -470,13 +470,11 @@ function ActivePreview({
 
                           const newAngle = baseline + delta;
 
-                          checkAfterRotation(
+                          const adjusted = getRotationAdjustedValues(
                             getBoundingBox,
                             d,
-                            activePreview,
                             regionWidth,
                             regionHeight,
-                            setDesignsByView,
                             newAngle,
                           );
 
@@ -486,6 +484,7 @@ function ActivePreview({
                               item.id === d.id
                                 ? {
                                     ...item,
+                                    ...adjusted,
                                     rotation: newAngle,
                                   }
                                 : item,

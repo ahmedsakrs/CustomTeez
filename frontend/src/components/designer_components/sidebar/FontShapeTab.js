@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import debounce from "lodash.debounce";
 import { applyNewTextImg } from "../../../utils/designerUtils";
 
@@ -14,39 +14,77 @@ export default function FontShapeTab({
   pendingText,
   setActiveTab,
   setDesignsByView,
+  updateDesignsByView,
+  designsByView,
   activePreview,
   regionWidth,
   regionHeight,
   getBoundingBox,
 }) {
   const currentShape = selectedDesign?.text_shape || "normal";
-  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 200), []);
+  const debouncedUpdate = useMemo(
+    () => debounce((...args) => applyNewTextImg(...args), 200),
+    [],
+  );
+
   const [shapeIntensity, setShapeIntensity] = useState(
     selectedDesign?.shape_intensity === 0
       ? 0.25
       : selectedDesign?.shape_intensity,
   );
 
-  const applyShape = (shape, newIntensity = shapeIntensity) => {
-    applyNewTextImg(
-      selectedDesign.text,
-      selectedDesign.fontFamily,
-      selectedDesign.isBold,
-      selectedDesign.isItalic,
-      selectedDesign.design_color,
-      selectedDesign.outline_color,
-      selectedDesign.outline_width,
-      shape === "normal" ? selectedDesign.text_alignment : "center",
-      shape,
-      newIntensity,
-      selectedDesign.lineSpacing,
-      setDesignsByView,
-      activePreview,
-      selectedDesign,
-      regionWidth,
-      regionHeight,
-      getBoundingBox,
-    );
+  useEffect(() => {
+    setShapeIntensity(selectedDesign?.shape_intensity || 0);
+  }, [selectedDesign?.id, selectedDesign?.shape_intensity]);
+
+  useEffect(() => {
+    return () => {
+      debouncedUpdate.cancel();
+    };
+  }, [debouncedUpdate]);
+
+  const applyShape = (shape, updateState = false) => {
+    if (updateState) {
+      applyNewTextImg(
+        selectedDesign.text,
+        selectedDesign.fontFamily,
+        selectedDesign.isBold,
+        selectedDesign.isItalic,
+        selectedDesign.design_color,
+        selectedDesign.outline_color,
+        selectedDesign.outline_width,
+        shape === "normal" ? selectedDesign.text_alignment : "center",
+        shape,
+        shapeIntensity,
+        selectedDesign.lineSpacing,
+        updateDesignsByView,
+        activePreview,
+        selectedDesign,
+        regionWidth,
+        regionHeight,
+        getBoundingBox,
+      );
+    } else {
+      applyNewTextImg(
+        selectedDesign.text,
+        selectedDesign.fontFamily,
+        selectedDesign.isBold,
+        selectedDesign.isItalic,
+        selectedDesign.design_color,
+        selectedDesign.outline_color,
+        selectedDesign.outline_width,
+        shape === "normal" ? selectedDesign.text_alignment : "center",
+        shape,
+        shapeIntensity,
+        selectedDesign.lineSpacing,
+        setDesignsByView,
+        activePreview,
+        selectedDesign,
+        regionWidth,
+        regionHeight,
+        getBoundingBox,
+      );
+    }
   };
 
   return (
@@ -59,7 +97,7 @@ export default function FontShapeTab({
             className={`shape-btn ${
               currentShape === shape.key ? "active" : ""
             }`}
-            onClick={() => applyShape(shape.key)}
+            onClick={() => applyShape(shape.key, true)}
           >
             {shape.label}
           </button>
@@ -75,6 +113,9 @@ export default function FontShapeTab({
             max="0.65"
             step="0.1"
             value={shapeIntensity}
+            onPointerDown={() => {
+              updateDesignsByView(designsByView);
+            }}
             onChange={(e) => {
               const newVal = parseFloat(e.target.value);
               setShapeIntensity(newVal);
@@ -131,7 +172,7 @@ export default function FontShapeTab({
               "normal",
               0,
               selectedDesign.lineSpacing,
-              setDesignsByView,
+              updateDesignsByView,
               activePreview,
               selectedDesign,
               regionWidth,

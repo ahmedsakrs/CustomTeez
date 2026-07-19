@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import debounce from "lodash.debounce";
 import { applyNewTextImg } from "../../../utils/designerUtils";
 
@@ -9,11 +9,26 @@ function LineSpacer({
   getBoundingBox,
   regionWidth,
   regionHeight,
+  updateDesignsByView,
+  designsByView,
 }) {
-  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 200), []);
+  const debouncedUpdate = useMemo(
+    () => debounce((...args) => applyNewTextImg(...args), 200),
+    [],
+  );
   const [lineHeight, setLineHeight] = useState(
     selectedDesign?.lineSpacing || 1,
   );
+
+  useEffect(() => {
+    setLineHeight(selectedDesign?.lineSpacing || 1);
+  }, [selectedDesign?.id, selectedDesign?.lineSpacing]);
+
+  useEffect(() => {
+    return () => {
+      debouncedUpdate.cancel();
+    };
+  }, [debouncedUpdate]);
 
   return (
     <div className="size-row">
@@ -26,6 +41,9 @@ function LineSpacer({
           max="1.5"
           step={0.1}
           value={lineHeight}
+          onPointerDown={() => {
+            updateDesignsByView(designsByView);
+          }}
           onChange={(e) => {
             setLineHeight(parseFloat(e.target.value));
             debouncedUpdate(

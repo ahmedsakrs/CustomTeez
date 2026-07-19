@@ -13,7 +13,7 @@ import FontShapeTab from "./FontShapeTab";
 import FontColors from "./FontColors";
 import LineSpacer from "./LineSpacer";
 import UploaderTab from "./UploaderTab";
-import MainTab from './MainTab'
+import MainTab from "./MainTab";
 
 import {
   handleToggleAspectLock,
@@ -32,6 +32,7 @@ function TabPanel({
   activePreview,
   designsByView,
   setDesignsByView,
+  updateDesignsByView,
   panelRef,
   getBoundingBox,
   regionWidth,
@@ -54,9 +55,7 @@ function TabPanel({
   );
   return (
     <div className="tab-content" ref={panelRef}>
-      {activeTab === null && (
-        <MainTab setActiveTab={setActiveTab}/>
-      )}
+      {activeTab === null && <MainTab setActiveTab={setActiveTab} />}
 
       {!selectedCategory && activeTab === "addDesign" && (
         <>
@@ -95,7 +94,7 @@ function TabPanel({
             regionWidth={regionWidth}
             regionHeight={regionHeight}
             selectedDesign={selectedDesign}
-            setDesignsByView={setDesignsByView}
+            setDesignsByView={updateDesignsByView}
             activePreview={activePreview}
             getBoundingBox={getBoundingBox}
             handleToggleAspectLock={handleToggleAspectLock}
@@ -111,7 +110,9 @@ function TabPanel({
           <HorizontalLine marginUp={15} marginDown={15} lineColor={"#333"} />
           <RotationSection
             selectedDesign={selectedDesign}
+            designsByView={designsByView}
             setDesignsByView={setDesignsByView}
+            updateDesignsByView={updateDesignsByView}
             activePreview={activePreview}
             getBoundingBox={getBoundingBox}
             regionWidth={regionWidth}
@@ -125,7 +126,7 @@ function TabPanel({
           <ButtonsSection
             selectedDesign={selectedDesign}
             activePreview={activePreview}
-            setDesignsByView={setDesignsByView}
+            setDesignsByView={updateDesignsByView}
             setIsCropping={setIsCropping}
             setActiveTab={setActiveTab}
             regionWidth={regionWidth}
@@ -134,18 +135,6 @@ function TabPanel({
             designsByView={designsByView}
             getBoundingBox={getBoundingBox}
           />
-
-          {/* 5. Color */}
-          {/* <div className="edit-row">
-                <label>Color:</label>
-                <input
-                  type="color"
-                  value={selectedDesign.color || "#000000"}
-                  onChange={(e) =>
-                    updateColor(selectedDesign.id, e.target.value)
-                  }
-                />
-              </div> */}
         </div>
       )}
 
@@ -154,7 +143,7 @@ function TabPanel({
           design={selectedDesign}
           applyCrop={applyCrop}
           setIsCropping={setIsCropping}
-          setDesignsByView={setDesignsByView}
+          setDesignsByView={updateDesignsByView}
           activePreview={activePreview}
           getBoundingBox={getBoundingBox}
           regionWidth={regionWidth}
@@ -192,7 +181,7 @@ function TabPanel({
             getBoundingBox={getBoundingBox}
             activePreview={activePreview}
             designsByView={designsByView}
-            setDesignsByView={setDesignsByView}
+            setDesignsByView={updateDesignsByView}
             pendingText={pendingText}
             setPendingText={setPendingText}
           />
@@ -316,6 +305,8 @@ function TabPanel({
           <LineSpacer
             selectedDesign={selectedDesign}
             setDesignsByView={setDesignsByView}
+            updateDesignsByView={updateDesignsByView}
+            designsByView={designsByView}
             activePreview={activePreview}
             getBoundingBox={getBoundingBox}
             regionWidth={regionWidth}
@@ -326,7 +317,7 @@ function TabPanel({
           <ButtonsSection
             selectedDesign={selectedDesign}
             activePreview={activePreview}
-            setDesignsByView={setDesignsByView}
+            setDesignsByView={updateDesignsByView}
             setIsCropping={setIsCropping}
             setActiveTab={setActiveTab}
             regionWidth={regionWidth}
@@ -341,7 +332,7 @@ function TabPanel({
             regionWidth={regionWidth}
             regionHeight={regionHeight}
             selectedDesign={selectedDesign}
-            setDesignsByView={setDesignsByView}
+            setDesignsByView={updateDesignsByView}
             activePreview={activePreview}
             getBoundingBox={getBoundingBox}
             handleToggleAspectLock={handleToggleAspectLock}
@@ -357,7 +348,9 @@ function TabPanel({
           <HorizontalLine marginUp={15} marginDown={15} lineColor={"#333"} />
           <RotationSection
             selectedDesign={selectedDesign}
+            designsByView={designsByView}
             setDesignsByView={setDesignsByView}
+            updateDesignsByView={updateDesignsByView}
             activePreview={activePreview}
             getBoundingBox={getBoundingBox}
             regionWidth={regionWidth}
@@ -375,7 +368,7 @@ function TabPanel({
           selectedDesign={selectedDesign}
           pendingText={selectedDesign.text}
           setActiveTab={setActiveTab}
-          setDesignsByView={setDesignsByView}
+          setDesignsByView={updateDesignsByView}
           activePreview={activePreview}
           regionWidth={regionWidth}
           regionHeight={regionHeight}
@@ -389,6 +382,8 @@ function TabPanel({
           pendingText={selectedDesign.text}
           setActiveTab={setActiveTab}
           setDesignsByView={setDesignsByView}
+          designsByView={designsByView}
+          updateDesignsByView={updateDesignsByView}
           activePreview={activePreview}
           regionWidth={regionWidth}
           regionHeight={regionHeight}
@@ -401,7 +396,9 @@ function TabPanel({
           selectedDesign={selectedDesign}
           pendingText={selectedDesign.text}
           setActiveTab={setActiveTab}
-          setDesignsByView={setDesignsByView}
+          setDesignsByView={updateDesignsByView}
+          updateDesignsByView={updateDesignsByView}
+          designsByView={designsByView}
           activePreview={activePreview}
           regionWidth={regionWidth}
           regionHeight={regionHeight}
@@ -415,6 +412,8 @@ function TabPanel({
           pendingText={selectedDesign.text}
           setActiveTab={setActiveTab}
           setDesignsByView={setDesignsByView}
+          updateDesignsByView={updateDesignsByView}
+          designsByView={designsByView}
           activePreview={activePreview}
           regionWidth={regionWidth}
           regionHeight={regionHeight}

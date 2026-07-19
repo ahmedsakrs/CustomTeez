@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import debounce from "lodash.debounce";
 import { applyNewTextImg } from "../../../utils/designerUtils";
 
@@ -18,6 +18,8 @@ const availableColors = [
 function FontColors({
   selectedDesign,
   setDesignsByView,
+  updateDesignsByView,
+  designsByView,
   activePreview,
   regionWidth,
   regionHeight,
@@ -25,12 +27,26 @@ function FontColors({
   setActiveTab,
   isOutline = false,
 }) {
-  const debouncedUpdate = useMemo(() => debounce(applyNewTextImg, 200), []);
+  const debouncedUpdate = useMemo(
+    () => debounce((...args) => applyNewTextImg(...args), 200),
+    [],
+  );
+
   const [outlineWidth, setOutlineWidth] = useState(
     selectedDesign?.outline_width === 0 || isNaN(selectedDesign?.outline_width)
       ? 2
       : selectedDesign?.outline_width,
   );
+
+  useEffect(() => {
+    setOutlineWidth(selectedDesign?.outline_width || 0);
+  }, [selectedDesign?.id, selectedDesign?.outline_width]);
+
+  useEffect(() => {
+    return () => {
+      debouncedUpdate.cancel();
+    };
+  }, [debouncedUpdate]);
   return (
     <div className="vinyl-colors-tab">
       <div className="selected-color-header">
@@ -101,7 +117,7 @@ function FontColors({
                   selectedDesign.text_shape,
                   selectedDesign.shape_intensity,
                   selectedDesign.lineSpacing,
-                  setDesignsByView,
+                  updateDesignsByView,
                   activePreview,
                   selectedDesign,
                   regionWidth,
@@ -121,7 +137,7 @@ function FontColors({
                   selectedDesign.text_shape,
                   selectedDesign.shape_intensity,
                   selectedDesign.lineSpacing,
-                  setDesignsByView,
+                  updateDesignsByView,
                   activePreview,
                   selectedDesign,
                   regionWidth,
@@ -155,6 +171,9 @@ function FontColors({
             max="5"
             step={0.5}
             value={outlineWidth}
+            onPointerDown={() => {
+              updateDesignsByView(designsByView);
+            }}
             onChange={(e) => {
               setOutlineWidth(e.target.value);
               debouncedUpdate(
@@ -213,7 +232,7 @@ function FontColors({
                 selectedDesign.text_shape,
                 selectedDesign.shape_intensity,
                 selectedDesign.lineSpacing,
-                setDesignsByView,
+                updateDesignsByView,
                 activePreview,
                 selectedDesign,
                 regionWidth,

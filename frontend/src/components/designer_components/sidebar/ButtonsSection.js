@@ -52,7 +52,7 @@ function ButtonsSection({
         <span className="edit-label">Layer</span>
       </div>
 
-      {selectedDesign.text && (
+      {selectedDesign?.text && (
         <div className="edit-block">
           <div className="edit-group no-gap">
             <button
@@ -153,7 +153,7 @@ function ButtonsSection({
       )}
 
       {/* 2. Flip */}
-      {selectedDesign.text && (
+      {selectedDesign?.text && (
         <div className="edit-block">
           <div className="edit-group no-gap">
             <button
@@ -220,7 +220,7 @@ function ButtonsSection({
       <div className="edit-block">
         <div className="edit-group no-gap">
           <button
-            className={selectedDesign.horizontalFlip ? "active" : ""}
+            className={selectedDesign?.horizontalFlip ? "active" : ""}
             onClick={(e) => {
               e.stopPropagation();
               flipHorizontal(
@@ -234,7 +234,7 @@ function ButtonsSection({
           </button>
 
           <button
-            className={selectedDesign.verticalFlip ? "active" : ""}
+            className={selectedDesign?.verticalFlip ? "active" : ""}
             onClick={(e) => {
               e.stopPropagation();
               flipVertical(activePreview, selectedDesign.id, setDesignsByView);
@@ -268,7 +268,7 @@ function ButtonsSection({
         <span className="edit-label">Duplicate</span>
       </div>
 
-      {!selectedDesign.text && (
+      {!selectedDesign?.text && (
         <div className="edit-block">
           <div className="edit-group no-gap">
             <button

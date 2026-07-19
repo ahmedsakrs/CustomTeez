@@ -80,45 +80,93 @@ export const rotate = (
   setDesignsByView,
   activePreview,
   angleRad,
-  getBoundingBox,
   regionWidth,
   regionHeight,
-  check = false,
+  getBoundingBox,
+  adjust = false,
 ) => {
-  if (!isNaN(angleRad)) {
-    if (angleRad !== 0 && !d.isLocked_aspect_ratio) {
-      handleToggleAspectLock(
-        d,
-        activePreview,
-        setDesignsByView,
-        getBoundingBox,
-        regionWidth,
-        regionHeight,
-      );
-    }
-    if (check) {
-      checkAfterRotation(
-        getBoundingBox,
-        d,
-        activePreview,
-        regionWidth,
-        regionHeight,
-        setDesignsByView,
-        angleRad,
-      );
-    }
-    setDesignsByView((prev) => ({
-      ...prev,
-      [activePreview]: prev[activePreview].map((item) =>
-        item.id === d.id
-          ? {
-              ...item,
-              rotation: angleRad,
-            }
-          : item,
-      ),
-    }));
+  if (isNaN(angleRad)) {
+    return;
   }
+
+  let newWidthNorm = d.width;
+  let newHeightNorm = d.height;
+  let newLock = d.isLocked_aspect_ratio;
+  let d_x = d.x;
+  let d_y = d.y;
+
+  if (angleRad !== 0 && !d.isLocked_aspect_ratio) {
+    newLock = !newLock;
+
+    // If re-locking, restore original aspect ratio safely
+    if (newLock) {
+      const aspect = d.aspect_ratio;
+      let newWidthPx = d.width * Math.min(regionWidth, regionHeight);
+      let newHeightPx = newWidthPx / aspect;
+
+      if (newWidthPx / regionWidth < 0.05) {
+        newWidthPx = 0.05 * Math.min(regionWidth, regionHeight);
+        newHeightPx = newWidthPx / aspect;
+      }
+
+      if (newHeightPx / regionHeight < 0.05) {
+        newHeightPx = 0.05 * Math.min(regionWidth, regionHeight);
+        newWidthPx = newHeightPx * aspect;
+      }
+
+      // clamp both dimensions simultaneously
+      if (newWidthPx > regionWidth || newHeightPx > regionHeight) {
+        const widthRatio = regionWidth / newWidthPx;
+        const heightRatio = regionHeight / newHeightPx;
+        const scale = Math.min(widthRatio, heightRatio);
+        newWidthPx *= scale;
+        newHeightPx *= scale;
+      }
+
+      // clamp position so edges stay inside
+      let posX = d.x * regionWidth;
+      let posY = d.y * regionHeight;
+
+      if (posX + newWidthPx > regionWidth) posX = regionWidth - newWidthPx;
+      if (posX < 0) posX = 0;
+      if (posY + newHeightPx > regionHeight) posY = regionHeight - newHeightPx;
+      if (posY < 0) posY = 0;
+
+      newWidthNorm = newWidthPx / regionWidth;
+      newHeightNorm = newHeightPx / regionHeight;
+      d_x = posX / regionWidth;
+      d_y = posY / regionHeight;
+    }
+  }
+
+  let adjusted = { x: d_x, y: d_y, width: newWidthNorm, height: newHeightNorm };
+
+  if (adjust) {
+    adjusted = getRotationAdjustedValues(
+      getBoundingBox,
+      d,
+      regionWidth,
+      regionHeight,
+      angleRad,
+    );
+  }
+
+  setDesignsByView((prev) => ({
+    ...prev,
+    [activePreview]: prev[activePreview].map((item) =>
+      item.id === d.id
+        ? {
+            ...item,
+            rotation: angleRad,
+            width: Math.round(adjusted.width * 1000) / 1000,
+            height: Math.round(adjusted.height * 1000) / 1000,
+            x: adjusted.x,
+            y: adjusted.y,
+            isLocked_aspect_ratio: newLock,
+          }
+        : item,
+    ),
+  }));
 };
 
 export function radToDeg(angleRad) {
@@ -128,79 +176,73 @@ export function radToDeg(angleRad) {
   return degrees;
 }
 
-export function checkAfterRotation(
+export function getRotationAdjustedValues(
   getBoundingBox,
   selectedDesign,
-  activePreview,
   regionWidth,
   regionHeight,
-  setDesignsByView,
   angle,
 ) {
   let bbox = getBoundingBox(
-    selectedDesign?.width * Math.min(regionWidth, regionHeight),
-    (selectedDesign?.width / selectedDesign?.aspect_ratio) *
+    selectedDesign.width * Math.min(regionWidth, regionHeight),
+    (selectedDesign.width / selectedDesign.aspect_ratio) *
       Math.min(regionWidth, regionHeight),
     angle,
   );
-  let posX = selectedDesign?.x * regionWidth;
-  let posY = selectedDesign?.y * regionHeight;
+
+  let posX = selectedDesign.x * regionWidth;
+
+  let posY = selectedDesign.y * regionHeight;
 
   if (posX < 0) posX = 0;
   if (posY < 0) posY = 0;
-  if (posX + bbox.width > regionWidth)
+
+  if (posX + bbox.width > regionWidth) {
     posX = Math.max(regionWidth - bbox.width, 0);
-  if (posY + bbox.height > regionHeight)
+  }
+
+  if (posY + bbox.height > regionHeight) {
     posY = Math.max(regionHeight - bbox.height, 0);
+  }
 
   if (bbox.width > regionWidth || bbox.height > regionHeight) {
     const widthRatio = regionWidth / bbox.width;
+
     const heightRatio = regionHeight / bbox.height;
+
     const scale = Math.min(widthRatio, heightRatio);
 
-    const newWidth = selectedDesign?.width * regionWidth * scale;
+    const newWidth = selectedDesign.width * regionWidth * scale;
+
     const newHeight =
-      (selectedDesign?.width / selectedDesign?.aspect_ratio) *
+      (selectedDesign.width / selectedDesign.aspect_ratio) *
       regionHeight *
       scale;
 
     bbox = getBoundingBox(newWidth, newHeight, angle);
 
-    if (posX < 0) posX = 0;
-    if (posY < 0) posY = 0;
-    if (posX + bbox.width > regionWidth)
+    if (posX + bbox.width > regionWidth) {
       posX = Math.max(regionWidth - bbox.width, 0);
-    if (posY + bbox.height > regionHeight)
-      posY = Math.max(regionHeight - bbox.height, 0);
+    }
 
-    setDesignsByView((prev) => ({
-      ...prev,
-      [activePreview]: prev[activePreview].map((item) =>
-        item.id === selectedDesign?.id
-          ? {
-              ...item,
-              x: posX / regionWidth,
-              y: posY / regionHeight,
-              width: Math.round((newWidth / regionWidth) * 1000) / 1000,
-              height: Math.round((newHeight / regionHeight) * 1000) / 1000,
-            }
-          : item,
-      ),
-    }));
-  } else {
-    setDesignsByView((prev) => ({
-      ...prev,
-      [activePreview]: prev[activePreview].map((item) =>
-        item.id === selectedDesign?.id
-          ? {
-              ...item,
-              x: posX / regionWidth,
-              y: posY / regionHeight,
-            }
-          : item,
-      ),
-    }));
+    if (posY + bbox.height > regionHeight) {
+      posY = Math.max(regionHeight - bbox.height, 0);
+    }
+
+    return {
+      x: posX / regionWidth,
+      y: posY / regionHeight,
+      width: Math.round((newWidth / regionWidth) * 1000) / 1000,
+      height: Math.round((newHeight / regionHeight) * 1000) / 1000,
+    };
   }
+
+  return {
+    x: posX / regionWidth,
+    y: posY / regionHeight,
+    width: selectedDesign.width,
+    height: selectedDesign.height,
+  };
 }
 
 export function getNewSizePos(
@@ -575,16 +617,59 @@ export const applyCrop = async (
 
   const heightScale = norm.height / prevHeight;
   const widthScale = norm.width / prevWidth;
-  updateSize(
-    selectedDesign.id,
-    selectedDesign.width * widthScale,
-    selectedDesign.height * heightScale,
-    setDesignsByView,
-    activePreview,
-    getBoundingBox,
-    regionWidth,
-    regionHeight,
+
+  let newWidthNorm = selectedDesign.width * widthScale;
+  let newHeightNorm = selectedDesign.height * heightScale;
+
+  if (newWidthNorm < 0.05) {
+    newWidthNorm = 0.05;
+    newHeightNorm = newWidthNorm / newAspect;
+  }
+
+  if (newHeightNorm < 0.05) {
+    newHeightNorm = 0.05;
+    newWidthNorm = newHeightNorm * newAspect;
+  }
+
+  let finalWidth = newWidthNorm * regionWidth;
+  let finalHeight = newHeightNorm * regionHeight;
+
+  // rotated bounding box for new size
+  let bbox = getBoundingBox(
+    newWidthNorm * Math.min(regionWidth, regionHeight),
+    newHeightNorm * Math.min(regionWidth, regionHeight),
+    selectedDesign.rotation,
   );
+
+  // current top-left in pixels
+  let posX = selectedDesign.x * regionWidth;
+  let posY = selectedDesign.y * regionHeight;
+
+  // clamp size if bbox exceeds region
+  if (bbox.width > regionWidth || bbox.height > regionHeight) {
+    const widthRatio = regionWidth / bbox.width;
+    const heightRatio = regionHeight / bbox.height;
+    const scale = Math.min(widthRatio, heightRatio);
+
+    finalWidth = finalWidth * scale;
+    finalHeight = finalHeight * scale;
+
+    bbox = getBoundingBox(finalWidth, finalHeight, selectedDesign.rotation);
+  }
+
+  // clamp position so bbox stays inside region
+  if (posX + bbox.width > regionWidth) {
+    posX = regionWidth - bbox.width;
+  }
+  if (posX < 0) {
+    posX = 0;
+  }
+  if (posY + bbox.height > regionHeight) {
+    posY = regionHeight - bbox.height;
+  }
+  if (posY < 0) {
+    posY = 0;
+  }
 
   setDesignsByView((prev) => ({
     ...prev,
@@ -595,6 +680,10 @@ export const applyCrop = async (
             croppedSrc: croppedSrc,
             aspect_ratio: newAspect,
             crop: norm,
+            width: Math.round((finalWidth / regionWidth) * 1000) / 1000,
+            height: Math.round((finalHeight / regionHeight) * 1000) / 1000,
+            x: posX / regionWidth,
+            y: posY / regionHeight,
           }
         : item,
     ),

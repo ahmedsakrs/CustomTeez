@@ -44,6 +44,7 @@ export default function SizeSection({
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               let newWidthNorm = parseFloat(localWidth);
+              if (newWidthNorm === selectedDesign.width) return;
               if (isNaN(newWidthNorm)) {
                 setIsWidthBlank(true);
                 setIsWidthZero(false);
@@ -94,6 +95,7 @@ export default function SizeSection({
           }}
           onBlur={() => {
             let newWidthNorm = parseFloat(localWidth);
+            if (newWidthNorm === selectedDesign.width) return;
             if (isNaN(newWidthNorm)) {
               setIsWidthBlank(true);
               setIsWidthZero(false);
@@ -157,6 +159,7 @@ export default function SizeSection({
           }}
           onBlur={() => {
             let newHeightNorm = parseFloat(localHeight);
+            if (newHeightNorm === selectedDesign.height) return;
             if (isNaN(newHeightNorm)) {
               setIsHeightBlank(true);
               setIsHeightZero(false);
@@ -207,6 +210,7 @@ export default function SizeSection({
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               let newHeightNorm = parseFloat(localHeight);
+              if (newHeightNorm === selectedDesign.height) return;
               if (isNaN(newHeightNorm)) {
                 setIsHeightBlank(true);
                 setIsHeightZero(false);
