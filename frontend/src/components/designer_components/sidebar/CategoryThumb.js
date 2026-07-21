@@ -1,11 +1,14 @@
 import React from "react";
 
-function CategoryThumb({cat, setSelectedCategory}) {
+function CategoryThumb({ cat, setSelectedCategory }) {
   return (
     <div
       key={cat}
       className="cat-thumb"
-      onClick={() => setSelectedCategory(cat)}
+      onClick={(e) => {
+        e.stopPropagation();
+        setSelectedCategory(cat);
+      }}
     >
       {cat}
     </div>

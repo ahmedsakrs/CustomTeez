@@ -264,7 +264,8 @@ export default function SizeSection({
         {/* Aspect Ratio Toggle */}
         <button
           className="tab-edit-btn"
-          onClick={() =>
+          onClick={(e) => {
+            e.stopPropagation();
             handleToggleAspectLock(
               selectedDesign,
               activePreview,
@@ -272,8 +273,8 @@ export default function SizeSection({
               getBoundingBox,
               regionWidth,
               regionHeight,
-            )
-          }
+            );
+          }}
           disabled={
             selectedDesign?.isLocked_aspect_ratio &&
             Math.round(radToDeg(selectedDesign?.rotation)) !== 0

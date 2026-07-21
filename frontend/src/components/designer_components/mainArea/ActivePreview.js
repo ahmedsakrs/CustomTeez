@@ -1,10 +1,15 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Rnd } from "react-rnd";
 import {
   getRotationAdjustedValues,
   handleToggleAspectLock,
   updateSizeClamped,
+  addDesignCollageToActiveView,
+  sendToBack,
+  bringToFront,
+  center,
 } from "../../../utils/designerUtils";
+import HorizontalLine from "../../HorizontalLine";
 
 function ActivePreview({
   imgRef,
@@ -34,6 +39,8 @@ function ActivePreview({
   setIsRotating,
   setIsResizing,
   updateDesignsByView,
+  contextMenu,
+  setContextMenu,
 }) {
   const [lockedWrapperPos, setLockedWrapperPos] = useState(null);
   const [lockedDesignId, setLockedDesignId] = useState(null);
@@ -43,6 +50,8 @@ function ActivePreview({
   const dragStartPosRef = useRef(null);
   const dragMovedRef = useRef(false);
   const dragHistorySavedRef = useRef(false);
+  const copiedCollageRef = useRef(null);
+  const touchHoldTimerRef = useRef(null);
 
   useEffect(() => {
     if (!previewRef.current) return;
@@ -166,6 +175,172 @@ function ActivePreview({
     };
   }, []);
 
+  const copyDesign = useCallback(
+    (designID, copied = true) => {
+      const design = designsByView[activePreview].find(
+        (d) => d.id === designID,
+      );
+      copiedCollageRef.current = {
+        designs: [
+          {
+            ...design,
+          },
+        ],
+        operation: copied ? "copy" : "cut",
+      };
+    },
+    [designsByView, activePreview],
+  );
+
+  const deleteDesign = useCallback(
+    (designID) => {
+      updateDesignsByView((prev) => ({
+        ...prev,
+        [activePreview]: prev[activePreview].filter(
+          (item) => item.id !== designID,
+        ),
+      }));
+      setSelectedDesignId(null);
+      setActiveTab(null);
+    },
+    [updateDesignsByView, activePreview, setSelectedDesignId, setActiveTab],
+  );
+
+  const cutDesign = useCallback(
+    (designID) => {
+      copyDesign(designID, false);
+      deleteDesign(designID);
+    },
+    [copyDesign, deleteDesign],
+  );
+
+  const pasteDesign = useCallback(() => {
+    if (!copiedCollageRef.current) {
+      return;
+    }
+
+    const offsetX = 10 / regionWidth;
+
+    const offsetY = 10 / regionHeight;
+
+    const collage = {
+      designs: copiedCollageRef.current.designs.map((d) => ({
+        ...d,
+
+        // offset from original
+        x: d.x + offsetX,
+        y: d.y + offsetY,
+      })),
+    };
+
+    addDesignCollageToActiveView(
+      collage,
+      imgRef,
+      setSelectedDesignId,
+      updateDesignsByView,
+      activePreview,
+    );
+
+    if (copiedCollageRef.current.operation === "cut") {
+      copiedCollageRef.current = null;
+    }
+  }, [
+    copiedCollageRef,
+    imgRef,
+    setSelectedDesignId,
+    updateDesignsByView,
+    activePreview,
+    regionWidth,
+    regionHeight,
+  ]);
+
+  useEffect(() => {
+    const closeMenu = () => setContextMenu(null);
+
+    window.addEventListener("click", closeMenu);
+
+    return () => window.removeEventListener("click", closeMenu);
+  }, [setContextMenu]);
+
+  const selectedDesign = designsByView[activePreview].find(
+    (d) => d.id === selectedDesignId,
+  );
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const ctrl = e.ctrlKey || e.metaKey;
+
+      const selectedDesign = designsByView[activePreview]?.find(
+        (d) => d.id === selectedDesignId,
+      );
+
+      if (!selectedDesign && e.key !== "v" && e.key !== "V") {
+        return;
+      }
+
+      // Copy
+      if (ctrl && e.key.toLowerCase() === "c") {
+        e.preventDefault();
+
+        copyDesign(selectedDesign.id);
+
+        return;
+      }
+
+      // Cut
+      if (ctrl && e.key.toLowerCase() === "x") {
+        console.log("hereee");
+        e.preventDefault();
+
+        cutDesign(selectedDesign.id);
+
+        return;
+      }
+
+      // Paste
+      if (ctrl && e.key.toLowerCase() === "v") {
+        e.preventDefault();
+
+        pasteDesign();
+
+        if (selectedDesign?.text) {
+          // ✅ it's a text image
+          setActiveTab("editText");
+        } else if (selectedDesign?.type !== "upload") {
+          // ✅ it's a normal design image
+          setActiveTab("editDesign");
+        } else {
+          setActiveTab("editUpload");
+        }
+
+        return;
+      }
+
+      // Delete
+      if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+
+        deleteDesign(selectedDesign.id);
+
+        return;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [
+    activePreview,
+    selectedDesignId,
+    designsByView,
+    cutDesign,
+    copyDesign,
+    deleteDesign,
+    pasteDesign,
+    setActiveTab
+  ]);
   return (
     <div
       className="preview-image-wrapper"
@@ -213,7 +388,23 @@ function ActivePreview({
         };
 
         return (
-          <div style={style}>
+          <div
+            style={style}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              if (e.target === e.currentTarget) {
+                setSelectedDesignId(null);
+
+                const rect = previewRef.current.getBoundingClientRect();
+
+                setContextMenu({
+                  type: "preview",
+                  x: e.clientX - rect.left,
+                  y: e.clientY - rect.top,
+                });
+              }
+            }}
+          >
             {designsByView[activePreview].map((d) => (
               <Rnd
                 key={d.id}
@@ -242,6 +433,7 @@ function ActivePreview({
                 enableResizing={false}
                 onDragStart={(e) => {
                   e.preventDefault();
+                  setContextMenu(null);
                   setIsActive(true);
                   setIsWidthBlank(false);
                   setIsWidthZero(false);
@@ -303,6 +495,7 @@ function ActivePreview({
                   className={"design-container"}
                   onClick={(e) => {
                     e.stopPropagation();
+                    setContextMenu(null);
                     setSelectedDesignId(d.id);
                     if (d.text) {
                       // ✅ it's a text image
@@ -313,6 +506,51 @@ function ActivePreview({
                     } else {
                       setActiveTab("editUpload");
                     }
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSelectedDesignId(d.id);
+                    if (d.text) {
+                      // ✅ it's a text image
+                      setActiveTab("editText");
+                    } else if (d.type !== "upload") {
+                      // ✅ it's a normal design image
+                      setActiveTab("editDesign");
+                    } else {
+                      setActiveTab("editUpload");
+                    }
+                    setContextMenu({
+                      type: "design",
+                      designId: d.id,
+                    });
+                  }}
+                  onTouchStart={(e) => {
+                    touchHoldTimerRef.current = setTimeout(() => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSelectedDesignId(d.id);
+                      if (d.text) {
+                        // ✅ it's a text image
+                        setActiveTab("editText");
+                      } else if (d.type !== "upload") {
+                        // ✅ it's a normal design image
+                        setActiveTab("editDesign");
+                      } else {
+                        setActiveTab("editUpload");
+                      }
+
+                      setContextMenu({
+                        type: "design",
+                        designId: d.id,
+                      });
+                    }, 600);
+                  }}
+                  onTouchEnd={() => {
+                    clearTimeout(touchHoldTimerRef.current);
+                  }}
+                  onTouchMove={() => {
+                    clearTimeout(touchHoldTimerRef.current);
                   }}
                   draggable="false"
                   style={{
@@ -355,6 +593,193 @@ function ActivePreview({
                 </div>
               </Rnd>
             ))}
+
+            {contextMenu &&
+              (() => {
+                const menuDesign =
+                  contextMenu.type === "design"
+                    ? designsByView[activePreview].find(
+                        (item) => item.id === contextMenu.designId,
+                      )
+                    : null;
+
+                if (contextMenu.type === "design" && !menuDesign) {
+                  return null;
+                }
+
+                const bbox = getBoundingBox(
+                  menuDesign?.width * Math.min(regionWidth, regionHeight),
+                  menuDesign?.height * Math.min(regionWidth, regionHeight),
+                  menuDesign?.rotation,
+                );
+
+                return (
+                  <div
+                    className="designer-context-menu"
+                    style={{
+                      position: "absolute",
+                      left:
+                        contextMenu.type === "preview"
+                          ? contextMenu.x
+                          : menuDesign.x * regionWidth + bbox.width / 2,
+                      top:
+                        contextMenu.type === "preview"
+                          ? contextMenu.y
+                          : menuDesign.y * regionHeight + bbox.height / 2,
+                    }}
+                  >
+                    {contextMenu.type === "design" && (
+                      <>
+                        <button
+                          onClick={(e) => {
+                            center(
+                              selectedDesignId,
+                              updateDesignsByView,
+                              activePreview,
+                              getBoundingBox,
+                              regionWidth,
+                              regionHeight,
+                            );
+                            setContextMenu(null);
+                          }}
+                        >
+                          Center
+                        </button>
+                        <HorizontalLine
+                          lineColor={"#555"}
+                          marginUp={0}
+                          marginDown={0}
+                        />
+
+                        <button
+                          onClick={(e) => {
+                            bringToFront(
+                              activePreview,
+                              selectedDesignId,
+                              updateDesignsByView,
+                            );
+                            setContextMenu(null);
+                          }}
+                        >
+                          Bring To Front
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            sendToBack(
+                              activePreview,
+                              selectedDesignId,
+                              updateDesignsByView,
+                            );
+                            setContextMenu(null);
+                          }}
+                        >
+                          Send To Back
+                        </button>
+                        <HorizontalLine
+                          lineColor={"#555"}
+                          marginUp={0}
+                          marginDown={0}
+                        />
+                        {!selectedDesign?.text && (
+                          <div>
+                            <button
+                              onClick={(e) => {
+                                setActiveTab("Crop");
+                                setContextMenu(null);
+                              }}
+                            >
+                              Crop
+                            </button>
+                            <HorizontalLine
+                              lineColor={"#555"}
+                              marginUp={0}
+                              marginDown={0}
+                            />
+                          </div>
+                        )}
+                        <button
+                          onClick={() => {
+                            copyDesign(contextMenu.designId);
+                            setContextMenu(null);
+                          }}
+                        >
+                          Copy
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            cutDesign(contextMenu.designId);
+                            setContextMenu(null);
+                          }}
+                        >
+                          Cut
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            pasteDesign();
+                            setContextMenu(null);
+
+                            if (selectedDesign?.text) {
+                              // ✅ it's a text image
+                              setActiveTab("editText");
+                            } else if (selectedDesign?.type !== "upload") {
+                              // ✅ it's a normal design image
+                              setActiveTab("editDesign");
+                            } else {
+                              setActiveTab("editUpload");
+                            }
+                          }}
+                          disabled={!copiedCollageRef.current}
+                        >
+                          Paste
+                        </button>
+
+                        <HorizontalLine
+                          lineColor={"#555"}
+                          marginUp={0}
+                          marginDown={0}
+                        />
+
+                        <button
+                          onClick={() => {
+                            deleteDesign(contextMenu.designId);
+                            setContextMenu(null);
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+
+                    {contextMenu.type === "preview" && (
+                      <button
+                        onClick={() => {
+                          pasteDesign();
+                          setContextMenu(null);
+
+                          const d = designsByView[activePreview].find(
+                            (d) => d.id === selectedDesignId,
+                          );
+
+                          if (d?.text) {
+                            // ✅ it's a text image
+                            setActiveTab("editText");
+                          } else if (d?.type !== "upload") {
+                            // ✅ it's a normal design image
+                            setActiveTab("editDesign");
+                          } else {
+                            setActiveTab("editUpload");
+                          }
+                        }}
+                        disabled={!copiedCollageRef.current}
+                      >
+                        Paste
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
             {designsByView[activePreview].map((d) => (
               <div
                 className="bounding-box-overlay"
@@ -381,7 +806,7 @@ function ActivePreview({
                     d.height * Math.min(regionWidth, regionHeight),
                     d.rotation,
                   ).height,
-                  zIndex: selectedDesignId === d.id ? 9999 : d.layer,
+                  zIndex: selectedDesignId === d.id ? 999 : d.layer,
                   border:
                     selectedDesignId === d.id
                       ? "2px solid rgba(0,0,0,0.2)"
@@ -403,17 +828,11 @@ function ActivePreview({
                         right: "-30px",
                         pointerEvents: "auto",
                       }}
-                      onPointerDown={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
                       onClick={(e) => {
                         e.stopPropagation();
                         setActiveTab(null);
-                        updateDesignsByView((prev) => ({
-                          ...prev,
-                          [activePreview]: prev[activePreview].filter(
-                            (item) => item.id !== d.id,
-                          ),
-                        }));
-                        setSelectedDesignId(null);
+                        deleteDesign(d.id);
                       }}
                     >
                       <i class="bi bi-x" style={{ fontSize: "24px" }}></i>
@@ -438,7 +857,18 @@ function ActivePreview({
                           y: d.y * regionHeight,
                         });
 
-                        updateDesignsByView(designsByView);
+                        if (!d.isLocked_aspect_ratio) {
+                          handleToggleAspectLock(
+                            d,
+                            activePreview,
+                            updateDesignsByView,
+                            getBoundingBox,
+                            regionWidth,
+                            regionHeight,
+                          );
+                        } else {
+                          updateDesignsByView(designsByView);
+                        }
 
                         const rect = e.target.getBoundingClientRect();
                         const centerX = rect.left + rect.width / 2;
@@ -449,17 +879,6 @@ function ActivePreview({
                           e.clientX - centerX,
                         );
                         const baseline = d.rotation || 0;
-
-                        if (!d.isLocked_aspect_ratio) {
-                          handleToggleAspectLock(
-                            d,
-                            activePreview,
-                            setDesignsByView,
-                            getBoundingBox,
-                            regionWidth,
-                            regionHeight,
-                          );
-                        }
 
                         const handleMove = (moveEvent) => {
                           const currentAngle = Math.atan2(

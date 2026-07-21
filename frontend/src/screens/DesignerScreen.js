@@ -221,6 +221,7 @@ function ProductDesigner() {
   const [isResizing, setIsResizing] = useState(false);
   const [justFinishedInteraction, setJustFinishedInteraction] = useState(false);
   const [pendingText, setPendingText] = useState("");
+  const [contextMenu, setContextMenu] = useState(null);
 
   const imgRef = useRef(null);
   const panelRef = useRef(null);
@@ -268,15 +269,29 @@ function ProductDesigner() {
           return;
         }
 
+        if (
+          e.target.closest(".bounding-box-overlay") ||
+          e.target.closest(".design-container") ||
+          e.target.closest(".control-btn") ||
+          e.target.closest(".designer-context-menu")
+        ) {
+          return;
+        }
+
         if (isActive) return;
 
         if (isResizing || isRotating) return;
         setActiveTab(null);
         setSelectedDesignId(null);
         setIsCropping(false);
+        setContextMenu(null);
       };
+      // window.addEventListener("click", handleClickOutside);
       window.addEventListener("mousedown", handleClickOutside);
-      return () => window.removeEventListener("mousedown", handleClickOutside);
+      return () => {
+        // window.removeEventListener("click", handleClickOutside);
+        window.removeEventListener("mousedown", handleClickOutside);
+      };
     },
     [
       isActive,
@@ -343,7 +358,6 @@ function ProductDesigner() {
     if (previous.selectedDesignId === null) {
       setActiveTab(null);
     }
-      
 
     setUndoStack((prev) => prev.slice(0, -1));
   }, [undoStack, designsByView, selectedDesignId]);
@@ -476,6 +490,8 @@ function ProductDesigner() {
               setIsRotating={setIsRotating}
               setIsResizing={setIsResizing}
               updateDesignsByView={updateDesignsByView}
+              contextMenu={contextMenu}
+              setContextMenu={setContextMenu}
             />
             {/* Column 2: Thumbnails stacked */}
             <ViewThumbnails

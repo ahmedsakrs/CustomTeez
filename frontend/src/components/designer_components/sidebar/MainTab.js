@@ -1,11 +1,17 @@
 import React from "react";
 
-function MainTab({setActiveTab}) {
+function MainTab({ setActiveTab }) {
   return (
     <div className="start-tab">
       <h2 className="start-title">Bring Your Ideas to Life</h2>
 
-      <button className="start-card" onClick={() => setActiveTab("addDesign")}>
+      <button
+        className="start-card"
+        onClick={(e) => {
+          e.stopPropagation();
+          setActiveTab("addDesign");
+        }}
+      >
         {/* <CollectionsIcon /> */}
 
         <div>
@@ -14,7 +20,13 @@ function MainTab({setActiveTab}) {
         </div>
       </button>
 
-      <button className="start-card" onClick={() => setActiveTab("uploadDesign")}>
+      <button
+        className="start-card"
+        onClick={(e) => {
+          e.stopPropagation();
+          setActiveTab("uploadDesign");
+        }}
+      >
         {/* <UploadIcon /> */}
 
         <div>
@@ -23,7 +35,13 @@ function MainTab({setActiveTab}) {
         </div>
       </button>
 
-      <button className="start-card" onClick={() => setActiveTab("addText")}>
+      <button
+        className="start-card"
+        onClick={(e) => {
+          e.stopPropagation();
+          setActiveTab("addText");
+        }}
+      >
         {/* <TextFieldsIcon /> */}
 
         <div>

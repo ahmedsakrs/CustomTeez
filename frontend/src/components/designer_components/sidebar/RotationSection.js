@@ -38,7 +38,7 @@ function RotationSection({
               (parseInt(e.target.value) * Math.PI) / 180,
               regionWidth,
               regionHeight,
-              getBoundingBox
+              getBoundingBox,
             )
           }
           onPointerUp={(e) => {
@@ -70,12 +70,12 @@ function RotationSection({
             const angle = (parseInt(val) * Math.PI) / 180;
             rotate(
               selectedDesign,
-              setDesignsByView,
+              updateDesignsByView,
               activePreview,
               angle,
-              getBoundingBox,
               regionWidth,
               regionHeight,
+              getBoundingBox,
               true,
             );
             setIsWidthBlank(false);

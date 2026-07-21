@@ -53,7 +53,8 @@ export default function FontsTab({
             width: "100%",
             minHeight: "50px",
           }}
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             applyNewTextImg(
               selectedDesign.text,
               font,
@@ -81,10 +82,15 @@ export default function FontsTab({
 
       <button
         className="text-add-btn"
-        style={{ marginTop: "10px", height: "45px", width: "80px", fontSize: "14px"}}
+        style={{
+          marginTop: "10px",
+          height: "45px",
+          width: "80px",
+          fontSize: "14px",
+        }}
         onClick={(e) => {
-            e.stopPropagation();
-            setActiveTab("editText");
+          e.stopPropagation();
+          setActiveTab("editText");
         }}
       >
         Done

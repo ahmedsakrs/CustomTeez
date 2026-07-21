@@ -272,7 +272,8 @@ function ButtonsSection({
         <div className="edit-block">
           <div className="edit-group no-gap">
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
                 setIsCropping(true);
                 setActiveTab("Crop");
               }}

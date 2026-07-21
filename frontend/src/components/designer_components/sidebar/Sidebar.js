@@ -2,7 +2,7 @@ import "./sidebar.css";
 import React, { useState } from "react";
 import TabBar from "./TabBar";
 import TabPanel from "./TabPanel";
-import UndoRedoControls from './UndoRedoControls';
+import UndoRedoControls from "./UndoRedoControls";
 
 function Sidebar({
   activeTab,
@@ -39,69 +39,14 @@ function Sidebar({
   redo,
 }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [designCounter, setDesignCounter] = useState(0);
 
-  const addDesignCollageToActiveView = (collage) => {
-    if (!imgRef.current) return;
-
-    const lastDesign = collage.designs[collage.designs.length - 1];
-
-    const lastDesignId =
-      lastDesign?.id ?? `design-${designCounter + collage.designs.length}`;
-
-    setSelectedDesignId(lastDesignId);
-
-    setDesignCounter((prev) => prev + collage.designs.length);
-
-    updateDesignsByView((prev) => {
-      const designs = prev[activePreview] || [];
-      const highest = designs.length
-        ? Math.max(...designs.map((d) => d.layer || 1))
-        : 0;
-      return {
-        ...prev,
-        [activePreview]: [
-          ...prev[activePreview],
-          ...collage.designs.map((d, idx) => ({
-            ...d,
-            id: d.id ? d.id : `design-${designCounter + idx + 1}`,
-            x: d.x,
-            y: d.y,
-            width: d.width, // already normalized in data
-            height: d.height, // already normalized in data
-            aspect_ratio: d.width / d.height,
-            originalAspectRatio: d.width / d.height,
-            isLocked_aspect_ratio: true,
-            type: d.type,
-            text: d.text,
-            is_colorable: d.is_colorable,
-            design_color: d.design_color,
-            outline_width: d.design_outline,
-            outline_color: d.outline_color,
-            fontFamily: d.fontFamily,
-            isBold: d.isBold || false,
-            isItalic: d.isItalic || false,
-            text_alignment: d.text_alignment,
-            text_shape: d.text_shape,
-            shape_intensity: d.shape_intensity,
-            lineSpacing: d.lineSpacing,
-
-            horizontalFlip: false,
-            verticalFlip: false,
-            rotation: 0,
-            layer: highest + idx + 1,
-            crop: { x: 0, y: 0, width: 1, height: 1 },
-          })),
-        ],
-      };
-    });
-  };
   return (
     <div className="sidebar">
       <div className="sidebar-buttons" ref={sideRef}>
         <button
           className={`sidebar-btn ${activeTab === "addDesign" || activeTab === "editDesign" || activeTab === "Crop" ? "active" : ""}`}
-          onClick={() => {
+          onClick={(e) => {
+            // e.stopPropagation();
             setActiveTab("addDesign");
             setSelectedCategory(null);
             setSelectedDesignId(null);
@@ -113,7 +58,8 @@ function Sidebar({
 
         <button
           className={`sidebar-btn ${activeTab === "uploadDesign" || activeTab === "editUpload" ? "active" : ""}`}
-          onClick={() => {
+          onClick={(e) => {
+            // e.stopPropagation();
             setActiveTab("uploadDesign");
             setSelectedDesignId(null);
           }}
@@ -127,7 +73,8 @@ function Sidebar({
 
         <button
           className={`sidebar-btn ${activeTab === "addText" || activeTab === "editText" || activeTab === "changeFont" || activeTab === "changeShape" || activeTab === "changeFontColor" || activeTab === "changeFontOutline" ? "active" : ""}`}
-          onClick={() => {
+          onClick={(e) => {
+            // e.stopPropagation();
             setActiveTab("addText");
             setPendingText("");
             setSelectedDesignId(null);
@@ -139,7 +86,8 @@ function Sidebar({
 
         <button
           className={`sidebar-btn ${activeTab === "saveDesign" ? "active" : ""}`}
-          onClick={() => {
+          onClick={(e) => {
+            // e.stopPropagation();
             setActiveTab("saveDesign");
             setSelectedDesignId(null);
           }}
@@ -164,7 +112,6 @@ function Sidebar({
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
           designCategories={designCategories}
-          addDesignCollageToActiveView={addDesignCollageToActiveView}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           selectedDesignId={selectedDesignId}
@@ -189,6 +136,7 @@ function Sidebar({
           setIsWidthBlank={setIsWidthBlank}
           pendingText={pendingText}
           setPendingText={setPendingText}
+          imgRef={imgRef}
         />
 
         <UndoRedoControls

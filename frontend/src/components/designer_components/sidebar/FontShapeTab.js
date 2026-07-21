@@ -97,7 +97,10 @@ export default function FontShapeTab({
             className={`shape-btn ${
               currentShape === shape.key ? "active" : ""
             }`}
-            onClick={() => applyShape(shape.key, true)}
+            onClick={(e) => {
+              applyShape(shape.key, true);
+              e.stopPropagation();
+            }}
           >
             {shape.label}
           </button>
@@ -159,7 +162,8 @@ export default function FontShapeTab({
             width: "120px",
             fontSize: "13px",
           }}
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             applyNewTextImg(
               selectedDesign.text,
               selectedDesign.fontFamily,
@@ -194,7 +198,8 @@ export default function FontShapeTab({
             width: "120px",
             fontSize: "13px",
           }}
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             setActiveTab("editText");
           }}
         >

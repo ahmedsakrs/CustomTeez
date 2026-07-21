@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 
 export default function SideBarCropper({
   design,
@@ -9,7 +9,7 @@ export default function SideBarCropper({
   getBoundingBox,
   regionWidth,
   regionHeight,
-  setActiveTab
+  setActiveTab,
 }) {
   const containerRef = useRef(null);
 
@@ -144,7 +144,7 @@ export default function SideBarCropper({
       regionHeight,
     );
     setIsCropping(false);
-    setActiveTab(design.text ? "editText" : "editDesign")
+    setActiveTab(design.text ? "editText" : "editDesign");
   };
 
   return (
@@ -225,14 +225,21 @@ export default function SideBarCropper({
       <div className="crop-actions">
         <button
           className="panel-btn"
-          onClick={() => {
-            setCropBox({x:0, y:0, width:1, height:1});
+          onClick={(e) => {
+            e.stopPropagation();
+            setCropBox({ x: 0, y: 0, width: 1, height: 1 });
           }}
         >
           Reset
         </button>
 
-        <button className="panel-btn" onClick={handleApply}>
+        <button
+          className="panel-btn"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleApply();
+          }}
+        >
           Apply
         </button>
       </div>

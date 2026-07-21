@@ -103,7 +103,8 @@ function FontColors({
             style={{
               backgroundColor: color.rgb,
             }}
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               if (!isOutline) {
                 applyNewTextImg(
                   selectedDesign.text,
@@ -219,7 +220,8 @@ function FontColors({
               width: "120px",
               fontSize: "13px",
             }}
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               applyNewTextImg(
                 selectedDesign.text,
                 selectedDesign.fontFamily,
@@ -254,7 +256,8 @@ function FontColors({
               width: "120px",
               fontSize: "13px",
             }}
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               setActiveTab("editText");
             }}
           >
@@ -271,7 +274,8 @@ function FontColors({
             width: "80px",
             fontSize: "14px",
           }}
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             setActiveTab("editText");
           }}
         >

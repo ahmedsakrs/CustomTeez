@@ -1,12 +1,27 @@
 import React from "react";
+import { addDesignCollageToActiveView } from "../../../utils/designerUtils";
 
-function DesignThumb({d, addDesignCollageToActiveView, setActiveTab}) {
+function DesignThumb({
+  d,
+  setActiveTab,
+  imgRef,
+  setSelectedDesignId,
+  updateDesignsByView,
+  activePreview,
+}) {
   return (
     <div
       key={d.id}
       className="design-thumb"
-      onClick={() => {
-        addDesignCollageToActiveView(d);
+      onClick={(e) => {
+        e.stopPropagation();
+        addDesignCollageToActiveView(
+          d,
+          imgRef,
+          setSelectedDesignId,
+          updateDesignsByView,
+          activePreview,
+        );
         setActiveTab("editDesign");
       }}
     >

@@ -79,7 +79,8 @@ function TabBar({
         {
           <button
             className="tab-bar-btn"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               setActiveTab("");
               setSelectedCategory(null);
               setIsCropping(false);

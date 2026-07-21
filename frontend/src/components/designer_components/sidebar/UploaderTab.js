@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { getNewSizePos } from "../../../utils/designerUtils";
+import {
+  getNewSizePos,
+  addDesignCollageToActiveView,
+} from "../../../utils/designerUtils";
 import data from "../../../utils/googleDrive/googleDriveKeys.json";
 
-export default function ImageUploader({
+export default function UploaderTab({
   onGoogleDriveClick,
   setActiveTab,
+  imgRef,
+  updateDesignsByView,
   setSelectedDesignId,
-  addDesignCollageToActiveView,
   getBoundingBox,
   activePreview,
   regionWidth,
@@ -58,30 +62,33 @@ export default function ImageUploader({
 
       const baseHeight = baseWidth / aspectRatio;
 
-      const id = `upload-${Date.now()}`;
+      addDesignCollageToActiveView(
+        {
+          designs: [
+            getNewSizePos(
+              getBoundingBox,
+              {
+                src: imageUrl,
+                x: 0.25,
+                y: 0.25,
+                width: baseWidth,
+                height: baseHeight,
+                type: "upload",
+              },
+              activePreview,
+              regionWidth,
+              regionHeight,
+              0,
+            ),
+          ],
+        },
+        imgRef,
+        setSelectedDesignId,
+        updateDesignsByView,
+        activePreview,
+      );
 
-      addDesignCollageToActiveView({
-        designs: [
-          getNewSizePos(
-            getBoundingBox,
-            {
-              id,
-              src: imageUrl,
-              x: 0.25,
-              y: 0.25,
-              width: baseWidth,
-              height: baseHeight,
-              type: "upload",
-            },
-            activePreview,
-            regionWidth,
-            regionHeight,
-            0,
-          ),
-        ],
-      });
-
-      setSelectedDesignId(id);
+      // setSelectedDesignId(id);
       setActiveTab("editUpload");
     };
 
@@ -166,29 +173,32 @@ export default function ImageUploader({
             // pick a base normalized width
             const baseWidth = 0.2;
             const baseHeight = baseWidth / aspectRatio;
-            const id = `upload-${Date.now()}`;
 
-            addDesignCollageToActiveView({
-              designs: [
-                getNewSizePos(
-                  getBoundingBox,
-                  {
-                    id: id,
-                    src: ev.target.result,
-                    x: 0.25,
-                    y: 0.25,
-                    width: baseWidth,
-                    height: baseHeight, // ✅ preserves aspect ratio
-                    type: "upload",
-                  },
-                  activePreview,
-                  regionWidth,
-                  regionHeight,
-                  0,
-                ),
-              ],
-            });
-            setSelectedDesignId(id);
+            addDesignCollageToActiveView(
+              {
+                designs: [
+                  getNewSizePos(
+                    getBoundingBox,
+                    {
+                      src: ev.target.result,
+                      x: 0.25,
+                      y: 0.25,
+                      width: baseWidth,
+                      height: baseHeight, // ✅ preserves aspect ratio
+                      type: "upload",
+                    },
+                    activePreview,
+                    regionWidth,
+                    regionHeight,
+                    0,
+                  ),
+                ],
+              },
+              imgRef,
+              setSelectedDesignId,
+              updateDesignsByView,
+              activePreview,
+            );
             setActiveTab("editUpload");
           };
           img.src = ev.target.result;

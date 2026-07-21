@@ -1,6 +1,68 @@
 import { findFittingFontSize } from "./textRenderer";
 import { textWorker } from "./textWorkerClient";
 
+export const addDesignCollageToActiveView = (
+  collage,
+  imgRef,
+  setSelectedDesignId,
+  updateDesignsByView,
+  activePreview,
+) => {
+  if (!imgRef.current) return;
+
+  const timestamp = Date.now();
+
+  const generatedDesigns = collage.designs.map((d, idx) => ({
+    ...d,
+    id: `${crypto.randomUUID()}-${timestamp}-${idx}`,
+  }));
+
+  const lastDesignId = generatedDesigns[generatedDesigns.length - 1].id;
+
+  updateDesignsByView((prev) => {
+    const designs = prev[activePreview] || [];
+    const highest = designs.length
+      ? Math.max(...designs.map((d) => d.layer || 1))
+      : 0;
+    return {
+      ...prev,
+      [activePreview]: [
+        ...prev[activePreview],
+        ...generatedDesigns.map((d, idx) => ({
+          ...d,
+          x: d.x,
+          y: d.y,
+          width: d.width, // already normalized in data
+          height: d.height, // already normalized in data
+          aspect_ratio: d.width / d.height,
+          originalAspectRatio: d.width / d.height,
+          isLocked_aspect_ratio: true,
+          type: d.type,
+          text: d.text,
+          is_colorable: d.is_colorable,
+          design_color: d.design_color,
+          outline_width: d.design_outline,
+          outline_color: d.outline_color,
+          fontFamily: d.fontFamily,
+          isBold: d.isBold || false,
+          isItalic: d.isItalic || false,
+          text_alignment: d.text_alignment,
+          text_shape: d.text_shape,
+          shape_intensity: d.shape_intensity,
+          lineSpacing: d.lineSpacing,
+
+          horizontalFlip: d.horizontalFlip ? d.horizontalFlip : false,
+          verticalFlip: d.verticalFlip ? d.verticalFlip : false,
+          rotation: d.rotation ? d.rotation : 0,
+          layer: highest + idx + 1,
+          crop: d.crop ? d.crop : { x: 0, y: 0, width: 1, height: 1 },
+        })),
+      ],
+    };
+  });
+  setSelectedDesignId(lastDesignId);
+};
+
 export function bringToFront(
   activePreview,
   selectedDesignId,

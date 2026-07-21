@@ -24,7 +24,6 @@ function TabPanel({
   selectedCategory,
   setSelectedCategory,
   designCategories,
-  addDesignCollageToActiveView,
   activeTab,
   setActiveTab,
   selectedDesignId,
@@ -49,6 +48,7 @@ function TabPanel({
   setIsWidthBlank,
   pendingText,
   setPendingText,
+  imgRef,
 }) {
   const selectedDesign = designsByView[activePreview].find(
     (d) => d.id === selectedDesignId,
@@ -79,8 +79,11 @@ function TabPanel({
             {designCategories[selectedCategory].map((d) => (
               <DesignThumb
                 d={d}
-                addDesignCollageToActiveView={addDesignCollageToActiveView}
                 setActiveTab={setActiveTab}
+                setSelectedDesignId={setSelectedDesignId}
+                imgRef={imgRef}
+                updateDesignsByView={updateDesignsByView}
+                activePreview={activePreview}
               />
             ))}
           </div>
@@ -154,7 +157,8 @@ function TabPanel({
 
       {activeTab === "addText" && (
         <TextArea
-          addDesignCollageToActiveView={addDesignCollageToActiveView}
+          imgRef={imgRef}
+          updateDesignsByView={updateDesignsByView}
           setSelectedDesignId={setSelectedDesignId}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -171,7 +175,7 @@ function TabPanel({
       {activeTab === "editText" && selectedDesign && (
         <div className="tab-content">
           <TextArea
-            addDesignCollageToActiveView={addDesignCollageToActiveView}
+            imgRef={imgRef}
             setSelectedDesignId={setSelectedDesignId}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
@@ -424,7 +428,8 @@ function TabPanel({
 
       {activeTab === "uploadDesign" && (
         <UploaderTab
-          addDesignCollageToActiveView={addDesignCollageToActiveView}
+          imgRef={imgRef}
+          updateDesignsByView={updateDesignsByView}
           setSelectedDesignId={setSelectedDesignId}
           setActiveTab={setActiveTab}
           getBoundingBox={getBoundingBox}

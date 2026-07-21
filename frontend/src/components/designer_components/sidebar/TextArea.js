@@ -1,9 +1,13 @@
 import React from "react";
-import { getNewSizePos, applyNewTextImg } from "../../../utils/designerUtils";
+import {
+  getNewSizePos,
+  applyNewTextImg,
+  addDesignCollageToActiveView,
+} from "../../../utils/designerUtils";
 import { findFittingFontSize, textToImage } from "../../../utils/textRenderer";
 
 function TextArea({
-  addDesignCollageToActiveView,
+  imgRef,
   setSelectedDesignId,
   activeTab,
   setActiveTab,
@@ -14,6 +18,7 @@ function TextArea({
   activePreview,
   designsByView,
   setDesignsByView,
+  updateDesignsByView,
   pendingText,
   setPendingText,
 }) {
@@ -69,9 +74,7 @@ function TextArea({
                 textAlign: "center",
               });
 
-              const id = `text-${Date.now()}`;
               let selectedDesign = {
-                id: id,
                 src: imageData.img,
                 text: pendingText,
                 is_colorable: true,
@@ -94,19 +97,24 @@ function TextArea({
                 lineSpacing: 1,
               };
 
-              addDesignCollageToActiveView({
-                designs: [
-                  getNewSizePos(
-                    getBoundingBox,
-                    selectedDesign,
-                    activePreview,
-                    regionWidth,
-                    regionHeight,
-                    0,
-                  ),
-                ],
-              });
-              setSelectedDesignId(id);
+              addDesignCollageToActiveView(
+                {
+                  designs: [
+                    getNewSizePos(
+                      getBoundingBox,
+                      selectedDesign,
+                      activePreview,
+                      regionWidth,
+                      regionHeight,
+                      0,
+                    ),
+                  ],
+                },
+                imgRef,
+                setSelectedDesignId,
+                updateDesignsByView,
+                activePreview,
+              );
               if (activeTab === "addText") {
                 setActiveTab("editText");
               }
