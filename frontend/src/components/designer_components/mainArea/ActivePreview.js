@@ -45,8 +45,10 @@ function ActivePreview({
   const [lockedWrapperPos, setLockedWrapperPos] = useState(null);
   const [lockedDesignId, setLockedDesignId] = useState(null);
   const [keyboardMoving, setKeyboardMoving] = useState(false);
+  const [menuPosition, setMenuPosition] = useState(null);
 
   const previewRef = useRef(null);
+  const contextMenuRef = useRef(null);
   const dragStartPosRef = useRef(null);
   const dragMovedRef = useRef(false);
   const dragHistorySavedRef = useRef(false);
@@ -339,7 +341,67 @@ function ActivePreview({
     copyDesign,
     deleteDesign,
     pasteDesign,
-    setActiveTab
+    setActiveTab,
+  ]);
+
+  useEffect(() => {
+    if (!contextMenu || !previewRef.current || !contextMenuRef.current) {
+      return;
+    }
+
+    const menuDesign = designsByView[activePreview].find(
+      (d) => d.id === contextMenu.designId,
+    );
+
+    if (!menuDesign) {
+      return;
+    }
+
+    const bbox = getBoundingBox(
+      menuDesign.width * Math.min(regionWidth, regionHeight),
+      menuDesign.height * Math.min(regionWidth, regionHeight),
+      menuDesign.rotation,
+    );
+
+    const wrapperRect = previewRef.current.getBoundingClientRect();
+
+    const menuRect = contextMenuRef.current.getBoundingClientRect();
+
+    let left = menuDesign.x * regionWidth + bbox.width / 2;
+
+    let top = menuDesign.y * regionHeight + bbox.height + 10;
+
+    // keep inside right edge
+    if (left + menuRect.width / 2 > wrapperRect.width) {
+      left = wrapperRect.width - menuRect.width / 2 - 8;
+    }
+
+    // keep inside left edge
+    if (left - menuRect.width / 2 < 0) {
+      left = menuRect.width / 2 + 8;
+    }
+
+    // overflow bottom → show above design
+    if (top + menuRect.height > wrapperRect.height) {
+      top = menuDesign.y * regionHeight - menuRect.height - 10;
+    }
+
+    // top overflow
+    if (top < 0) {
+      top = 8;
+    }
+
+    setMenuPosition({
+      left,
+      top,
+    });
+  }, [
+    contextMenu,
+    activePreview,
+    designsByView,
+    regionWidth,
+    regionHeight,
+    getBoundingBox,
   ]);
   return (
     <div
@@ -395,12 +457,10 @@ function ActivePreview({
               if (e.target === e.currentTarget) {
                 setSelectedDesignId(null);
 
-                const rect = previewRef.current.getBoundingClientRect();
-
                 setContextMenu({
                   type: "preview",
-                  x: e.clientX - rect.left,
-                  y: e.clientY - rect.top,
+                  x: e.clientX,
+                  y: e.clientY,
                 });
               }
             }}
@@ -616,16 +676,26 @@ function ActivePreview({
                 return (
                   <div
                     className="designer-context-menu"
+                    ref={contextMenuRef}
+                    // style={{
+                    //   left:
+                    //     contextMenu.type === "preview"
+                    //       ? contextMenu.x
+                    //       : menuDesign.x * regionWidth + bbox.width / 2,
+                    //   top:
+                    //     contextMenu.type === "preview"
+                    //       ? contextMenu.y
+                    //       : menuDesign.y * regionHeight + bbox.height / 2,
+                    //   position:
+                    //     contextMenu.type === "preview" ? "fixed" : "absolute",
+                    // }}
+
                     style={{
-                      position: "absolute",
-                      left:
-                        contextMenu.type === "preview"
-                          ? contextMenu.x
-                          : menuDesign.x * regionWidth + bbox.width / 2,
-                      top:
-                        contextMenu.type === "preview"
-                          ? contextMenu.y
-                          : menuDesign.y * regionHeight + bbox.height / 2,
+                      left: menuPosition?.left ?? 0,
+
+                      top: menuPosition?.top ?? 0,
+
+                      transform: "translateX(-50%)",
                     }}
                   >
                     {contextMenu.type === "design" && (
