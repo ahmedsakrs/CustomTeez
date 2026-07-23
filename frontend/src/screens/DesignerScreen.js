@@ -26,7 +26,7 @@ const productOptions = [
       },
     },
     viewRegions: {
-      Front: { xStart: 0, yStart: 0, xEnd: 1, yEnd: 1 },
+      Front: { xStart: 0.2, yStart: 0.2, xEnd: 0.7, yEnd: 0.8 },
       Back: { xStart: 0.1, yStart: 0.4, xEnd: 0.8, yEnd: 1 },
       "L Sleeve": { xStart: 0.1, yStart: 0.2, xEnd: 0.9, yEnd: 0.8 },
       "R Sleeve": { xStart: 0.1, yStart: 0.2, xEnd: 0.9, yEnd: 0.8 },
@@ -227,6 +227,8 @@ function DesignerScreen() {
   const [showProductModal, setShowProductModal] = useState(false);
   const [showColorModal, setShowColorModal] = useState(false);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
+
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   const imgRef = useRef(null);
   const panelRef = useRef(null);
@@ -467,6 +469,8 @@ function DesignerScreen() {
         redo={redo}
         canUndo={undoStack.length > 0}
         canRedo={redoStack.length > 0}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
         onClick={(e) => {
           e.stopPropagation();
         }}
@@ -586,6 +590,9 @@ function DesignerScreen() {
       setShowProductModal={setShowProductModal}
       setIsAddingProduct={setIsAddingProduct}
       barRef={barRef}
+      selectedCategory={selectedCategory}
+      setSelectedCategory={setSelectedCategory}
+      sideRef={sideRef}
     />
   );
 }

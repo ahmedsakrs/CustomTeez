@@ -2,6 +2,7 @@ import React from "react";
 import MobileActivePreview from "./MobileActivePreview";
 import "./mobileDesigner.css";
 import MobileProductModal from "./modals/MobileProductModal";
+import DesignsModal from "./modals/DesignsModal";
 
 function MobileDesigner({
   activeTab,
@@ -68,7 +69,11 @@ function MobileDesigner({
   setShowColorModal,
 
   barRef,
-  setIsAddingProduct
+  setIsAddingProduct,
+  selectedCategory,
+  setSelectedCategory,
+
+  sideRef
 }) {
   const hasSelection = !!selectedDesignId;
 
@@ -118,17 +123,40 @@ function MobileDesigner({
           setShowProductModal={setShowProductModal}
           setShowColorModal={setShowColorModal}
           barRef={barRef}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+        />
+      )}
+
+      {activeTab === "addDesign" && (
+        <DesignsModal
+          barRef={barRef}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          designCategories={designCategories}
+          setActiveTab={setActiveTab}
+          setSelectedDesignId={setSelectedDesignId}
+          imgRef={imgRef}
+          updateDesignsByView={updateDesignsByView}
+          activePreview={activePreview}
         />
       )}
 
       {!hasSelection && (
-        <div className="mobile-bottom-nav">
-          <button onClick={() => setActiveTab("productOptions")}>
+        <div className="mobile-bottom-nav" ref={sideRef}>
+          <button onClick={(e) =>{
+            e.stopPropagation();
+            setActiveTab("productOptions");
+      }}>
             <i className="fas fa-tshirt" />
             <span>Product</span>
           </button>
 
-          <button onClick={() => setActiveTab("addDesign")}>
+          <button onClick={(e) => {
+            e.stopPropagation();
+            setActiveTab("addDesign");
+            setSelectedCategory(null);
+          }}>
             <i className="bi bi-brush-fill" />
             <span>Design</span>
           </button>
@@ -151,7 +179,7 @@ function MobileDesigner({
       )}
 
       {hasSelection && (
-        <div className="mobile-bottom-nav">
+        <div className="mobile-bottom-nav" ref={sideRef}>
           <button onClick={() => setActiveTab("editDesign")}>
             <i className="bi bi-sliders" />
             <span>Edit</span>

@@ -1,5 +1,5 @@
 import "./sidebar.css";
-import React, { useState } from "react";
+import React from "react";
 import TabBar from "./TabBar";
 import TabPanel from "./TabPanel";
 import UndoRedoControls from "./UndoRedoControls";
@@ -37,8 +37,9 @@ function Sidebar({
   canRedo,
   undo,
   redo,
+  selectedCategory,
+  setSelectedCategory
 }) {
-  const [selectedCategory, setSelectedCategory] = useState(null);
 
   return (
     <div className="sidebar">
