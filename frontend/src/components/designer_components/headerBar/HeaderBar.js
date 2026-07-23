@@ -10,11 +10,14 @@ function HeaderBar({
   activeProductId,
   setActiveProductId,
   activeProduct,
+  showColorModal,
+  showProductModal,
+  setShowColorModal,
+  setShowProductModal,
+  isAddingProduct,
+  setIsAddingProduct
 }) {
-  const [showProductModal, setShowProductModal] = useState(false);
-  const [showColorModal, setShowColorModal] = useState(false);
   const [pendingProductType, setPendingProductType] = useState(null);
-  const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 

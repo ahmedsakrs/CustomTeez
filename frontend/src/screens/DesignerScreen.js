@@ -193,7 +193,7 @@ const designCategories = {
   ],
 };
 
-function ProductDesigner() {
+function DesignerScreen() {
   const [allProducts, setAllProducts] = useState([
     { id: 1, productType: "tshirt", name: "tshirt", color: "Red" },
   ]);
@@ -223,6 +223,10 @@ function ProductDesigner() {
   const [justFinishedInteraction, setJustFinishedInteraction] = useState(false);
   const [pendingText, setPendingText] = useState("");
   const [contextMenu, setContextMenu] = useState(null);
+
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [showColorModal, setShowColorModal] = useState(false);
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
 
   const imgRef = useRef(null);
   const panelRef = useRef(null);
@@ -477,6 +481,12 @@ function ProductDesigner() {
           activeProductId={activeProductId}
           setActiveProductId={setActiveProductId}
           activeProduct={activeProduct}
+          showColorModal={showColorModal}
+          showProductModal={showProductModal}
+          setShowColorModal={setShowColorModal}
+          setShowProductModal={setShowProductModal}
+          isAddingProduct={isAddingProduct}
+          setIsAddingProduct={setIsAddingProduct}
         />
 
         {/* Right preview area */}
@@ -570,8 +580,14 @@ function ProductDesigner() {
       setActiveProductId={setActiveProductId}
       contextMenu={contextMenu}
       setContextMenu={setContextMenu}
+      showColorModal={showColorModal}
+      setShowColorModal={setShowColorModal}
+      showProductModal={showProductModal}
+      setShowProductModal={setShowProductModal}
+      setIsAddingProduct={setIsAddingProduct}
+      barRef={barRef}
     />
   );
 }
 
-export default ProductDesigner;
+export default DesignerScreen;

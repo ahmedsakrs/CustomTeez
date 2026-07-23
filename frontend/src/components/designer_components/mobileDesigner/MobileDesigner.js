@@ -1,6 +1,7 @@
 import React from "react";
 import MobileActivePreview from "./MobileActivePreview";
 import "./mobileDesigner.css";
+import MobileProductModal from "./modals/MobileProductModal";
 
 function MobileDesigner({
   activeTab,
@@ -62,6 +63,12 @@ function MobileDesigner({
 
   contextMenu,
   setContextMenu,
+
+  setShowProductModal,
+  setShowColorModal,
+
+  barRef,
+  setIsAddingProduct
 }) {
   const hasSelection = !!selectedDesignId;
 
@@ -98,6 +105,21 @@ function MobileDesigner({
         contextMenu={contextMenu}
         setContextMenu={setContextMenu}
       />
+
+      {activeTab === "productOptions" && (
+        <MobileProductModal
+          setActiveTab={setActiveTab}
+          allProducts={allProducts}
+          setAllProducts={setAllProducts}
+          activeProductId={activeProductId}
+          setActiveProductId={setActiveProductId}
+          activeProduct={activeProduct}
+          productOptions={productOptions}
+          setShowProductModal={setShowProductModal}
+          setShowColorModal={setShowColorModal}
+          barRef={barRef}
+        />
+      )}
 
       {!hasSelection && (
         <div className="mobile-bottom-nav">
