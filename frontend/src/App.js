@@ -75,14 +75,14 @@ function App() {
           <Route
             path="/designer/"
             element={
-              <Container fluid className="p-1">
+              <Container fluid className="p-0">
                 <DesignerScreen />
               </Container>
             }
           />
         </Routes>
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </Router>
   );
 }

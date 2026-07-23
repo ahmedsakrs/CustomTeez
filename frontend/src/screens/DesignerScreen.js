@@ -4,6 +4,7 @@ import Sidebar from "../components/designer_components/sidebar/Sidebar";
 import HeaderBar from "../components/designer_components/headerBar/HeaderBar";
 import ActivePreview from "../components/designer_components/mainArea/ActivePreview";
 import ViewThumbnails from "../components/designer_components/mainArea/ViewThumbnails";
+import MobileDesigner from "../components/designer_components/mobileDesigner/MobileDesigner";
 
 const productOptions = [
   {
@@ -406,7 +407,27 @@ function ProductDesigner() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [undo, redo]);
 
-  return (
+  const MOBILE_QUERY = "(max-width: 720px)";
+
+  const [isMobile, setIsMobile] = useState(
+    window.matchMedia(MOBILE_QUERY).matches,
+  );
+
+  useEffect(() => {
+    const media = window.matchMedia(MOBILE_QUERY);
+
+    const handler = (e) => {
+      setIsMobile(e.matches);
+    };
+
+    media.addEventListener("change", handler);
+
+    return () => {
+      media.removeEventListener("change", handler);
+    };
+  }, []);
+
+  return !isMobile ? (
     <div className="designer-container">
       {/* Sidebar */}
       <Sidebar
@@ -492,6 +513,7 @@ function ProductDesigner() {
               updateDesignsByView={updateDesignsByView}
               contextMenu={contextMenu}
               setContextMenu={setContextMenu}
+              isMobile={false}
             />
             {/* Column 2: Thumbnails stacked */}
             <ViewThumbnails
@@ -506,6 +528,49 @@ function ProductDesigner() {
         </div>
       </div>
     </div>
+  ) : (
+    <MobileDesigner
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      activePreview={activePreview}
+      setActivePreview={setActivePreview}
+      selectedDesignId={selectedDesignId}
+      setSelectedDesignId={setSelectedDesignId}
+      productOptions={productOptions}
+      activeProduct={activeProduct}
+      imgRef={imgRef}
+      regionWidth={regionWidth}
+      regionHeight={regionHeight}
+      setRegionWidth={setRegionWidth}
+      setRegionHeight={setRegionHeight}
+      designsByView={designsByView}
+      setDesignsByView={setDesignsByView}
+      isRotating={isRotating}
+      isResizing={isResizing}
+      setIsActive={setIsActive}
+      setIsWidthBlank={setIsWidthBlank}
+      setIsWidthZero={setIsWidthZero}
+      setIsHeightBlank={setIsHeightBlank}
+      setIsHeightZero={setIsHeightZero}
+      pendingText={pendingText}
+      setPendingText={setPendingText}
+      getBoundingBox={getBoundingBox}
+      setJustFinishedInteraction={setJustFinishedInteraction}
+      isActive={isActive}
+      setIsRotating={setIsRotating}
+      setIsResizing={setIsResizing}
+      setIsCropping={setIsCropping}
+      isCropping={isCropping}
+      designCategories={designCategories}
+      panelRef={panelRef}
+      updateDesignsByView={updateDesignsByView}
+      allProducts={allProducts}
+      setAllProducts={setAllProducts}
+      activeProductId={activeProductId}
+      setActiveProductId={setActiveProductId}
+      contextMenu={contextMenu}
+      setContextMenu={setContextMenu}
+    />
   );
 }
 

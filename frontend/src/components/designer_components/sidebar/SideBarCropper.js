@@ -174,7 +174,7 @@ export default function SideBarCropper({
 
         {/* Crop Box */}
         <div
-          onMouseDown={startDrag}
+          onPointerDown={startDrag}
           style={{
             position: "absolute",
             left: `${cropBox.x * 100}%`,
@@ -200,24 +200,24 @@ export default function SideBarCropper({
 
           {/* EDGES */}
           <div
-            onMouseDown={(e) => startResize("left", e)}
+            onPointerDown={(e) => startResize("left", e)}
             style={edge("left")}
           />
           <div
-            onMouseDown={(e) => startResize("right", e)}
+            onPointerDown={(e) => startResize("right", e)}
             style={edge("right")}
           />
-          <div onMouseDown={(e) => startResize("top", e)} style={edge("top")} />
+          <div onPointerDown={(e) => startResize("top", e)} style={edge("top")} />
           <div
-            onMouseDown={(e) => startResize("bottom", e)}
+            onPointerDown={(e) => startResize("bottom", e)}
             style={edge("bottom")}
           />
 
           {/* CORNERS */}
-          <div onMouseDown={(e) => startResize("nw", e)} style={corner("nw")} />
-          <div onMouseDown={(e) => startResize("ne", e)} style={corner("ne")} />
-          <div onMouseDown={(e) => startResize("sw", e)} style={corner("sw")} />
-          <div onMouseDown={(e) => startResize("se", e)} style={corner("se")} />
+          <div onPointerDown={(e) => startResize("nw", e)} style={corner("nw")} />
+          <div onPointerDown={(e) => startResize("ne", e)} style={corner("ne")} />
+          <div onPointerDown={(e) => startResize("sw", e)} style={corner("sw")} />
+          <div onPointerDown={(e) => startResize("se", e)} style={corner("se")} />
         </div>
       </div>
 

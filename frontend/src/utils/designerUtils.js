@@ -14,7 +14,7 @@ export const addDesignCollageToActiveView = (
 
   const generatedDesigns = collage.designs.map((d, idx) => ({
     ...d,
-    id: `${crypto.randomUUID()}-${timestamp}-${idx}`,
+    id: `design-${timestamp}-${idx}`,
   }));
 
   const lastDesignId = generatedDesigns[generatedDesigns.length - 1].id;

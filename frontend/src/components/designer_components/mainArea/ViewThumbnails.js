@@ -67,6 +67,8 @@ function ViewThumbnails({
           className={`view-thumbnail ${activePreview === view ? "active" : ""}`}
           onClick={() => setActivePreview(view)}
         >
+          {view !== activePreview && (
+            <div>
           <img
             src={
               productOptions.find(
@@ -200,7 +202,10 @@ function ViewThumbnails({
               </div>
             ))}
           </div>
+          
           <div className="option-name">{view}</div>
+          </div>
+          )}
         </div>
       ))}
     </div>

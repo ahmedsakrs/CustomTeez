@@ -194,6 +194,7 @@
   overflow-y: auto;
   position: relative;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  gap: 10px;
 }
 
 .modal-content.small {

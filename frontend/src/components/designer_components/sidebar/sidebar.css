@@ -2,7 +2,7 @@
   display: grid;
   grid-template-columns: 70px 1fr; /* left buttons, right tab */
   flex: 0 0 100%; /* full width by default (mobile) */
-  height: calc(100vh - 83.5px);
+  height: calc(100vh - 93.5px);
   border-right: linear-gradient(180deg, #aaaaaa, #bfbfbf);
   padding-right: 0;
   padding-left: 0;
@@ -834,6 +834,14 @@
 
   .slider {
     max-width: 100px;
+  }
+}
+
+@media (min-width: 300px) {
+  .size-left::before {
+    content: "Size \A (W x H)";
+    white-space: pre-wrap;
+    text-align: center;
   }
 }
 

@@ -41,6 +41,7 @@ function ActivePreview({
   updateDesignsByView,
   contextMenu,
   setContextMenu,
+  isMobile
 }) {
   const [lockedWrapperPos, setLockedWrapperPos] = useState(null);
   const [lockedDesignId, setLockedDesignId] = useState(null);
@@ -405,7 +406,7 @@ function ActivePreview({
   ]);
   return (
     <div
-      className="preview-image-wrapper"
+      className= {!isMobile ? "preview-image-wrapper" : "mobile-preview-image-wrapper"}
       ref={previewRef}
       style={{ position: "relative" }}
     >
@@ -667,12 +668,6 @@ function ActivePreview({
                   return null;
                 }
 
-                const bbox = getBoundingBox(
-                  menuDesign?.width * Math.min(regionWidth, regionHeight),
-                  menuDesign?.height * Math.min(regionWidth, regionHeight),
-                  menuDesign?.rotation,
-                );
-
                 return (
                   <div
                     className="designer-context-menu"
@@ -891,6 +886,7 @@ function ActivePreview({
                 {selectedDesignId === d.id && (
                   <>
                     <button
+                    draggable="false"
                       className="control-btn"
                       style={{
                         position: "absolute",
@@ -1004,6 +1000,7 @@ function ActivePreview({
                     </button>
 
                     <button
+                    draggable="false"
                       className="control-btn"
                       style={{
                         position: "absolute",
