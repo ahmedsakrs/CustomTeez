@@ -6,7 +6,6 @@ import {
 import data from "../../../utils/googleDrive/googleDriveKeys.json";
 
 export default function UploaderTab({
-  onGoogleDriveClick,
   setActiveTab,
   imgRef,
   updateDesignsByView,
@@ -15,6 +14,7 @@ export default function UploaderTab({
   activePreview,
   regionWidth,
   regionHeight,
+  isMobile = false,
 }) {
   const APP_ID = data.APP_ID;
   const CLIENT_ID = data.CLIENT_ID;
@@ -226,11 +226,17 @@ export default function UploaderTab({
       }}
     >
       <div className="upload-actions">
-        <button type="button" onClick={() => inputRef.current?.click()}>
+        <button
+          className={!isMobile ? "button" : "button mobile"}
+          onClick={() => inputRef.current?.click()}
+        >
           Upload from Device
         </button>
 
-        <button type="button" onClick={openGoogleDrive}>
+        <button
+          className={!isMobile ? "button" : "button mobile"}
+          onClick={openGoogleDrive}
+        >
           Upload from Drive
         </button>
       </div>

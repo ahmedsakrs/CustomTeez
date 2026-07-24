@@ -728,8 +728,16 @@
   background-color: #fff;
 }
 
+.upload-actions button.mobile {
+  background-color: #CACACA;
+}
+
 .upload-actions button:hover {
   background-color: #ccc;
+}
+
+.upload-actions button.mobile:hover {
+  background-color: #BABABA;
 }
 
 .start-tab {
