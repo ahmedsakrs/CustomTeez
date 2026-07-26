@@ -14,7 +14,7 @@ function DesignsModal({
   barRef,
 }) {
   return (
-    <div className="mobile-designs-modal" ref={barRef}>
+    <div className="mobile-product-modal" ref={barRef}>
       <div className="mobile-product-tabbar">
         {selectedCategory && (
           <button

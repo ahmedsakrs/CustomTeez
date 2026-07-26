@@ -59,7 +59,7 @@
   justify-content: space-around;
   overflow-x: auto;
   overflow-y: hidden;
-  z-index: 1000;
+  z-index: 9999;
 }
 
 .mobile-bottom-nav button {
@@ -88,14 +88,14 @@
   position: absolute;
   inset: 88px 0;
   width: 100%;
-  height: calc(100dvh - 173px);
+  height: calc(100dvh - 88px);
 
   background: white;
 
   display: flex;
   flex-direction: column;
   padding: 10px 10px;
-  z-index: 1000;
+  z-index: 10000;
 }
 
 .mobile-product-tabbar {
@@ -292,13 +292,6 @@
   border: 2px solid rgb(0, 100, 200);
 }
 
-.mobile-designs-modal {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  z-index: 1000;
-}
-
 .mobile-designs-header {
   position: sticky;
   top: 0;
@@ -368,4 +361,25 @@
 
 .mobile-design-card:active {
   transform: scale(0.97);
+}
+
+.mobile-upload-sheet {
+  position: absolute;
+
+  inset: auto 0 0 0;
+
+  height: 31%;
+  max-height: 31%;
+
+  min-height: 200px;
+
+  background: white;
+
+  border-radius: 16px 16px 0 0;
+
+  overflow: hidden;
+  z-index: 10000;
+  padding-left: 6px;
+  padding-right: 6px;
+  padding-bottom: 10px;
 }

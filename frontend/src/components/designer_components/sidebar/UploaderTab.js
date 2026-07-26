@@ -211,6 +211,7 @@ export default function UploaderTab({
   return (
     <div
       className={`upload-zone ${isDragging ? "dragging" : ""}`}
+      style={{maxHeight: isMobile ? "135px" : ""}}
       onDragOver={(e) => {
         e.preventDefault();
         setIsDragging(true);
@@ -242,7 +243,7 @@ export default function UploaderTab({
       </div>
 
       <p style={{ marginTop: "20px", color: "black" }}>
-        Drag & drop images here
+        {!isMobile ? "Drag & drop images here" : ""}
       </p>
 
       <input
