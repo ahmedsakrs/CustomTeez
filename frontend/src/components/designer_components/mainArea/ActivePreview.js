@@ -41,7 +41,7 @@ function ActivePreview({
   updateDesignsByView,
   contextMenu,
   setContextMenu,
-  isMobile
+  isMobile,
 }) {
   const [lockedWrapperPos, setLockedWrapperPos] = useState(null);
   const [lockedDesignId, setLockedDesignId] = useState(null);
@@ -406,7 +406,9 @@ function ActivePreview({
   ]);
   return (
     <div
-      className= {!isMobile ? "preview-image-wrapper" : "mobile-preview-image-wrapper"}
+      className={
+        !isMobile ? "preview-image-wrapper" : "mobile-preview-image-wrapper"
+      }
       ref={previewRef}
       style={{ position: "relative" }}
     >
@@ -886,7 +888,7 @@ function ActivePreview({
                 {selectedDesignId === d.id && (
                   <>
                     <button
-                    draggable="false"
+                      draggable="false"
                       className="control-btn"
                       style={{
                         position: "absolute",
@@ -911,6 +913,7 @@ function ActivePreview({
                         top: "-30px",
                         left: "-30px",
                         pointerEvents: "auto",
+                        touchAction: "none",
                       }}
                       draggable="false"
                       onPointerDown={(e) => {
@@ -990,27 +993,30 @@ function ActivePreview({
 
                           window.removeEventListener("pointermove", handleMove);
                           window.removeEventListener("pointerup", handleUp);
+                          window.removeEventListener("pointercancel", handleUp);
                         };
 
                         window.addEventListener("pointermove", handleMove);
                         window.addEventListener("pointerup", handleUp);
+                        window.addEventListener("pointercancel", handleUp);
                       }}
                     >
                       <i className="bi bi-arrow-clockwise"></i>
                     </button>
 
                     <button
-                    draggable="false"
+                      draggable="false"
                       className="control-btn"
                       style={{
                         position: "absolute",
                         bottom: "-30px",
                         right: "-30px",
                         pointerEvents: "auto",
+                        touchAction: "none",
                       }}
                       onPointerDown={(e) => {
                         e.stopPropagation();
-                        e.preventDefault();
+                        // e.preventDefault();
                         setIsResizing(true);
                         setLockedDesignId(d.id);
                         setLockedWrapperPos({
@@ -1061,17 +1067,19 @@ function ActivePreview({
                           setIsWidthZero(false);
                           setIsHeightBlank(false);
                           setIsHeightZero(false);
-                          setJustFinishedInteraction(true);
+                          setJustFinishedInteraction(false);
                           setIsResizing(false);
                           setLockedWrapperPos(null);
                           setSelectedDesignId(d.id);
 
                           window.removeEventListener("pointermove", handleMove);
                           window.removeEventListener("pointerup", handleUp);
+                          window.removeEventListener("pointercancel", handleUp);
                         };
 
                         window.addEventListener("pointermove", handleMove);
                         window.addEventListener("pointerup", handleUp);
+                        window.addEventListener("pointercancel", handleUp);
                       }}
                     >
                       <i

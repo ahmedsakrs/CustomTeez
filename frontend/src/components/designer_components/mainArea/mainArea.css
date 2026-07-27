@@ -84,9 +84,9 @@
   position: absolute;
 }
 
-.designer-container .control-btn {
-  width: 28px; /* ✅ square size */
-  height: 28px;
+.bounding-box-overlay .control-btn {
+  width: 30px; /* ✅ square size */
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;

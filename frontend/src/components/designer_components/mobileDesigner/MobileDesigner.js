@@ -6,6 +6,7 @@ import DesignsModal from "./modals/DesignsModal";
 import MobileUploadModal from "./modals/MobileUploadModal";
 import AddTextModal from "./modals/AddTextModal";
 import { center, duplicateDesign } from "../../../utils/designerUtils";
+import MobileCropModal from './modals/MobileCropModal'
 
 function MobileDesigner({
   activeTab,
@@ -78,6 +79,9 @@ function MobileDesigner({
 
   sideRef,
 }) {
+  const selectedDesign = designsByView[activePreview].find(
+    (d) => d.id === selectedDesignId,
+  );
   return (
     <div className="mobile-designer">
       <MobileActivePreview
@@ -175,6 +179,19 @@ function MobileDesigner({
         />
       )}
 
+      {activeTab === "Crop" && (
+        <MobileCropModal
+        barRef={barRef}
+        selectedDesign={selectedDesign}
+        setIsCropping={setIsCropping}
+        updateDesignsByView={updateDesignsByView}
+        activePreview={activePreview}
+        getBoundingBox={getBoundingBox}
+        regionWidth={regionWidth}
+        regionHeight={regionHeight}
+        setActiveTab={setActiveTab}/>
+      )}
+
       {!selectedDesignId && (
         <div className="mobile-bottom-nav" ref={sideRef}>
           <button
@@ -224,12 +241,12 @@ function MobileDesigner({
         <div>
           {(activeTab === "editUpload" || activeTab === "editDesign") && (
             <div className="mobile-bottom-nav" ref={sideRef}>
-              <button onClick={() => setActiveTab("editDesign")}>
+              <button onClick={() => setActiveTab("resize")}>
                 <i className="bi bi-pip" style={{ fontSize: "33px" }}></i>
                 <span>Resize</span>
               </button>
 
-              <button onClick={() => setActiveTab("Crop")}>
+              <button onClick={() => setActiveTab("rotate")}>
                 <i
                   className="bi bi-arrow-repeat"
                   style={{ fontSize: "33px" }}
@@ -238,11 +255,11 @@ function MobileDesigner({
               </button>
 
               <button onClick={() => setActiveTab("layers")}>
-                <i className="bi bi-layers" />
-                <span>Layers</span>
+                <i className="bi bi-stack" />
+                <span>Order</span>
               </button>
 
-              <button onClick={() => setActiveTab("layers")}>
+              <button onClick={() => setActiveTab("flip")}>
                 <i className="bi bi-symmetry-vertical"></i>
                 <span>Flip</span>
               </button>

@@ -17,7 +17,6 @@ import MainTab from "./MainTab";
 
 import {
   handleToggleAspectLock,
-  applyCrop,
 } from "../../../utils/designerUtils";
 
 function TabPanel({
@@ -144,7 +143,6 @@ function TabPanel({
       {activeTab === "Crop" && (
         <SideBarCropper
           design={selectedDesign}
-          applyCrop={applyCrop}
           setIsCropping={setIsCropping}
           setDesignsByView={updateDesignsByView}
           activePreview={activePreview}

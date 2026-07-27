@@ -1,8 +1,8 @@
 import React, { useState, useRef } from "react";
+import { applyCrop } from "../../../utils/designerUtils";
 
 export default function SideBarCropper({
   design,
-  applyCrop,
   setIsCropping,
   setDesignsByView,
   activePreview,
@@ -18,18 +18,23 @@ export default function SideBarCropper({
 
   // ✅ Move crop box
   const startDrag = (e) => {
+    e.currentTarget.setPointerCapture?.(e.pointerId);
     e.preventDefault();
     e.stopPropagation();
 
     setShowGrid(true);
 
-    const startX = e.clientX;
-    const startY = e.clientY;
+    const startX = e.clientX ?? e.touches?.[0]?.clientX;
+    const startY = e.clientY ?? e.touches?.[0]?.clientY;
     const startBox = { ...cropBox };
 
     const handleMove = (ev) => {
-      const dx = ev.clientX - startX;
-      const dy = ev.clientY - startY;
+      const currentX = ev.clientX ?? ev.touches?.[0]?.clientX;
+
+      const currentY = ev.clientY ?? ev.touches?.[0]?.clientY;
+
+      const dx = currentX - startX;
+      const dy = currentY - startY;
 
       const container = containerRef.current.getBoundingClientRect();
 
@@ -47,20 +52,25 @@ export default function SideBarCropper({
       });
     };
 
-    const handleUp = () => {
+    const handleUp = (e) => {
+      e.currentTarget.releasePointerCapture?.(e.pointerId);
       setShowGrid(false);
-      window.removeEventListener("mousemove", handleMove);
-      window.removeEventListener("mouseup", handleUp);
+      document.removeEventListener("pointermove", handleMove);
+      document.removeEventListener("pointerup", handleUp);
+      document.removeEventListener("pointercancel", handleUp);
     };
 
-    window.addEventListener("mousemove", handleMove);
-    window.addEventListener("mouseup", handleUp);
+    document.addEventListener("pointermove", handleMove);
+    document.addEventListener("pointerup", handleUp);
+    document.addEventListener("pointercancel", handleUp);
   };
 
   // ✅ Resize edges + corners
   const startResize = (direction, e) => {
+    
     e.preventDefault();
     e.stopPropagation();
+    e.currentTarget.setPointerCapture?.(e.pointerId);
 
     setShowGrid(true);
 
@@ -70,8 +80,13 @@ export default function SideBarCropper({
 
     const handleMove = (ev) => {
       const container = containerRef.current.getBoundingClientRect();
-      const dx = (ev.clientX - startX) / container.width;
-      const dy = (ev.clientY - startY) / container.height;
+      const currentX = ev.clientX ?? ev.touches?.[0]?.clientX;
+
+      const currentY = ev.clientY ?? ev.touches?.[0]?.clientY;
+
+      const dx = (currentX - startX) / container.width;
+
+      const dy = (currentY - startY) / container.height;
 
       let newBox = { ...startBox };
 
@@ -122,14 +137,17 @@ export default function SideBarCropper({
       setCropBox(newBox);
     };
 
-    const handleUp = () => {
+    const handleUp = (e) => {
+      e.currentTarget.releasePointerCapture?.(e.pointerId);
       setShowGrid(false);
-      window.removeEventListener("mousemove", handleMove);
-      window.removeEventListener("mouseup", handleUp);
+      document.removeEventListener("pointermove", handleMove);
+      document.removeEventListener("pointerup", handleUp);
+      document.removeEventListener("pointercancel", handleUp);
     };
 
-    window.addEventListener("mousemove", handleMove);
-    window.addEventListener("mouseup", handleUp);
+    document.addEventListener("pointermove", handleMove);
+    document.addEventListener("pointerup", handleUp);
+    document.addEventListener("pointercancel", handleUp);
   };
 
   // ✅ Apply crop
@@ -144,7 +162,7 @@ export default function SideBarCropper({
       regionHeight,
     );
     setIsCropping(false);
-    setActiveTab(design.text ? "editText" : "editDesign");
+    setActiveTab(design.type === "upload" ? "editUpload" : "editDesign");
   };
 
   return (
@@ -158,6 +176,7 @@ export default function SideBarCropper({
           aspectRatio: design.originalAspectRatio,
           background: "#111",
           overflow: "hidden",
+          touchAction: "none"
         }}
       >
         <img
@@ -184,6 +203,7 @@ export default function SideBarCropper({
             border: "2px solid #ccc",
             boxShadow: "0 0 0 9999px rgba(0,0,0,0.5)",
             cursor: "move",
+            touchAction: "none"
           }}
         >
           {/* GRID */}
@@ -207,17 +227,32 @@ export default function SideBarCropper({
             onPointerDown={(e) => startResize("right", e)}
             style={edge("right")}
           />
-          <div onPointerDown={(e) => startResize("top", e)} style={edge("top")} />
+          <div
+            onPointerDown={(e) => startResize("top", e)}
+            style={edge("top")}
+          />
           <div
             onPointerDown={(e) => startResize("bottom", e)}
             style={edge("bottom")}
           />
 
           {/* CORNERS */}
-          <div onPointerDown={(e) => startResize("nw", e)} style={corner("nw")} />
-          <div onPointerDown={(e) => startResize("ne", e)} style={corner("ne")} />
-          <div onPointerDown={(e) => startResize("sw", e)} style={corner("sw")} />
-          <div onPointerDown={(e) => startResize("se", e)} style={corner("se")} />
+          <div
+            onPointerDown={(e) => startResize("nw", e)}
+            style={corner("nw")}
+          />
+          <div
+            onPointerDown={(e) => startResize("ne", e)}
+            style={corner("ne")}
+          />
+          <div
+            onPointerDown={(e) => startResize("sw", e)}
+            style={corner("sw")}
+          />
+          <div
+            onPointerDown={(e) => startResize("se", e)}
+            style={corner("se")}
+          />
         </div>
       </div>
 
@@ -251,6 +286,7 @@ export default function SideBarCropper({
 
 const edge = (pos) => ({
   position: "absolute",
+  touchAction: "none",
   background: "transparent",
   ...(pos === "left" && {
     left: 0,
@@ -284,8 +320,9 @@ const edge = (pos) => ({
 
 const corner = (pos) => ({
   position: "absolute",
-  width: "12px",
-  height: "12px",
+  touchAction: "none",
+  width: "20px",
+  height: "20px",
   background: "#ccc",
   border: "2px solid #000",
   borderRadius: "50%",
