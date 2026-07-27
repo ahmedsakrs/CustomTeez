@@ -21,6 +21,7 @@ function TextArea({
   updateDesignsByView,
   pendingText,
   setPendingText,
+  isMobile=false
 }) {
   return (
     <div className="text-panel">
@@ -29,6 +30,7 @@ function TextArea({
         placeholder="Type your text here..."
         rows={pendingText.split("\n").length}
         value={pendingText}
+        style={{maxHeight: isMobile ? "150px" : "200px"}}
         onClick={(e) => {
           e.stopPropagation();
           if (e.target.scrollHeight > 200) {

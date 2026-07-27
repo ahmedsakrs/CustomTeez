@@ -820,10 +820,10 @@
 }
 
 /* Responsive rules */
-@media (min-width: 600px) {
+@media (min-width: 700px) {
   .sidebar {
-    flex: 0 0 350px; /* tablet width */
-    max-width: 350px;
+    flex: 0 0 365px; /* tablet width */
+    max-width: 365px;
   }
 
   .color-grid {

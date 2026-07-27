@@ -38,9 +38,16 @@ function Sidebar({
   undo,
   redo,
   selectedCategory,
-  setSelectedCategory
+  setSelectedCategory,
 }) {
-
+  if (
+    activeTab === "productOptions" ||
+    activeTab === "resize" ||
+    activeTab === "rotate" ||
+    activeTab === "layers" ||
+    activeTab === "flip"
+  )
+    setActiveTab(null);
   return (
     <div className="sidebar">
       <div className="sidebar-buttons" ref={sideRef}>

@@ -118,11 +118,9 @@ function HeaderBar({
           className="product-thumbnails-container"
           style={{
             maxWidth:
-              allProducts.length === 1
-                ? "55px"
-                : allProducts.length === 2
-                  ? "115px"
-                  : "120px",
+              allProducts.length < 6
+                ? `${allProducts.length * 58}px`
+                : "360px",
           }}
         >
           {/* Left fade + button */}

@@ -1,6 +1,109 @@
 import { findFittingFontSize } from "./textRenderer";
 import { textWorker } from "./textWorkerClient";
 
+// ─── Internal helper functions ───────────────────────────────────
+
+/**
+ * Clamps a pixel position so that a bounding box of the given size
+ * stays within the region boundaries.
+ * @returns {{x: number, y: number}} clamped pixel position
+ */
+function clampPosition(posX, posY, bbox, regionWidth, regionHeight) {
+  if (posX < 0) posX = 0;
+  if (posY < 0) posY = 0;
+  if (posX + bbox.width > regionWidth)
+    posX = Math.max(regionWidth - bbox.width, 0);
+  if (posY + bbox.height > regionHeight)
+    posY = Math.max(regionHeight - bbox.height, 0);
+  return { x: posX, y: posY };
+}
+
+/**
+ * If a bounding box exceeds the region, scales width/height down to fit.
+ * @returns {{width: number, height: number, bbox: object, scaled: boolean}}
+ */
+function clampSizeToFit(
+  bbox,
+  regionWidth,
+  regionHeight,
+  finalWidth,
+  finalHeight,
+  getBoundingBox,
+  rotation,
+) {
+  let scaled = false;
+  if (bbox.width > regionWidth || bbox.height > regionHeight) {
+    scaled = true;
+    const widthRatio = regionWidth / bbox.width;
+    const heightRatio = regionHeight / bbox.height;
+    const scale = Math.min(widthRatio, heightRatio);
+
+    finalWidth = finalWidth * scale;
+    finalHeight = finalHeight * scale;
+
+    bbox = getBoundingBox(finalWidth, finalHeight, rotation);
+  }
+  return { width: finalWidth, height: finalHeight, bbox, scaled };
+}
+
+/**
+ * Swaps the layer (z-index) of two designs in the array.
+ */
+function swapLayer(designs, idxA, idxB) {
+  const temp = designs[idxA].layer;
+  designs[idxA].layer = designs[idxB].layer;
+  designs[idxB].layer = temp;
+}
+
+/**
+ * Restores the aspect ratio of a design by adjusting width/height
+ * and clamping to region boundaries. Returns normalized values.
+ */
+function restoreAspectRatio(item, regionWidth, regionHeight) {
+  const aspect = item.aspect_ratio;
+  let newWidthPx = item.width * Math.min(regionWidth, regionHeight);
+  let newHeightPx = newWidthPx / aspect;
+
+  // Enforce minimum size (5% of the smaller dimension)
+  if (newWidthPx / regionWidth < 0.05) {
+    newWidthPx = 0.05 * Math.min(regionWidth, regionHeight);
+    newHeightPx = newWidthPx / aspect;
+  }
+  if (newHeightPx / regionHeight < 0.05) {
+    newHeightPx = 0.05 * Math.min(regionWidth, regionHeight);
+    newWidthPx = newHeightPx * aspect;
+  }
+
+  // Clamp both dimensions simultaneously
+  if (newWidthPx > regionWidth || newHeightPx > regionHeight) {
+    const widthRatio = regionWidth / newWidthPx;
+    const heightRatio = regionHeight / newHeightPx;
+    const scale = Math.min(widthRatio, heightRatio);
+    newWidthPx *= scale;
+    newHeightPx *= scale;
+  }
+
+  // Clamp position so edges stay inside
+  let posX = item.x * regionWidth;
+  let posY = item.y * regionHeight;
+  const clamped = clampPosition(
+    posX,
+    posY,
+    { width: newWidthPx, height: newHeightPx },
+    regionWidth,
+    regionHeight,
+  );
+
+  return {
+    width: Math.round((newWidthPx / regionWidth) * 1000) / 1000,
+    height: Math.round((newHeightPx / regionHeight) * 1000) / 1000,
+    x: clamped.x / regionWidth,
+    y: clamped.y / regionHeight,
+  };
+}
+
+// ─── Public API ────────────────────────────────────────────────
+
 export const addDesignCollageToActiveView = (
   collage,
   imgRef,
@@ -22,12 +125,12 @@ export const addDesignCollageToActiveView = (
   updateDesignsByView((prev) => {
     const designs = prev[activePreview] || [];
     const highest = designs.length
-      ? Math.max(...designs.map((d) => d.layer || 1))
+      ? Math.max(...designs.map((d) => d.layer || 0))
       : 0;
     return {
       ...prev,
       [activePreview]: [
-        ...prev[activePreview],
+        ...designs,
         ...generatedDesigns.map((d, idx) => ({
           ...d,
           x: d.x,
@@ -63,11 +166,7 @@ export const addDesignCollageToActiveView = (
   setSelectedDesignId(lastDesignId);
 };
 
-export function bringToFront(
-  activePreview,
-  selectedDesignId,
-  setDesignsByView,
-) {
+export function bringToFront(activePreview, selectedDesignId, setDesignsByView) {
   setDesignsByView((prev) => {
     const designs = [...(prev[activePreview] || [])];
     // sort designs by zIndex ascending
@@ -76,12 +175,7 @@ export function bringToFront(
     const idx = designs.findIndex((d) => d.id === selectedDesignId);
     if (idx === designs.length - 1) return prev; // already highest
 
-    // swap zIndex with the next higher design
-    const current = designs[idx];
-    const above = designs[idx + 1];
-    const temp = current.layer;
-    current.layer = above.layer;
-    above.layer = temp;
+    swapLayer(designs, idx, idx + 1);
 
     return { ...prev, [activePreview]: [...designs] };
   });
@@ -96,46 +190,34 @@ export function sendToBack(activePreview, selectedDesignId, setDesignsByView) {
     const idx = designs.findIndex((d) => d.id === selectedDesignId);
     if (idx === 0) return prev; // already lowest
 
-    // swap zIndex with the next lower design
-    const current = designs[idx];
-    const below = designs[idx - 1];
-    const temp = current.layer;
-    current.layer = below.layer;
-    below.layer = temp;
+    swapLayer(designs, idx, idx - 1);
 
     return { ...prev, [activePreview]: [...designs] };
   });
+}
+
+function flip(activePreview, selectedDesignId, setDesignsByView, property) {
+  setDesignsByView((prev) => ({
+    ...prev,
+    [activePreview]: prev[activePreview].map((item) =>
+      item.id === selectedDesignId
+        ? { ...item, [property]: !item[property] }
+        : item,
+    ),
+  }));
 }
 
 export const flipHorizontal = (
   activePreview,
   selectedDesignId,
   setDesignsByView,
-) => {
-  setDesignsByView((prev) => ({
-    ...prev,
-    [activePreview]: prev[activePreview].map((item) =>
-      item.id === selectedDesignId
-        ? { ...item, horizontalFlip: !item.horizontalFlip }
-        : item,
-    ),
-  }));
-};
+) => flip(activePreview, selectedDesignId, setDesignsByView, "horizontalFlip");
 
 export const flipVertical = (
   activePreview,
   selectedDesignId,
   setDesignsByView,
-) => {
-  setDesignsByView((prev) => ({
-    ...prev,
-    [activePreview]: prev[activePreview].map((item) =>
-      item.id === selectedDesignId
-        ? { ...item, verticalFlip: !item.verticalFlip }
-        : item,
-    ),
-  }));
-};
+) => flip(activePreview, selectedDesignId, setDesignsByView, "verticalFlip");
 
 export const rotate = (
   d,
@@ -162,42 +244,11 @@ export const rotate = (
 
     // If re-locking, restore original aspect ratio safely
     if (newLock) {
-      const aspect = d.aspect_ratio;
-      let newWidthPx = d.width * Math.min(regionWidth, regionHeight);
-      let newHeightPx = newWidthPx / aspect;
-
-      if (newWidthPx / regionWidth < 0.05) {
-        newWidthPx = 0.05 * Math.min(regionWidth, regionHeight);
-        newHeightPx = newWidthPx / aspect;
-      }
-
-      if (newHeightPx / regionHeight < 0.05) {
-        newHeightPx = 0.05 * Math.min(regionWidth, regionHeight);
-        newWidthPx = newHeightPx * aspect;
-      }
-
-      // clamp both dimensions simultaneously
-      if (newWidthPx > regionWidth || newHeightPx > regionHeight) {
-        const widthRatio = regionWidth / newWidthPx;
-        const heightRatio = regionHeight / newHeightPx;
-        const scale = Math.min(widthRatio, heightRatio);
-        newWidthPx *= scale;
-        newHeightPx *= scale;
-      }
-
-      // clamp position so edges stay inside
-      let posX = d.x * regionWidth;
-      let posY = d.y * regionHeight;
-
-      if (posX + newWidthPx > regionWidth) posX = regionWidth - newWidthPx;
-      if (posX < 0) posX = 0;
-      if (posY + newHeightPx > regionHeight) posY = regionHeight - newHeightPx;
-      if (posY < 0) posY = 0;
-
-      newWidthNorm = newWidthPx / regionWidth;
-      newHeightNorm = newHeightPx / regionHeight;
-      d_x = posX / regionWidth;
-      d_y = posY / regionHeight;
+      const restored = restoreAspectRatio(d, regionWidth, regionHeight);
+      newWidthNorm = restored.width;
+      newHeightNorm = restored.height;
+      d_x = restored.x;
+      d_y = restored.y;
     }
   }
 
@@ -232,10 +283,8 @@ export const rotate = (
 };
 
 export function radToDeg(angleRad) {
-  let degrees = angleRad * (180 / Math.PI);
-  while (degrees > 180) degrees -= 360;
-  while (degrees < -180) degrees += 360;
-  return degrees;
+  const degrees = angleRad * (180 / Math.PI);
+  return ((degrees + 180) % 360 + 360) % 360 - 180;
 }
 
 export function getRotationAdjustedValues(
@@ -253,49 +302,41 @@ export function getRotationAdjustedValues(
   );
 
   let posX = selectedDesign.x * regionWidth;
-
   let posY = selectedDesign.y * regionHeight;
 
-  if (posX < 0) posX = 0;
-  if (posY < 0) posY = 0;
+  // Clamp position based on original bbox
+  const clamped = clampPosition(posX, posY, bbox, regionWidth, regionHeight);
+  posX = clamped.x;
+  posY = clamped.y;
 
-  if (posX + bbox.width > regionWidth) {
-    posX = Math.max(regionWidth - bbox.width, 0);
-  }
+  // If bbox exceeds region, scale down and re-clamp position
+  const finalWidth = selectedDesign.width * regionWidth;
+  const finalHeight =
+    (selectedDesign.width / selectedDesign.aspect_ratio) * regionHeight;
 
-  if (posY + bbox.height > regionHeight) {
-    posY = Math.max(regionHeight - bbox.height, 0);
-  }
+  const result = clampSizeToFit(
+    bbox,
+    regionWidth,
+    regionHeight,
+    finalWidth,
+    finalHeight,
+    getBoundingBox,
+    angle,
+  );
 
-  if (bbox.width > regionWidth || bbox.height > regionHeight) {
-    const widthRatio = regionWidth / bbox.width;
-
-    const heightRatio = regionHeight / bbox.height;
-
-    const scale = Math.min(widthRatio, heightRatio);
-
-    const newWidth = selectedDesign.width * regionWidth * scale;
-
-    const newHeight =
-      (selectedDesign.width / selectedDesign.aspect_ratio) *
-      regionHeight *
-      scale;
-
-    bbox = getBoundingBox(newWidth, newHeight, angle);
-
-    if (posX + bbox.width > regionWidth) {
-      posX = Math.max(regionWidth - bbox.width, 0);
-    }
-
-    if (posY + bbox.height > regionHeight) {
-      posY = Math.max(regionHeight - bbox.height, 0);
-    }
-
+  if (result.scaled) {
+    const reclamped = clampPosition(
+      posX,
+      posY,
+      result.bbox,
+      regionWidth,
+      regionHeight,
+    );
     return {
-      x: posX / regionWidth,
-      y: posY / regionHeight,
-      width: Math.round((newWidth / regionWidth) * 1000) / 1000,
-      height: Math.round((newHeight / regionHeight) * 1000) / 1000,
+      x: reclamped.x / regionWidth,
+      y: reclamped.y / regionHeight,
+      width: Math.round((result.width / regionWidth) * 1000) / 1000,
+      height: Math.round((result.height / regionHeight) * 1000) / 1000,
     };
   }
 
@@ -324,43 +365,46 @@ export function getNewSizePos(
   let posX = selectedDesign?.x * regionWidth;
   let posY = selectedDesign?.y * regionHeight;
 
-  if (posX < 0) posX = 0;
-  if (posY < 0) posY = 0;
-  if (posX + bbox.width > regionWidth)
-    posX = Math.max(regionWidth - bbox.width, 0);
-  if (posY + bbox.height > regionHeight)
-    posY = Math.max(regionHeight - bbox.height, 0);
+  const clamped = clampPosition(posX, posY, bbox, regionWidth, regionHeight);
+  posX = clamped.x;
+  posY = clamped.y;
 
-  if (bbox.width > regionWidth || bbox.height > regionHeight) {
-    const widthRatio = regionWidth / bbox.width;
-    const heightRatio = regionHeight / bbox.height;
-    const scale = Math.min(widthRatio, heightRatio);
+  const finalWidth = selectedDesign?.width * regionWidth;
+  const finalHeight =
+    (selectedDesign?.width / selectedDesign?.aspect_ratio) * regionHeight;
 
-    const newWidth = selectedDesign?.width * regionWidth * scale;
-    const newHeight =
-      (selectedDesign?.width / selectedDesign?.aspect_ratio) *
-      regionHeight *
-      scale;
+  const result = clampSizeToFit(
+    bbox,
+    regionWidth,
+    regionHeight,
+    finalWidth,
+    finalHeight,
+    getBoundingBox,
+    angle,
+  );
 
-    bbox = getBoundingBox(newWidth, newHeight, angle);
-
-    if (posX < 0) posX = 0;
-    if (posY < 0) posY = 0;
-    if (posX + bbox.width > regionWidth)
-      posX = Math.max(regionWidth - bbox.width, 0);
-    if (posY + bbox.height > regionHeight)
-      posY = Math.max(regionHeight - bbox.height, 0);
-
-    selectedDesign.x = posX / regionWidth;
-    selectedDesign.y = posX / regionWidth;
-    selectedDesign.width = Math.round((newWidth / regionWidth) * 1000) / 1000;
-    selectedDesign.height =
-      Math.round((newHeight / regionHeight) * 1000) / 1000;
-  } else {
-    selectedDesign.x = posX / regionWidth;
-    selectedDesign.y = posX / regionWidth;
+  if (result.scaled) {
+    const reclamped = clampPosition(
+      posX,
+      posY,
+      result.bbox,
+      regionWidth,
+      regionHeight,
+    );
+    return {
+      ...selectedDesign,
+      x: reclamped.x / regionWidth,
+      y: reclamped.y / regionHeight,
+      width: Math.round((result.width / regionWidth) * 1000) / 1000,
+      height: Math.round((result.height / regionHeight) * 1000) / 1000,
+    };
   }
-  return selectedDesign;
+
+  return {
+    ...selectedDesign,
+    x: posX / regionWidth,
+    y: posY / regionHeight,
+  };
 }
 
 export function duplicateDesign(
@@ -521,37 +565,28 @@ export function updateSize(
       let posY = item.y * regionHeight;
 
       // clamp size if bbox exceeds region
-      if (bbox.width > regionWidth || bbox.height > regionHeight) {
-        const widthRatio = regionWidth / bbox.width;
-        const heightRatio = regionHeight / bbox.height;
-        const scale = Math.min(widthRatio, heightRatio);
-
-        finalWidth = finalWidth * scale;
-        finalHeight = finalHeight * scale;
-
-        bbox = getBoundingBox(finalWidth, finalHeight, item.rotation);
-      }
+      const sizeResult = clampSizeToFit(
+        bbox,
+        regionWidth,
+        regionHeight,
+        finalWidth,
+        finalHeight,
+        getBoundingBox,
+        item.rotation,
+      );
+      finalWidth = sizeResult.width;
+      finalHeight = sizeResult.height;
+      bbox = sizeResult.bbox;
 
       // clamp position so bbox stays inside region
-      if (posX + bbox.width > regionWidth) {
-        posX = regionWidth - bbox.width;
-      }
-      if (posX < 0) {
-        posX = 0;
-      }
-      if (posY + bbox.height > regionHeight) {
-        posY = regionHeight - bbox.height;
-      }
-      if (posY < 0) {
-        posY = 0;
-      }
+      const clamped = clampPosition(posX, posY, bbox, regionWidth, regionHeight);
 
       return {
         ...item,
         width: Math.round((finalWidth / regionWidth) * 1000) / 1000,
         height: Math.round((finalHeight / regionHeight) * 1000) / 1000,
-        x: posX / regionWidth,
-        y: posY / regionHeight,
+        x: clamped.x / regionWidth,
+        y: clamped.y / regionHeight,
       };
     });
 
@@ -608,45 +643,9 @@ export function handleToggleAspectLock(
 
       // If re-locking, restore original aspect ratio safely
       if (newLock) {
-        const aspect = item.aspect_ratio;
-        let newWidthPx = item.width * Math.min(regionWidth, regionHeight);
-        let newHeightPx = newWidthPx / aspect;
-
-        if (newWidthPx / regionWidth < 0.05) {
-          newWidthPx = 0.05 * Math.min(regionWidth, regionHeight);
-          newHeightPx = newWidthPx / aspect;
-        }
-
-        if (newHeightPx / regionHeight < 0.05) {
-          newHeightPx = 0.05 * Math.min(regionWidth, regionHeight);
-          newWidthPx = newHeightPx * aspect;
-        }
-
-        // clamp both dimensions simultaneously
-        if (newWidthPx > regionWidth || newHeightPx > regionHeight) {
-          const widthRatio = regionWidth / newWidthPx;
-          const heightRatio = regionHeight / newHeightPx;
-          const scale = Math.min(widthRatio, heightRatio);
-          newWidthPx *= scale;
-          newHeightPx *= scale;
-        }
-
-        // clamp position so edges stay inside
-        let posX = item.x * regionWidth;
-        let posY = item.y * regionHeight;
-
-        if (posX + newWidthPx > regionWidth) posX = regionWidth - newWidthPx;
-        if (posX < 0) posX = 0;
-        if (posY + newHeightPx > regionHeight)
-          posY = regionHeight - newHeightPx;
-        if (posY < 0) posY = 0;
-
         return {
           ...item,
-          width: Math.round((newWidthPx / regionWidth) * 1000) / 1000,
-          height: Math.round((newHeightPx / regionHeight) * 1000) / 1000,
-          x: posX / regionWidth,
-          y: posY / regionHeight,
+          ...restoreAspectRatio(item, regionWidth, regionHeight),
           isLocked_aspect_ratio: newLock, // ✅ update flag here
         };
       }
@@ -674,8 +673,8 @@ export const applyCrop = async (
   const croppedSrc = await generateCroppedImage(selectedDesign.src, norm);
   const newAspect = norm.width / norm.height;
 
-  const prevHeight = selectedDesign.crop["height"];
-  const prevWidth = selectedDesign.crop["width"];
+  const prevHeight = selectedDesign.crop.height;
+  const prevWidth = selectedDesign.crop.width;
 
   const heightScale = norm.height / prevHeight;
   const widthScale = norm.width / prevWidth;
@@ -708,30 +707,21 @@ export const applyCrop = async (
   let posY = selectedDesign.y * regionHeight;
 
   // clamp size if bbox exceeds region
-  if (bbox.width > regionWidth || bbox.height > regionHeight) {
-    const widthRatio = regionWidth / bbox.width;
-    const heightRatio = regionHeight / bbox.height;
-    const scale = Math.min(widthRatio, heightRatio);
-
-    finalWidth = finalWidth * scale;
-    finalHeight = finalHeight * scale;
-
-    bbox = getBoundingBox(finalWidth, finalHeight, selectedDesign.rotation);
-  }
+  const sizeResult = clampSizeToFit(
+    bbox,
+    regionWidth,
+    regionHeight,
+    finalWidth,
+    finalHeight,
+    getBoundingBox,
+    selectedDesign.rotation,
+  );
+  finalWidth = sizeResult.width;
+  finalHeight = sizeResult.height;
+  bbox = sizeResult.bbox;
 
   // clamp position so bbox stays inside region
-  if (posX + bbox.width > regionWidth) {
-    posX = regionWidth - bbox.width;
-  }
-  if (posX < 0) {
-    posX = 0;
-  }
-  if (posY + bbox.height > regionHeight) {
-    posY = regionHeight - bbox.height;
-  }
-  if (posY < 0) {
-    posY = 0;
-  }
+  const clamped = clampPosition(posX, posY, bbox, regionWidth, regionHeight);
 
   setDesignsByView((prev) => ({
     ...prev,
@@ -744,8 +734,8 @@ export const applyCrop = async (
             crop: norm,
             width: Math.round((finalWidth / regionWidth) * 1000) / 1000,
             height: Math.round((finalHeight / regionHeight) * 1000) / 1000,
-            x: posX / regionWidth,
-            y: posY / regionHeight,
+            x: clamped.x / regionWidth,
+            y: clamped.y / regionHeight,
           }
         : item,
     ),
@@ -753,7 +743,7 @@ export const applyCrop = async (
 };
 
 const generateCroppedImage = (imageSrc, crop) => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const image = new Image();
     image.crossOrigin = "anonymous";
     image.src = imageSrc;
@@ -783,6 +773,10 @@ const generateCroppedImage = (imageSrc, crop) => {
       );
 
       resolve(canvas.toDataURL("image/png"));
+    };
+
+    image.onerror = () => {
+      reject(new Error("Failed to load image for cropping"));
     };
   });
 };
@@ -859,40 +853,31 @@ export async function applyNewTextImg(
       let posY = item.y * regionHeight;
 
       // clamp size if bbox exceeds region
-      if (bbox.width > regionWidth || bbox.height > regionHeight) {
-        const widthRatio = regionWidth / bbox.width;
-        const heightRatio = regionHeight / bbox.height;
-        const scale = Math.min(widthRatio, heightRatio);
-
-        finalWidth = finalWidth * scale;
-        finalHeight = finalHeight * scale;
-
-        bbox = getBoundingBox(finalWidth, finalHeight, item.rotation);
-      }
+      const sizeResult = clampSizeToFit(
+        bbox,
+        regionWidth,
+        regionHeight,
+        finalWidth,
+        finalHeight,
+        getBoundingBox,
+        item.rotation,
+      );
+      finalWidth = sizeResult.width;
+      finalHeight = sizeResult.height;
+      bbox = sizeResult.bbox;
 
       // clamp position so bbox stays inside region
-      if (posX + bbox.width > regionWidth) {
-        posX = regionWidth - bbox.width;
-      }
-      if (posX < 0) {
-        posX = 0;
-      }
-      if (posY + bbox.height > regionHeight) {
-        posY = regionHeight - bbox.height;
-      }
-      if (posY < 0) {
-        posY = 0;
-      }
+      const clamped = clampPosition(posX, posY, bbox, regionWidth, regionHeight);
 
       return {
         ...item,
         text: newText,
         src: imageData.img,
-        width: Math.round((finalWidth / regionHeight) * 1000) / 1000,
+        width: Math.round((finalWidth / regionWidth) * 1000) / 1000,
         height: Math.round((finalHeight / regionHeight) * 1000) / 1000,
         aspect_ratio: aspect_ratio,
-        x: posX / regionWidth,
-        y: posY / regionHeight,
+        x: clamped.x / regionWidth,
+        y: clamped.y / regionHeight,
 
         fontFamily: newFontFamily,
         design_color: newFontColor,
