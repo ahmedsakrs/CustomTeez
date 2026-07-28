@@ -1,13 +1,17 @@
 import React from "react";
-import { flipVertical, flipHorizontal } from "../../../../utils/designerUtils";
+import {sendToBack, bringToFront} from '../../../../utils/designerUtils'
 
-function MobileFlipModal({
+function MobileOrderModal({
   barRef,
   selectedDesign,
   setActiveTab,
   activePreview,
   setDesignsByView,
+  designsByView,
 }) {
+  const currentDesigns = designsByView[activePreview] || [];
+  const highestZ = Math.max(...currentDesigns.map((d) => d.layer || 0));
+  const lowestZ = Math.min(...currentDesigns.map((d) => d.layer || 0));
   return (
     <div
       className="mobile-upload-sheet"
@@ -15,7 +19,7 @@ function MobileFlipModal({
       ref={barRef}
     >
       <div className="mobile-product-tabbar" style={{ marginBottom: "3px" }}>
-        <h2>{"Flip"}</h2>
+        <h2>{"Order"}</h2>
 
         <button
           className="close-btn"
@@ -35,36 +39,33 @@ function MobileFlipModal({
       </div>
       <div className="mobile-flip-buttons">
         <button
-          className={`mobile-flip-btn ${
-            selectedDesign?.horizontalFlip ? "active" : ""
-          }`}
+          className="mobile-flip-btn"
+          style={{width:"120px"}}
+          disabled={selectedDesign?.layer === highestZ}
           onClick={(e) => {
             e.stopPropagation();
-
-            flipHorizontal(activePreview, selectedDesign.id, setDesignsByView);
+            bringToFront(activePreview, selectedDesign.id, setDesignsByView);
           }}
         >
-          <i className="bi bi-symmetry-vertical"></i>
-          <span>Vertical</span>
+          <i className="bi bi-front"></i>
+          <span>Bring To Front</span>
         </button>
 
         <button
-          className={`mobile-flip-btn ${
-            selectedDesign?.verticalFlip ? "active" : ""
-          }`}
+          className="mobile-flip-btn"
+          style={{width:"120px"}}
+          disabled={selectedDesign?.layer === lowestZ}
           onClick={(e) => {
             e.stopPropagation();
-
-            flipVertical(activePreview, selectedDesign.id, setDesignsByView);
+            sendToBack(activePreview, selectedDesign.id, setDesignsByView);
           }}
         >
-          <i className="bi bi-symmetry-horizontal"></i>
-
-          <span>Horizontal</span>
+          <i className="bi bi-back"></i>
+          <span>Send To Back</span>
         </button>
       </div>
     </div>
   );
 }
 
-export default MobileFlipModal;
+export default MobileOrderModal;

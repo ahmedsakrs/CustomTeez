@@ -8,6 +8,7 @@ import AddTextModal from "./modals/AddTextModal";
 import { center, duplicateDesign } from "../../../utils/designerUtils";
 import MobileCropModal from "./modals/MobileCropModal";
 import MobileFlipModal from "./modals/MobileFlipModal";
+import MobileOrderModal from "./modals/MobileOrderModal";
 
 function MobileDesigner({
   activeTab,
@@ -195,6 +196,16 @@ function MobileDesigner({
           setActiveTab={setActiveTab}
           activePreview={activePreview}
           setDesignsByView={updateDesignsByView}
+        />
+      )}
+      {activeTab === "layers" && (
+        <MobileOrderModal
+          barRef={barRef}
+          selectedDesign={selectedDesign}
+          setActiveTab={setActiveTab}
+          activePreview={activePreview}
+          setDesignsByView={updateDesignsByView}
+          designsByView={designsByView}
         />
       )}
       {!selectedDesignId && (
