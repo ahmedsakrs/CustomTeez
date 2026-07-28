@@ -87,7 +87,7 @@
 
 .mobile-product-modal {
   position: absolute;
-  inset: 88px 0;
+  inset: auto 0 0 0;
   width: 100%;
   height: calc(100dvh - 88px);
 
@@ -406,4 +406,111 @@
   padding-bottom: 10px;
 
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.mobile-crop-modal {
+  position: absolute;
+
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+
+  /* overflow: hidden; */
+
+  background: white;
+  z-index: 10000;
+
+  inset: auto 0 0 0;
+  width: 100%;
+  height: calc(100dvh - 88px);
+
+  background: white;
+  /* padding-top: 10px; */
+  
+  /* padding: 10px 10px; */
+}
+
+.mobile-crop-content {
+  flex: 1;
+
+  min-height: 0;
+
+  /* overflow: hidden; */
+  padding-top: 10px;
+  /* padding-bottom: 20px; */
+
+  /* padding: 8px; */
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.mobile-flip-buttons {
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 16px 12px;
+}
+
+.mobile-flip-btn {
+  width: 110px;
+  height: 70px;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+  align-items: center;
+
+  gap: 4px;
+
+  border: 2px solid #ddd;
+  border-radius: 12px;
+
+  background: white;
+
+  cursor: pointer;
+
+  transition: all 0.15s ease;
+}
+
+.mobile-flip-btn:hover {
+  background-color: #ccc;
+}
+
+.mobile-flip-btn i {
+  font-size: 24px;
+}
+
+.mobile-flip-btn span {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mobile-flip-btn.active {
+  background: #222;
+  color: #fff;
+}
+
+.mobile-flip-btn.active i {
+  color: white;
+}
+
+
+.mobile-flip-btn.active:disabled {
+  background: #777;
+  color: #000000;
+}
+
+/* disabled */
+.mobile-flip-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f5f5f5;
+  color: #000000;
 }

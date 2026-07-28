@@ -14,7 +14,7 @@ function MobileCropModal({
   setActiveTab,
 }) {
   return (
-    <div className="mobile-product-modal" style={{paddingLeft:"15px", paddingRight:"15px"}} ref={barRef}>
+    <div className="mobile-crop-modal" style={{paddingLeft:"15px", paddingRight:"15px"}} ref={barRef}>
       <div className="mobile-product-tabbar">
         <h2>{"Crop"}</h2>
 
@@ -28,7 +28,8 @@ function MobileCropModal({
           <i class="fa fa-times" style={{ fontSize: "25px" }}></i>
         </button>
       </div>
-      <SideBarCropper
+      <div className="mobile-crop-content">
+        <SideBarCropper
         design={selectedDesign}
         setIsCropping={setIsCropping}
         setDesignsByView={updateDesignsByView}
@@ -38,6 +39,8 @@ function MobileCropModal({
         regionHeight={regionHeight}
         setActiveTab={setActiveTab}
       />
+      </div>
+      
     </div>
   );
 }

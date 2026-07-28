@@ -6,7 +6,8 @@ import DesignsModal from "./modals/DesignsModal";
 import MobileUploadModal from "./modals/MobileUploadModal";
 import AddTextModal from "./modals/AddTextModal";
 import { center, duplicateDesign } from "../../../utils/designerUtils";
-import MobileCropModal from './modals/MobileCropModal'
+import MobileCropModal from "./modals/MobileCropModal";
+import MobileFlipModal from "./modals/MobileFlipModal";
 
 function MobileDesigner({
   activeTab,
@@ -115,7 +116,6 @@ function MobileDesigner({
         contextMenu={contextMenu}
         setContextMenu={setContextMenu}
       />
-
       {activeTab === "productOptions" && (
         <MobileProductModal
           setActiveTab={setActiveTab}
@@ -132,7 +132,6 @@ function MobileDesigner({
           setSelectedCategory={setSelectedCategory}
         />
       )}
-
       {activeTab === "addDesign" && (
         <DesignsModal
           barRef={barRef}
@@ -146,7 +145,6 @@ function MobileDesigner({
           activePreview={activePreview}
         />
       )}
-
       {activeTab === "addText" && (
         <AddTextModal
           imgRef={imgRef}
@@ -164,7 +162,6 @@ function MobileDesigner({
           setPendingText={setPendingText}
         />
       )}
-
       {activeTab === "uploadDesign" && (
         <MobileUploadModal
           setActiveTab={setActiveTab}
@@ -178,20 +175,28 @@ function MobileDesigner({
           barRef={barRef}
         />
       )}
-
       {activeTab === "Crop" && (
         <MobileCropModal
-        barRef={barRef}
-        selectedDesign={selectedDesign}
-        setIsCropping={setIsCropping}
-        updateDesignsByView={updateDesignsByView}
-        activePreview={activePreview}
-        getBoundingBox={getBoundingBox}
-        regionWidth={regionWidth}
-        regionHeight={regionHeight}
-        setActiveTab={setActiveTab}/>
+          barRef={barRef}
+          selectedDesign={selectedDesign}
+          setIsCropping={setIsCropping}
+          updateDesignsByView={updateDesignsByView}
+          activePreview={activePreview}
+          getBoundingBox={getBoundingBox}
+          regionWidth={regionWidth}
+          regionHeight={regionHeight}
+          setActiveTab={setActiveTab}
+        />
       )}
-
+      {activeTab === "flip" && (
+        <MobileFlipModal
+          barRef={barRef}
+          selectedDesign={selectedDesign}
+          setActiveTab={setActiveTab}
+          activePreview={activePreview}
+          setDesignsByView={updateDesignsByView}
+        />
+      )}
       {!selectedDesignId && (
         <div className="mobile-bottom-nav" ref={sideRef}>
           <button
@@ -236,10 +241,9 @@ function MobileDesigner({
           </button>
         </div>
       )}
-
       {selectedDesignId && (
         <div>
-          {(activeTab === "editUpload" || activeTab === "editDesign") && (
+          {!selectedDesign.text && (
             <div className="mobile-bottom-nav" ref={sideRef}>
               <button onClick={() => setActiveTab("resize")}>
                 <i className="bi bi-pip" style={{ fontSize: "33px" }}></i>
