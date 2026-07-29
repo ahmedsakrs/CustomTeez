@@ -15,6 +15,7 @@ function AddTextModal({
   designsByView,
   pendingText,
   setPendingText,
+  selectedDesign
 }) {
   return (
     <div className="mobile-text-sheet" ref={barRef}>
@@ -44,6 +45,7 @@ function AddTextModal({
         designsByView={designsByView}
         pendingText={pendingText}
         setPendingText={setPendingText}
+        selectedDesign={selectedDesign}
         isMobile={true}
       />
     </div>

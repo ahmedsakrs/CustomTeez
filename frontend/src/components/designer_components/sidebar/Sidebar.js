@@ -51,7 +51,8 @@ function Sidebar({
     activeTab === "resize" ||
     activeTab === "rotate" ||
     activeTab === "layers" ||
-    activeTab === "flip"
+    activeTab === "flip" ||
+    activeTab === "editTextArea"
   )
     setActiveTab(selectedDesign.text ? "editText" : selectedDesign.type === "upload" ? "editUpload" : "editDesign");
   return (

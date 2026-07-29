@@ -240,6 +240,24 @@ function MobileDesigner({
           barRef={barRef}
         />
       )}
+      {activeTab === "editTextArea" && (
+        <AddTextModal
+          imgRef={imgRef}
+          updateDesignsByView={updateDesignsByView}
+          setSelectedDesignId={setSelectedDesignId}
+          setActiveTab={setActiveTab}
+          getBoundingBox={getBoundingBox}
+          activePreview={activePreview}
+          regionWidth={regionWidth}
+          regionHeight={regionHeight}
+          barRef={barRef}
+          activeTab={activeTab}
+          designsByView={designsByView}
+          pendingText={pendingText}
+          setPendingText={setPendingText}
+          selectedDesign={selectedDesign}
+        />
+      )}
       {!selectedDesign && (
         <div className="mobile-bottom-nav" ref={sideRef}>
           <button
@@ -331,6 +349,74 @@ function MobileDesigner({
               <button onClick={() => setActiveTab("Crop")}>
                 <i class="bi bi-crop"></i>
                 <span>Crop</span>
+              </button>
+
+              <button
+                onClick={() =>
+                  center(
+                    selectedDesignId,
+                    updateDesignsByView,
+                    activePreview,
+                    getBoundingBox,
+                    regionWidth,
+                    regionHeight,
+                  )
+                }
+              >
+                <i class="bi bi-arrows-collapse-vertical"></i>
+                <span>Center</span>
+              </button>
+            </div>
+          )}
+
+          {selectedDesign?.text && (
+            <div className="mobile-bottom-nav" ref={sideRef}>
+              <button onClick={() => setActiveTab("editTextArea")}>
+                <i
+                  className="bi bi-pen-fill"
+                  style={{ fontWeight: "bold", fontSize: "33px" }}
+                ></i>
+                <span>Edit Text</span>
+              </button>
+
+              <button onClick={() => setActiveTab("resize")}>
+                <i className="bi bi-pip" style={{ fontSize: "33px" }}></i>
+                <span>Resize</span>
+              </button>
+
+              <button onClick={() => setActiveTab("rotate")}>
+                <i
+                  className="bi bi-arrow-repeat"
+                  style={{ fontSize: "33px" }}
+                ></i>
+                <span>Rotate</span>
+              </button>
+
+              <button onClick={() => setActiveTab("layers")}>
+                <i className="bi bi-stack" />
+                <span>Order</span>
+              </button>
+
+              <button onClick={() => setActiveTab("flip")}>
+                <i className="bi bi-symmetry-vertical"></i>
+                <span>Flip</span>
+              </button>
+
+              <button
+                onClick={() =>
+                  duplicateDesign(
+                    selectedDesignId,
+                    activePreview,
+                    updateDesignsByView,
+                    regionWidth,
+                    regionHeight,
+                    setSelectedDesignId,
+                    getBoundingBox,
+                  )
+                }
+              >
+                <i class="bi bi-copy"></i>
+                <span>Duplicate</span>
               </button>
 
               <button

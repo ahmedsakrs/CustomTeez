@@ -17,7 +17,6 @@ function TextArea({
   getBoundingBox,
   activePreview,
   designsByView,
-  setDesignsByView,
   updateDesignsByView,
   pendingText,
   setPendingText,
@@ -137,7 +136,7 @@ function TextArea({
                 selectedDesign.text_shape,
                 selectedDesign.shape_intensity,
                 selectedDesign.lineSpacing,
-                setDesignsByView,
+                updateDesignsByView,
                 activePreview,
                 selectedDesign,
                 regionWidth,
@@ -145,6 +144,7 @@ function TextArea({
                 getBoundingBox,
               );
             }
+            setActiveTab("editText");
           }
         }}
       >

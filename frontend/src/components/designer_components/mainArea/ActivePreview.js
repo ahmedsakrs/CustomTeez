@@ -77,6 +77,18 @@ function ActivePreview({
         return;
       }
 
+      const target = e.target;
+
+      const isTyping =
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+
+      if (isTyping) {
+        return;
+      }
+
       const STEP_PX = e.shiftKey ? 10 : 1;
 
       let dx = 0;
@@ -303,7 +315,6 @@ function ActivePreview({
 
       // Cut
       if (ctrl && e.key.toLowerCase() === "x") {
-        console.log("hereee");
         e.preventDefault();
 
         cutDesign(selectedDesign.id);
