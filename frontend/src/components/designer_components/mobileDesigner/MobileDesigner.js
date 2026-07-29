@@ -10,6 +10,7 @@ import MobileCropModal from "./modals/MobileCropModal";
 import MobileFlipModal from "./modals/MobileFlipModal";
 import MobileOrderModal from "./modals/MobileOrderModal";
 import MobileRotationModal from "./modals/MobileRotationModal";
+import MobileResizeModal from "./modals/MobileResizeModal";
 
 function MobileDesigner({
   activeTab,
@@ -211,16 +212,32 @@ function MobileDesigner({
       )}
       {activeTab === "rotate" && (
         <MobileRotationModal
-        barRef={barRef}
-        selectedDesign={selectedDesign}
-        designsByView={designsByView}
-        setDesignsByView={setDesignsByView}
-        updateDesignsByView={updateDesignsByView}
-        activePreview={activePreview}
-        getBoundingBox={getBoundingBox}
-        regionWidth={regionWidth}
-        regionHeight={regionHeight}
-        setActiveTab={setActiveTab}
+          barRef={barRef}
+          selectedDesign={selectedDesign}
+          designsByView={designsByView}
+          setDesignsByView={setDesignsByView}
+          updateDesignsByView={updateDesignsByView}
+          activePreview={activePreview}
+          getBoundingBox={getBoundingBox}
+          regionWidth={regionWidth}
+          regionHeight={regionHeight}
+          setActiveTab={setActiveTab}
+        />
+      )}
+      {activeTab === "resize" && (
+        <MobileResizeModal
+          selectedDesign={selectedDesign}
+          regionWidth={regionWidth}
+          regionHeight={regionHeight}
+          setIsHeightBlank={setIsHeightBlank}
+          setIsWidthBlank={setIsWidthBlank}
+          setIsHeightZero={setIsHeightZero}
+          setIsWidthZero={setIsWidthZero}
+          setDesignsByView={updateDesignsByView}
+          activePreview={activePreview}
+          getBoundingBox={getBoundingBox}
+          setActiveTab={setActiveTab}
+          barRef={barRef}
         />
       )}
       {!selectedDesign && (

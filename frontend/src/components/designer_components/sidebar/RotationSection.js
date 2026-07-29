@@ -98,26 +98,6 @@ function RotationSection({
               setIsHeightZero(false);
             }
           }}
-          onClick={(e) => {
-            let val = e.target.value;
-            if (val === "") val = 0;
-            const angle = (parseInt(val) * Math.PI) / 180;
-            rotate(
-              selectedDesign,
-              updateDesignsByView,
-              activePreview,
-              angle,
-              regionWidth,
-              regionHeight,
-              getBoundingBox,
-              true,
-            );
-            setAngleDeg(val);
-            setIsWidthBlank(false);
-            setIsWidthZero(false);
-            setIsHeightBlank(false);
-            setIsHeightZero(false);
-          }}
           onBlur={(e) => {
             let val = e.target.value;
             if (val === "") val = 0;
