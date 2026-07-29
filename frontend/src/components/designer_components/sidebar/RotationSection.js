@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { radToDeg, rotate } from "../../../utils/designerUtils";
 
 function RotationSection({
@@ -16,6 +16,14 @@ function RotationSection({
   setIsWidthZero,
   setIsWidthBlank,
 }) {
+  const [angleDeg, setAngleDeg] = useState(
+    Math.round(radToDeg(selectedDesign?.rotation || 0)),
+  );
+  useEffect(() => {
+    if (selectedDesign) {
+      setAngleDeg(Math.round(radToDeg(selectedDesign?.rotation || 0)));
+    }
+  }, [selectedDesign]);
   return (
     <div className="size-row">
       <div className="rotation-left">Rotation</div>
@@ -30,7 +38,8 @@ function RotationSection({
           onPointerDown={() => {
             updateDesignsByView(designsByView);
           }}
-          onChange={(e) =>
+          onChange={(e) => {
+            setAngleDeg(e.target.value);
             rotate(
               selectedDesign,
               setDesignsByView,
@@ -39,8 +48,8 @@ function RotationSection({
               regionWidth,
               regionHeight,
               getBoundingBox,
-            )
-          }
+            );
+          }}
           onPointerUp={(e) => {
             rotate(
               selectedDesign,
@@ -63,8 +72,33 @@ function RotationSection({
           type="number"
           min="-180"
           max="180"
-          value={Math.round(radToDeg(selectedDesign?.rotation))}
+          value={angleDeg}
           onChange={(e) => {
+            setAngleDeg(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              let val = e.target.value;
+              if (val === "") val = 0;
+              const angle = (parseInt(val) * Math.PI) / 180;
+              rotate(
+                selectedDesign,
+                updateDesignsByView,
+                activePreview,
+                angle,
+                regionWidth,
+                regionHeight,
+                getBoundingBox,
+                true,
+              );
+              setAngleDeg(val);
+              setIsWidthBlank(false);
+              setIsWidthZero(false);
+              setIsHeightBlank(false);
+              setIsHeightZero(false);
+            }
+          }}
+          onClick={(e) => {
             let val = e.target.value;
             if (val === "") val = 0;
             const angle = (parseInt(val) * Math.PI) / 180;
@@ -78,6 +112,27 @@ function RotationSection({
               getBoundingBox,
               true,
             );
+            setAngleDeg(val);
+            setIsWidthBlank(false);
+            setIsWidthZero(false);
+            setIsHeightBlank(false);
+            setIsHeightZero(false);
+          }}
+          onBlur={(e) => {
+            let val = e.target.value;
+            if (val === "") val = 0;
+            const angle = (parseInt(val) * Math.PI) / 180;
+            rotate(
+              selectedDesign,
+              updateDesignsByView,
+              activePreview,
+              angle,
+              regionWidth,
+              regionHeight,
+              getBoundingBox,
+              true,
+            );
+            setAngleDeg(val);
             setIsWidthBlank(false);
             setIsWidthZero(false);
             setIsHeightBlank(false);

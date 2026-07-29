@@ -223,7 +223,7 @@ function MobileDesigner({
         setActiveTab={setActiveTab}
         />
       )}
-      {!selectedDesignId && (
+      {!selectedDesign && (
         <div className="mobile-bottom-nav" ref={sideRef}>
           <button
             onClick={(e) => {
@@ -267,9 +267,9 @@ function MobileDesigner({
           </button>
         </div>
       )}
-      {selectedDesignId && (
+      {selectedDesign && (
         <div>
-          {!selectedDesign.text && (
+          {!selectedDesign?.text && (
             <div className="mobile-bottom-nav" ref={sideRef}>
               <button onClick={() => setActiveTab("resize")}>
                 <i className="bi bi-pip" style={{ fontSize: "33px" }}></i>

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { radToDeg, rotate } from "../../../../utils/designerUtils";
 
 function MobileRotationModal({
@@ -13,7 +13,14 @@ function MobileRotationModal({
   regionHeight,
   setActiveTab,
 }) {
-  let angleDeg = Math.round(radToDeg(selectedDesign?.rotation || 0));
+  const [angleDeg, setAngleDeg] = useState(
+    Math.round(radToDeg(selectedDesign?.rotation || 0)),
+  );
+  useEffect(() => {
+    if (selectedDesign) {
+      setAngleDeg(Math.round(radToDeg(selectedDesign?.rotation || 0)));
+    }
+  }, [selectedDesign]);
 
   const rotateIntervalRef = useRef(null);
 
@@ -43,6 +50,7 @@ function MobileRotationModal({
         const currentDeg = Math.round(radToDeg(item.rotation || 0));
 
         const nextDeg = Math.max(-180, Math.min(180, currentDeg + step));
+        setAngleDeg(nextDeg);
 
         return {
           ...item,
@@ -121,12 +129,29 @@ function MobileRotationModal({
           <input
             type="number"
             className="mobile-rotation-input"
-            value={Math.round(radToDeg(selectedDesign?.rotation))}
+            value={angleDeg}
             min={-180}
             max={180}
             onChange={(e) => {
-              const val = e.target.value === "" ? 0 : parseInt(e.target.value);
-              updateAngle(val, true, true);
+              setAngleDeg(e.target.value);
+            }}
+            onBlur={(e) => {
+              if (angleDeg === "") {
+                setAngleDeg(0);
+                updateAngle(0, true, true);
+              } else {
+                updateAngle(parseInt(angleDeg), true, true);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                if (angleDeg === "") {
+                  setAngleDeg(0);
+                  updateAngle(0, true, true);
+                } else {
+                  updateAngle(parseInt(angleDeg), true, true);
+                }
+              }
             }}
           />
 
@@ -147,11 +172,12 @@ function MobileRotationModal({
           type="range"
           min="-180"
           max="180"
-          value={angleDeg}
+          value={Math.round(radToDeg(selectedDesign?.rotation || 0))}
           className="slider"
           style={{ maxWidth: "100%", width: "100%" }}
           onPointerDown={() => updateDesignsByView(designsByView)}
           onChange={(e) => {
+            setAngleDeg(e.target.value);
             updateAngle(parseInt(e.target.value), false, false);
           }}
           onPointerUp={() => {

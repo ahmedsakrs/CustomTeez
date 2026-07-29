@@ -391,6 +391,17 @@ function DesignerScreen() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      const target = e.target;
+
+      const isTyping =
+        target instanceof HTMLElement &&
+        ((target.tagName === "INPUT" && target.className !== "slider") ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+
+      if (isTyping) {
+        return;
+      }
       const ctrl = e.ctrlKey || e.metaKey;
 
       if (ctrl && e.key.toLowerCase() === "z" && !e.shiftKey) {
