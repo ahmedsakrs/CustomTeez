@@ -9,6 +9,7 @@ import { center, duplicateDesign } from "../../../utils/designerUtils";
 import MobileCropModal from "./modals/MobileCropModal";
 import MobileFlipModal from "./modals/MobileFlipModal";
 import MobileOrderModal from "./modals/MobileOrderModal";
+import MobileRotationModal from "./modals/MobileRotationModal";
 
 function MobileDesigner({
   activeTab,
@@ -206,6 +207,20 @@ function MobileDesigner({
           activePreview={activePreview}
           setDesignsByView={updateDesignsByView}
           designsByView={designsByView}
+        />
+      )}
+      {activeTab === "rotate" && (
+        <MobileRotationModal
+        barRef={barRef}
+        selectedDesign={selectedDesign}
+        designsByView={designsByView}
+        setDesignsByView={setDesignsByView}
+        updateDesignsByView={updateDesignsByView}
+        activePreview={activePreview}
+        getBoundingBox={getBoundingBox}
+        regionWidth={regionWidth}
+        regionHeight={regionHeight}
+        setActiveTab={setActiveTab}
         />
       )}
       {!selectedDesignId && (

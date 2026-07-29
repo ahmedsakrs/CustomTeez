@@ -271,6 +271,17 @@ function ActivePreview({
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      const target = e.target;
+
+      const isTyping =
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+
+      if (isTyping) {
+        return;
+      }
       const ctrl = e.ctrlKey || e.metaKey;
 
       const selectedDesign = designsByView[activePreview]?.find(
@@ -302,6 +313,7 @@ function ActivePreview({
 
       // Paste
       if (ctrl && e.key.toLowerCase() === "v") {
+        if (!copiedCollageRef.current) return;
         e.preventDefault();
 
         pasteDesign();
