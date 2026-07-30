@@ -43,18 +43,24 @@ function Sidebar({
   const selectedDesign = designsByView[activePreview].find(
     (d) => d.id === selectedDesignId,
   );
-  if (activeTab === "productOptions")
-    setActiveTab(null);
+  if (activeTab === "productOptions") setActiveTab(null);
 
   if (
-    activeTab === "productOptions" ||
-    activeTab === "resize" ||
-    activeTab === "rotate" ||
-    activeTab === "layers" ||
-    activeTab === "flip" ||
-    activeTab === "editTextArea"
+    selectedDesign &&
+    (activeTab === "productOptions" ||
+      activeTab === "resize" ||
+      activeTab === "rotate" ||
+      activeTab === "layers" ||
+      activeTab === "flip" ||
+      activeTab === "editTextArea")
   )
-    setActiveTab(selectedDesign.text ? "editText" : selectedDesign.type === "upload" ? "editUpload" : "editDesign");
+    setActiveTab(
+      selectedDesign?.text
+        ? "editText"
+        : selectedDesign?.type === "upload"
+          ? "editUpload"
+          : "editDesign",
+    );
   return (
     <div className="sidebar">
       <div className="sidebar-buttons" ref={sideRef}>

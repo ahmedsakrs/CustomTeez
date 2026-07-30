@@ -528,6 +528,7 @@
 
 .fonts-tab {
   align-items: center;
+  width: 100%;
   flex-direction: column;
   display: flex;
 }
@@ -555,7 +556,7 @@
   cursor: pointer;
   background-color: transparent;
   font-size: 1.15rem;
-  max-width: 190px;
+  /* max-width: 190px; */
   transition: 0.2s;
 }
 

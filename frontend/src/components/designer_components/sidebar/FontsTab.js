@@ -20,6 +20,7 @@ export default function FontsTab({
   regionWidth,
   regionHeight,
   getBoundingBox,
+  isMobile=false,
 }) {
   // ✅ ✅ ADDED: search state
   const [search, setSearch] = useState("");
@@ -74,27 +75,32 @@ export default function FontsTab({
               regionHeight,
               getBoundingBox,
             );
+            if(isMobile) {
+              setActiveTab("editText");
+            }
           }}
         >
           AaBbCcDd — {font}
         </button>
       ))}
 
-      <button
-        className="text-add-btn"
-        style={{
-          marginTop: "10px",
-          height: "45px",
-          width: "80px",
-          fontSize: "14px",
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          setActiveTab("editText");
-        }}
-      >
-        Done
-      </button>
+      {!isMobile && (
+        <button
+          className="text-add-btn"
+          style={{
+            marginTop: "10px",
+            height: "45px",
+            width: "80px",
+            fontSize: "14px",
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setActiveTab("editText");
+          }}
+        >
+          Done
+        </button>
+      )}
 
       {/* ✅ ✅ OPTIONAL: no results */}
       {filteredFonts.length === 0 && (

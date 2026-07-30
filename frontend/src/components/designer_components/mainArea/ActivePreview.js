@@ -168,6 +168,17 @@ function ActivePreview({
     const arrowKeys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"];
 
     const handleKeyDown = (e) => {
+      const target = e.target;
+
+      const isTyping =
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable);
+
+      if (isTyping) {
+        return;
+      }
       if (arrowKeys.includes(e.key)) {
         setKeyboardMoving(true);
       }

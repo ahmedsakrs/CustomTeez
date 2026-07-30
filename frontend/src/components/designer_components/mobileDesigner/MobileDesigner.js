@@ -11,6 +11,7 @@ import MobileFlipModal from "./modals/MobileFlipModal";
 import MobileOrderModal from "./modals/MobileOrderModal";
 import MobileRotationModal from "./modals/MobileRotationModal";
 import MobileResizeModal from "./modals/MobileResizeModal";
+import MobileFontsTab from "./modals/MobileFontsTab";
 
 function MobileDesigner({
   activeTab,
@@ -258,6 +259,19 @@ function MobileDesigner({
           selectedDesign={selectedDesign}
         />
       )}
+      {activeTab === "changeFont" && (
+        <MobileFontsTab
+          selectedDesign={selectedDesign}
+          pendingText={selectedDesign.text}
+          setActiveTab={setActiveTab}
+          setDesignsByView={updateDesignsByView}
+          activePreview={activePreview}
+          regionWidth={regionWidth}
+          regionHeight={regionHeight}
+          getBoundingBox={getBoundingBox}
+          barRef={barRef}
+        />
+      )}
       {!selectedDesign && (
         <div className="mobile-bottom-nav" ref={sideRef}>
           <button
@@ -377,6 +391,14 @@ function MobileDesigner({
                   style={{ fontWeight: "bold", fontSize: "33px" }}
                 ></i>
                 <span>Edit Text</span>
+              </button>
+
+              <button onClick={() => setActiveTab("changeFont")}>
+                <i
+                  className="bi bi-fonts"
+                  style={{ fontWeight: "bold", fontSize: "40px", height:"50px" }}
+                ></i>
+                <span>Fonts</span>
               </button>
 
               <button onClick={() => setActiveTab("resize")}>
