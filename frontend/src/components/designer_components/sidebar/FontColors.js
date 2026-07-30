@@ -26,6 +26,7 @@ function FontColors({
   getBoundingBox,
   setActiveTab,
   isOutline = false,
+  isMobile = false,
 }) {
   const debouncedUpdate = useMemo(
     () => debounce((...args) => applyNewTextImg(...args), 200),
@@ -49,107 +50,179 @@ function FontColors({
   }, [debouncedUpdate]);
   return (
     <div className="vinyl-colors-tab">
-      <div className="selected-color-header">
-        {isOutline && (
-          <span
-            className="color-grid-title"
-            style={{ fontWeight: "normal", marginRight: "10px" }}
-          >
-            {selectedDesign?.outline_color
-              ? "Selected Color"
-              : "Select Outline Color"}
-          </span>
-        )}
+      {!isMobile && (
+        <div className="selected-color-header">
+          {isOutline && (
+            <span
+              className="color-grid-title"
+              style={{ fontWeight: "normal", marginRight: "10px" }}
+            >
+              {selectedDesign?.outline_color
+                ? "Selected Color"
+                : "Select Outline Color"}
+            </span>
+          )}
 
-        {!isOutline && (
-          <span
-            className="color-grid-title"
-            style={{ fontWeight: "normal", marginRight: "10px" }}
-          >
-            Selected Color
-          </span>
-        )}
+          {!isOutline && (
+            <span
+              className="color-grid-title"
+              style={{ fontWeight: "normal", marginRight: "10px" }}
+            >
+              Selected Color
+            </span>
+          )}
 
-        <div
-          className="color-swatch"
-          style={{
-            backgroundColor: !isOutline
-              ? selectedDesign?.design_color.rgb
-              : selectedDesign?.outline_color?.rgb,
-            width: "20px",
-            height: "20px",
-            borderRadius: "4px",
-            border: "2px solid transparent",
-            cursor: "default",
-          }}
-        />
-        <span className="color-grid-title">
-          {!isOutline
-            ? selectedDesign?.design_color.name
-            : selectedDesign?.outline_color?.name}
-        </span>
-      </div>
-      <div className="color-grid">
-        {availableColors.map((color) => (
-          <button
-            key={color.rgb}
-            className={`color-swatch ${
-              (!isOutline &&
-                selectedDesign?.design_color.name === color.name) ||
-              (isOutline && selectedDesign?.outline_color?.name === color.name)
-                ? "active"
-                : ""
-            }`}
+          <div
+            className="color-swatch"
             style={{
-              backgroundColor: color.rgb,
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!isOutline) {
-                applyNewTextImg(
-                  selectedDesign.text,
-                  selectedDesign.fontFamily,
-                  selectedDesign.isBold,
-                  selectedDesign.isItalic,
-                  color,
-                  selectedDesign.outline_color,
-                  selectedDesign.outline_width,
-                  selectedDesign.text_alignment,
-                  selectedDesign.text_shape,
-                  selectedDesign.shape_intensity,
-                  selectedDesign.lineSpacing,
-                  updateDesignsByView,
-                  activePreview,
-                  selectedDesign,
-                  regionWidth,
-                  regionHeight,
-                  getBoundingBox,
-                );
-              } else {
-                applyNewTextImg(
-                  selectedDesign.text,
-                  selectedDesign.fontFamily,
-                  selectedDesign.isBold,
-                  selectedDesign.isItalic,
-                  selectedDesign.design_color,
-                  color,
-                  selectedDesign.outline_width || 2,
-                  selectedDesign.text_alignment,
-                  selectedDesign.text_shape,
-                  selectedDesign.shape_intensity,
-                  selectedDesign.lineSpacing,
-                  updateDesignsByView,
-                  activePreview,
-                  selectedDesign,
-                  regionWidth,
-                  regionHeight,
-                  getBoundingBox,
-                );
-              }
+              backgroundColor: !isOutline
+                ? selectedDesign?.design_color.rgb
+                : selectedDesign?.outline_color?.rgb,
+              width: "20px",
+              height: "20px",
+              borderRadius: "4px",
+              border: "2px solid transparent",
+              cursor: "default",
             }}
           />
-        ))}
-      </div>
+          <span className="color-grid-title">
+            {!isOutline
+              ? selectedDesign?.design_color.name
+              : selectedDesign?.outline_color?.name}
+          </span>
+        </div>
+      )}
+      {!isMobile && (
+        <div className="color-grid">
+          {availableColors.map((color) => (
+            <button
+              key={color.rgb}
+              className={`color-swatch ${
+                (!isOutline &&
+                  selectedDesign?.design_color.name === color.name) ||
+                (isOutline &&
+                  selectedDesign?.outline_color?.name === color.name)
+                  ? "active"
+                  : ""
+              }`}
+              style={{
+                backgroundColor: color.rgb,
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isOutline) {
+                  applyNewTextImg(
+                    selectedDesign.text,
+                    selectedDesign.fontFamily,
+                    selectedDesign.isBold,
+                    selectedDesign.isItalic,
+                    color,
+                    selectedDesign.outline_color,
+                    selectedDesign.outline_width,
+                    selectedDesign.text_alignment,
+                    selectedDesign.text_shape,
+                    selectedDesign.shape_intensity,
+                    selectedDesign.lineSpacing,
+                    updateDesignsByView,
+                    activePreview,
+                    selectedDesign,
+                    regionWidth,
+                    regionHeight,
+                    getBoundingBox,
+                  );
+                } else {
+                  applyNewTextImg(
+                    selectedDesign.text,
+                    selectedDesign.fontFamily,
+                    selectedDesign.isBold,
+                    selectedDesign.isItalic,
+                    selectedDesign.design_color,
+                    color,
+                    selectedDesign.outline_width || 2,
+                    selectedDesign.text_alignment,
+                    selectedDesign.text_shape,
+                    selectedDesign.shape_intensity,
+                    selectedDesign.lineSpacing,
+                    updateDesignsByView,
+                    activePreview,
+                    selectedDesign,
+                    regionWidth,
+                    regionHeight,
+                    getBoundingBox,
+                  );
+                }
+              }}
+            />
+          ))}
+        </div>
+      )}
+      {isMobile && (
+        <div className="mobile-color-row-wrapper">
+          <div className="mobile-color-row">
+            {availableColors.map((color) => (
+              <button
+                key={color.rgb}
+                className={`mobile-color-swatch ${
+                  (!isOutline &&
+                    selectedDesign?.design_color?.rgb === color.rgb) ||
+                  (isOutline &&
+                    selectedDesign?.outline_color?.rgb === color.rgb)
+                    ? "active"
+                    : ""
+                }`}
+                style={{
+                  backgroundColor: color.rgb,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+
+                  if (!isOutline) {
+                    applyNewTextImg(
+                      selectedDesign.text,
+                      selectedDesign.fontFamily,
+                      selectedDesign.isBold,
+                      selectedDesign.isItalic,
+                      color,
+                      selectedDesign.outline_color,
+                      selectedDesign.outline_width,
+                      selectedDesign.text_alignment,
+                      selectedDesign.text_shape,
+                      selectedDesign.shape_intensity,
+                      selectedDesign.lineSpacing,
+                      updateDesignsByView,
+                      activePreview,
+                      selectedDesign,
+                      regionWidth,
+                      regionHeight,
+                      getBoundingBox,
+                    );
+                  } else {
+                    applyNewTextImg(
+                      selectedDesign.text,
+                      selectedDesign.fontFamily,
+                      selectedDesign.isBold,
+                      selectedDesign.isItalic,
+                      selectedDesign.design_color,
+                      color,
+                      selectedDesign.outline_width || 2,
+                      selectedDesign.text_alignment,
+                      selectedDesign.text_shape,
+                      selectedDesign.shape_intensity,
+                      selectedDesign.lineSpacing,
+                      updateDesignsByView,
+                      activePreview,
+                      selectedDesign,
+                      regionWidth,
+                      regionHeight,
+                      getBoundingBox,
+                    );
+                  }
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {isOutline && selectedDesign?.outline_color && (
         <div style={{ position: "relative", marginTop: "10px" }}>

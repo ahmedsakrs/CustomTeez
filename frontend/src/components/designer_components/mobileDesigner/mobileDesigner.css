@@ -62,6 +62,10 @@
   z-index: 9999;
 }
 
+.mobile-bottom-nav::-webkit-scrollbar {
+  display: none;
+}
+
 .mobile-bottom-nav button {
   display: flex;
   flex-direction: column;
@@ -74,8 +78,9 @@
   border: none;
   background: transparent;
 
-  min-width: 70px;
+  min-width: 82px;
   color: #222;
+  font-size: small;
 }
 
 .mobile-bottom-nav i {
@@ -575,4 +580,83 @@
 
 .mobile-rotation-slider {
   width: 100%;
+}
+
+.mobile-color-row-wrapper {
+  position: relative;
+}
+
+.mobile-color-row {
+  display: flex;
+
+  gap: 12px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding: 10px 20px;
+
+  scrollbar-width: none;
+}
+
+.mobile-color-row::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-color-row-wrapper::before,
+.mobile-color-row-wrapper::after {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  bottom: 0;
+
+  width: 24px;
+
+  pointer-events: none;
+
+  z-index: 2;
+}
+
+.mobile-color-row-wrapper::before {
+  left: 0;
+
+  background: linear-gradient(
+    to right,
+    white,
+    transparent
+  );
+}
+
+.mobile-color-row-wrapper::after {
+  right: 0;
+
+  background: linear-gradient(
+    to left,
+    white,
+    transparent
+  );
+}
+
+.mobile-color-swatch {
+  flex: 0 0 auto;
+
+  width: 44px;
+  height: 44px;
+
+  border-radius: 50%;
+
+  border: 2px solid #ddd;
+
+  transition: all 0.15s ease;
+}
+
+.mobile-color-swatch.active {
+  transform: scale(1.15);
+
+  border: 3px solid #007bff;
+
+  box-shadow:
+    0 0 0 3px rgba(0, 123, 255, 0.2);
 }

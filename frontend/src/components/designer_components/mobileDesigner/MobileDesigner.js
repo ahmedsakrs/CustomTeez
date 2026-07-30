@@ -12,6 +12,7 @@ import MobileOrderModal from "./modals/MobileOrderModal";
 import MobileRotationModal from "./modals/MobileRotationModal";
 import MobileResizeModal from "./modals/MobileResizeModal";
 import MobileFontsTab from "./modals/MobileFontsTab";
+import MobileFontColorModal from './modals/MobileFontColorModal'
 
 function MobileDesigner({
   activeTab,
@@ -272,6 +273,19 @@ function MobileDesigner({
           barRef={barRef}
         />
       )}
+      {activeTab === "changeFontColor" && (
+        <MobileFontColorModal
+        selectedDesign={selectedDesign}
+        setActiveTab={setActiveTab}
+        updateDesignsByView={updateDesignsByView}
+        designsByView={designsByView}
+        activePreview={activePreview}
+        regionWidth={regionWidth}
+        regionHeight={regionHeight}
+        getBoundingBox={getBoundingBox}
+        barRef={barRef}
+        />
+      )}
       {!selectedDesign && (
         <div className="mobile-bottom-nav" ref={sideRef}>
           <button
@@ -393,10 +407,22 @@ function MobileDesigner({
                 <span>Edit Text</span>
               </button>
 
+              <button onClick={() => setActiveTab("changeFontColor")}>
+                <i
+                  className="bi bi-palette-fill"
+                  style={{ fontWeight: "bold", fontSize: "33px" }}
+                ></i>
+                <span>Change Color</span>
+              </button>
+
               <button onClick={() => setActiveTab("changeFont")}>
                 <i
                   className="bi bi-fonts"
-                  style={{ fontWeight: "bold", fontSize: "40px", height:"50px" }}
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "40px",
+                    height: "50px",
+                  }}
                 ></i>
                 <span>Fonts</span>
               </button>
