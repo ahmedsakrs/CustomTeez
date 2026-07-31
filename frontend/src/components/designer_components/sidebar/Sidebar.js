@@ -53,7 +53,10 @@ function Sidebar({
       activeTab === "layers" ||
       activeTab === "flip" ||
       activeTab === "editTextArea" ||
-      activeTab === "changeLineSpacing")
+      activeTab === "changeLineSpacing" ||
+      activeTab === "style" ||
+      activeTab === "alignment"
+    )
   )
     setActiveTab(
       selectedDesign?.text

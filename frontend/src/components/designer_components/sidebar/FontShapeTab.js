@@ -20,6 +20,7 @@ export default function FontShapeTab({
   regionWidth,
   regionHeight,
   getBoundingBox,
+  isMobile = false
 }) {
   const currentShape = selectedDesign?.text_shape || "normal";
   const debouncedUpdate = useMemo(
@@ -90,13 +91,14 @@ export default function FontShapeTab({
   return (
     <div className="font-shape-tab">
       {/* ✅ SHAPES GRID */}
-      <div className="shape-grid">
+      <div className={isMobile ? "mobile-color-row" :"shape-grid"}>
         {shapes.map((shape) => (
           <button
             key={shape.key}
             className={`shape-btn ${
               currentShape === shape.key ? "active" : ""
             }`}
+            style={isMobile ? {minWidth:"120px"} : {}}
             onClick={(e) => {
               applyShape(shape.key, true);
               e.stopPropagation();

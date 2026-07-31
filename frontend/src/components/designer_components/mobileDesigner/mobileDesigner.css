@@ -132,6 +132,11 @@
   font-size: small;
 }
 
+.mobile-bottom-nav button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .mobile-bottom-nav i {
   font-size: 30px;
   align-items: center;

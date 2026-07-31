@@ -14,8 +14,12 @@ import MobileResizeModal from "./modals/MobileResizeModal";
 import MobileFontsTab from "./modals/MobileFontsTab";
 import MobileFontColorModal from "./modals/MobileFontColorModal";
 import outlineIcon from "./modals/text-outline-icon.svg";
+import shapeIcon from "./modals/text-shape-icon.svg";
 import MobileOutlineModal from "./modals/MobileOutlineModal";
 import MobileLineSpacing from "./modals/MobileLineSpacing";
+import MobileTextShapeModal from "./modals/MobileTextShapeModal";
+import MobileStyleModal from "./modals/MobileStyleModal";
+import MobileAlignmentModal from "./modals/MobileAlignmentModal";
 
 function MobileDesigner({
   activeTab,
@@ -343,6 +347,44 @@ function MobileDesigner({
             setActiveTab={setActiveTab}
           />
         )}
+        {activeTab === "changeShape" && (
+          <MobileTextShapeModal
+            barRef={barRef}
+            selectedDesign={selectedDesign}
+            setActiveTab={setActiveTab}
+            setDesignsByView={setDesignsByView}
+            updateDesignsByView={updateDesignsByView}
+            designsByView={designsByView}
+            activePreview={activePreview}
+            regionWidth={regionWidth}
+            regionHeight={regionHeight}
+            getBoundingBox={getBoundingBox}
+          />
+        )}
+        {activeTab === "style" && (
+          <MobileStyleModal
+            barRef={barRef}
+            selectedDesign={selectedDesign}
+            setDesignsByView={updateDesignsByView}
+            activePreview={activePreview}
+            regionWidth={regionWidth}
+            regionHeight={regionHeight}
+            getBoundingBox={getBoundingBox}
+            setActiveTab={setActiveTab}
+          />
+        )}
+        {activeTab === "alignment" && (
+          <MobileAlignmentModal
+            barRef={barRef}
+            selectedDesign={selectedDesign}
+            setDesignsByView={updateDesignsByView}
+            activePreview={activePreview}
+            regionWidth={regionWidth}
+            regionHeight={regionHeight}
+            getBoundingBox={getBoundingBox}
+            setActiveTab={setActiveTab}
+          />
+        )}
         {!selectedDesign && (
           <div
             className="mobile-bottom-nav"
@@ -507,6 +549,43 @@ function MobileDesigner({
                     }}
                   />
                   <span>Outline</span>
+                </button>
+
+                <button onClick={() => setActiveTab("changeShape")}>
+                  <img
+                    src={shapeIcon}
+                    alt=""
+                    style={{
+                      width: "70px",
+                      height: "45px",
+                    }}
+                  />
+                  <span>Shape</span>
+                </button>
+
+                <button onClick={() => setActiveTab("style")}>
+                  <i
+                    className="bi bi-type-bold"
+                    style={{ fontWeight: "bold", fontSize: "33px" }}
+                  ></i>
+                  <span>Style</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("alignment")}
+                  disabled={selectedDesign?.text_shape !== "normal"}
+                >
+                  <i
+                    className={
+                      selectedDesign?.text_alignment === "left"
+                        ? "bi bi-text-left"
+                        : selectedDesign?.text_alignment === "center"
+                          ? "bi bi-text-center"
+                          : "bi bi-text-right"
+                    }
+                    style={{ fontWeight: "bold", fontSize: "33px" }}
+                  ></i>
+                  <span>Alignment</span>
                 </button>
 
                 <button onClick={() => setActiveTab("changeLineSpacing")}>
