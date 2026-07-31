@@ -841,17 +841,9 @@
     text-align: center;
   }
 
-  .slider {
+  /* .slider {
     max-width: 100px;
-  }
-}
-
-@media (min-width: 300px) {
-  .size-left::before {
-    content: "Size \A (W x H)";
-    white-space: pre-wrap;
-    text-align: center;
-  }
+  } */
 }
 
 @media (min-width: 992px) {

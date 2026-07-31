@@ -15,6 +15,7 @@ import MobileFontsTab from "./modals/MobileFontsTab";
 import MobileFontColorModal from "./modals/MobileFontColorModal";
 import outlineIcon from "./modals/text-outline-icon.svg";
 import MobileOutlineModal from "./modals/MobileOutlineModal";
+import MobileLineSpacing from "./modals/MobileLineSpacing";
 
 function MobileDesigner({
   activeTab,
@@ -328,8 +329,26 @@ function MobileDesigner({
             barRef={barRef}
           />
         )}
+        {activeTab === "changeLineSpacing" && (
+          <MobileLineSpacing
+            barRef={barRef}
+            selectedDesign={selectedDesign}
+            setDesignsByView={setDesignsByView}
+            updateDesignsByView={updateDesignsByView}
+            designsByView={designsByView}
+            activePreview={activePreview}
+            regionWidth={regionWidth}
+            regionHeight={regionHeight}
+            getBoundingBox={getBoundingBox}
+            setActiveTab={setActiveTab}
+          />
+        )}
         {!selectedDesign && (
-          <div className="mobile-bottom-nav" onScroll={updateFades} ref={sideRef}>
+          <div
+            className="mobile-bottom-nav"
+            onScroll={updateFades}
+            ref={sideRef}
+          >
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -375,7 +394,11 @@ function MobileDesigner({
         {selectedDesign && (
           <div>
             {!selectedDesign?.text && (
-              <div className="mobile-bottom-nav" onScroll={updateFades} ref={sideRef}>
+              <div
+                className="mobile-bottom-nav"
+                onScroll={updateFades}
+                ref={sideRef}
+              >
                 <button onClick={() => setActiveTab("resize")}>
                   <i className="bi bi-pip" style={{ fontSize: "33px" }}></i>
                   <span>Resize</span>
@@ -440,7 +463,11 @@ function MobileDesigner({
             )}
 
             {selectedDesign?.text && (
-              <div className="mobile-bottom-nav" onScroll={updateFades} ref={sideRef}>
+              <div
+                className="mobile-bottom-nav"
+                onScroll={updateFades}
+                ref={sideRef}
+              >
                 <button onClick={() => setActiveTab("editTextArea")}>
                   <i
                     className="bi bi-pen-fill"
@@ -480,6 +507,14 @@ function MobileDesigner({
                     }}
                   />
                   <span>Outline</span>
+                </button>
+
+                <button onClick={() => setActiveTab("changeLineSpacing")}>
+                  <i
+                    className="bi bi-arrows-vertical"
+                    style={{ fontWeight: "bold", fontSize: "33px" }}
+                  ></i>
+                  <span>Spacing</span>
                 </button>
 
                 <button onClick={() => setActiveTab("resize")}>

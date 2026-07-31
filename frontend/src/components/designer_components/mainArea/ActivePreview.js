@@ -951,6 +951,13 @@ function ActivePreview({
                       }}
                       draggable="false"
                       onPointerDown={(e) => {
+                        setActiveTab(
+                          selectedDesign.text
+                            ? "editText"
+                            : selectedDesign.type === "upload"
+                              ? "editUpload"
+                              : "editDesign",
+                        );
                         e.stopPropagation();
                         e.preventDefault();
                         setIsRotating(true);
@@ -1049,6 +1056,13 @@ function ActivePreview({
                         touchAction: "none",
                       }}
                       onPointerDown={(e) => {
+                        setActiveTab(
+                          selectedDesign.text
+                            ? "editText"
+                            : selectedDesign.type === "upload"
+                              ? "editUpload"
+                              : "editDesign",
+                        );
                         e.stopPropagation();
                         // e.preventDefault();
                         setIsResizing(true);
