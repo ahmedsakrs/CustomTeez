@@ -223,6 +223,7 @@ function DesignerScreen() {
   const [justFinishedInteraction, setJustFinishedInteraction] = useState(false);
   const [pendingText, setPendingText] = useState("");
   const [contextMenu, setContextMenu] = useState(null);
+  const [showViewsPanel, setShowViewsPanel] = useState(false);
 
   const [showProductModal, setShowProductModal] = useState(false);
   const [showColorModal, setShowColorModal] = useState(false);
@@ -234,6 +235,7 @@ function DesignerScreen() {
   const panelRef = useRef(null);
   const sideRef = useRef(null);
   const barRef = useRef(null);
+  const viewsRef = useRef(null);
 
   const activeProduct = allProducts.find((p) => p.id === activeProductId);
 
@@ -270,6 +272,10 @@ function DesignerScreen() {
           return;
         }
 
+        if (viewsRef.current && viewsRef.current.contains(e.target)) {
+          return;
+        }
+
         if (justFinishedInteraction) {
           // Suppress deselect once
           setJustFinishedInteraction(false);
@@ -288,10 +294,12 @@ function DesignerScreen() {
         if (isActive) return;
 
         if (isResizing || isRotating) return;
+
         setActiveTab(null);
         setSelectedDesignId(null);
         setIsCropping(false);
         setContextMenu(null);
+        setShowViewsPanel(false);
       };
       // window.addEventListener("click", handleClickOutside);
       window.addEventListener("mousedown", handleClickOutside);
@@ -604,6 +612,13 @@ function DesignerScreen() {
       selectedCategory={selectedCategory}
       setSelectedCategory={setSelectedCategory}
       sideRef={sideRef}
+      canUndo={undoStack.length > 0}
+      canRedo={redoStack.length > 0}
+      undo={undo}
+      redo={redo}
+      showViewsPanel={showViewsPanel}
+      setShowViewsPanel={setShowViewsPanel}
+      viewsRef={viewsRef}
     />
   );
 }

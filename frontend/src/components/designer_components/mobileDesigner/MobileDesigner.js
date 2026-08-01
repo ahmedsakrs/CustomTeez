@@ -91,13 +91,22 @@ function MobileDesigner({
   setSelectedCategory,
 
   sideRef,
+
+  canUndo,
+  canRedo,
+  undo,
+  redo,
+
+  showViewsPanel,
+  setShowViewsPanel,
+
+  viewsRef,
 }) {
   const selectedDesign = designsByView[activePreview].find(
     (d) => d.id === selectedDesignId,
   );
 
   const [showLeftFade, setShowLeftFade] = useState(false);
-
   const [showRightFade, setShowRightFade] = useState(false);
 
   const updateFades = useCallback(() => {
@@ -117,6 +126,10 @@ function MobileDesigner({
 
     return () => window.removeEventListener("resize", updateFades);
   }, [selectedDesign, updateFades]);
+
+  useEffect(() => {
+    setShowViewsPanel(false);
+  }, [activePreview, setShowViewsPanel]);
 
   return (
     <div className="mobile-designer">
@@ -151,9 +164,86 @@ function MobileDesigner({
         contextMenu={contextMenu}
         setContextMenu={setContextMenu}
       />
+      <div className="mobile-history-buttons">
+        <button
+          className="mobile-floating-btn"
+          onClick={undo}
+          disabled={!canUndo}
+        >
+          <i className="bi bi-arrow-counterclockwise" />
+        </button>
+
+        <button
+          className="mobile-floating-btn"
+          onClick={redo}
+          disabled={!canRedo}
+        >
+          <i className="bi bi-arrow-clockwise" />
+        </button>
+      </div>
+
+      <div className="mobile-views-dropdown" ref={viewsRef}>
+        <button
+          className="mobile-floating-btn"
+          onClick={() => setShowViewsPanel((prev) => !prev)}
+        >
+          <i className="bi bi-arrow-repeat"></i>
+        </button>
+
+        {showViewsPanel && (
+          <div className="mobile-views-panel">
+            <button
+              className={activePreview === "Front" ? "active" : ""}
+              onClick={() => {
+                setActivePreview("Front");
+                setShowViewsPanel(false);
+              }}
+            >
+              Front
+            </button>
+
+            <button
+              className={activePreview === "Back" ? "active" : ""}
+              onClick={() => {
+                setActivePreview("Back");
+                setShowViewsPanel(false);
+              }}
+            >
+              Back
+            </button>
+
+            <button
+              className={activePreview === "Left Sleeve" ? "active" : ""}
+              onClick={() => {
+                setActivePreview("L Sleeve");
+                setShowViewsPanel(false);
+              }}
+            >
+              L Sleeve
+            </button>
+
+            <button
+              className={activePreview === "Right Sleeve" ? "active" : ""}
+              onClick={() => {
+                setActivePreview("R Sleeve");
+                setShowViewsPanel(false);
+              }}
+            >
+              R Sleeve
+            </button>
+          </div>
+        )}
+      </div>
+
       <div
         className={`mobile-bottom-nav-wrapper ${showLeftFade ? "show-left-fade" : ""} ${showRightFade ? "show-right-fade" : ""}`}
       >
+        <button
+          className="mobile-next-btn"
+          // onClick={() => navigate("/next-screen")}
+        >
+          <i className="bi bi-arrow-right" />
+        </button>
         {activeTab === "productOptions" && (
           <MobileProductModal
             setActiveTab={setActiveTab}
@@ -394,6 +484,7 @@ function MobileDesigner({
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                setShowViewsPanel(false);
                 setActiveTab("productOptions");
               }}
             >
@@ -405,6 +496,7 @@ function MobileDesigner({
               onClick={(e) => {
                 e.stopPropagation();
                 setActiveTab("addDesign");
+                setShowViewsPanel(false);
                 setSelectedCategory(null);
               }}
             >
@@ -412,7 +504,12 @@ function MobileDesigner({
               <span>Design</span>
             </button>
 
-            <button onClick={() => setActiveTab("uploadDesign")}>
+            <button
+              onClick={() => {
+                setActiveTab("uploadDesign");
+                setShowViewsPanel(false);
+              }}
+            >
               <i className="bi bi-cloud-upload-fill" />
               <span>Upload</span>
             </button>
@@ -420,6 +517,7 @@ function MobileDesigner({
             <button
               onClick={() => {
                 setPendingText("");
+                setShowViewsPanel(false);
                 setActiveTab("addText");
               }}
             >
@@ -427,7 +525,12 @@ function MobileDesigner({
               <span>Text</span>
             </button>
 
-            <button onClick={() => setActiveTab("saveDesign")}>
+            <button
+              onClick={() => {
+                setActiveTab("saveDesign");
+                setShowViewsPanel(false);
+              }}
+            >
               <i className="bi bi-floppy-fill" />
               <span>Save</span>
             </button>
@@ -441,31 +544,53 @@ function MobileDesigner({
                 onScroll={updateFades}
                 ref={sideRef}
               >
-                <button onClick={() => setActiveTab("resize")}>
-                  <i className="bi bi-pip" style={{ fontSize: "33px" }}></i>
+                <button
+                  onClick={() => {
+                    setActiveTab("resize");
+                    setShowViewsPanel(false);
+                  }}
+                >
+                  <i className="bi bi-pip"
+                  //  style={{ fontSize: "33px" }}
+                   ></i>
                   <span>Resize</span>
                 </button>
 
-                <button onClick={() => setActiveTab("rotate")}>
+                <button
+                  onClick={() => {
+                    setActiveTab("rotate");
+                    setShowViewsPanel(false);
+                  }}
+                >
                   <i
                     className="bi bi-arrow-repeat"
-                    style={{ fontSize: "33px" }}
+                    // style={{ fontSize: "33px" }}
                   ></i>
                   <span>Rotate</span>
                 </button>
 
-                <button onClick={() => setActiveTab("layers")}>
+                <button
+                  onClick={() => {
+                    setActiveTab("layers");
+                    setShowViewsPanel(false);
+                  }}
+                >
                   <i className="bi bi-stack" />
                   <span>Order</span>
                 </button>
 
-                <button onClick={() => setActiveTab("flip")}>
+                <button
+                  onClick={() => {
+                    setActiveTab("flip");
+                    setShowViewsPanel(false);
+                  }}
+                >
                   <i className="bi bi-symmetry-vertical"></i>
                   <span>Flip</span>
                 </button>
 
                 <button
-                  onClick={() =>
+                  onClick={() => {
                     duplicateDesign(
                       selectedDesignId,
                       activePreview,
@@ -474,20 +599,27 @@ function MobileDesigner({
                       regionHeight,
                       setSelectedDesignId,
                       getBoundingBox,
-                    )
-                  }
+                    );
+                    setShowViewsPanel(false);
+                  }}
                 >
                   <i class="bi bi-copy"></i>
                   <span>Duplicate</span>
                 </button>
 
-                <button onClick={() => setActiveTab("Crop")}>
+                <button
+                  onClick={() => {
+                    setActiveTab("Crop");
+                    setShowViewsPanel(false);
+                  }}
+                >
                   <i class="bi bi-crop"></i>
                   <span>Crop</span>
                 </button>
 
                 <button
-                  onClick={() =>
+                  onClick={() => {
+                    setShowViewsPanel(false);
                     center(
                       selectedDesignId,
                       updateDesignsByView,
@@ -495,8 +627,8 @@ function MobileDesigner({
                       getBoundingBox,
                       regionWidth,
                       regionHeight,
-                    )
-                  }
+                    );
+                  }}
                 >
                   <i class="bi bi-arrows-collapse-vertical"></i>
                   <span>Center</span>
@@ -510,69 +642,100 @@ function MobileDesigner({
                 onScroll={updateFades}
                 ref={sideRef}
               >
-                <button onClick={() => setActiveTab("editTextArea")}>
+                <button
+                  onClick={() => {
+                    setActiveTab("editTextArea");
+                    setShowViewsPanel(false);
+                  }}
+                >
                   <i
                     className="bi bi-pen-fill"
-                    style={{ fontWeight: "bold", fontSize: "33px" }}
+                    // style={{ fontWeight: "bold", fontSize: "33px" }}
                   ></i>
                   <span>Edit Text</span>
                 </button>
 
-                <button onClick={() => setActiveTab("changeFont")}>
+                <button
+                  onClick={() => {
+                    setActiveTab("changeFont");
+                    setShowViewsPanel(false);
+                  }}
+                >
                   <i
                     className="bi bi-fonts"
                     style={{
-                      fontWeight: "bold",
                       fontSize: "40px",
-                      height: "50px",
                     }}
                   ></i>
                   <span>Fonts</span>
                 </button>
 
-                <button onClick={() => setActiveTab("changeFontColor")}>
+                <button
+                  onClick={() => {
+                    setActiveTab("changeFontColor");
+                    setShowViewsPanel(false);
+                  }}
+                >
                   <i
                     className="bi bi-palette-fill"
-                    style={{ fontWeight: "bold", fontSize: "33px" }}
+                    // style={{ fontWeight: "bold", fontSize: "33px" }}
                   ></i>
                   <span>Change Color</span>
                 </button>
 
-                <button onClick={() => setActiveTab("changeFontOutline")}>
+                <button
+                  onClick={() => {
+                    setActiveTab("changeFontOutline");
+                    setShowViewsPanel(false);
+                  }}
+                >
                   <img
                     src={outlineIcon}
                     alt=""
-                    style={{
-                      width: "40px",
-                      height: "40px",
-                      paddingBottom: "7px",
-                    }}
+                    // style={{
+                    //   width: "40px",
+                    //   height: "40px",
+                    //   paddingBottom: "7px",
+                    // }}
                   />
                   <span>Outline</span>
                 </button>
 
-                <button onClick={() => setActiveTab("changeShape")}>
+                <button
+                  onClick={() => {
+                    setActiveTab("changeShape");
+                    setShowViewsPanel(false);
+                  }}
+                >
                   <img
                     src={shapeIcon}
                     alt=""
                     style={{
-                      width: "70px",
-                      height: "45px",
+                      width: "65px",
+                      // height: "35px",
                     }}
                   />
                   <span>Shape</span>
                 </button>
 
-                <button onClick={() => setActiveTab("style")}>
+                <button
+                  onClick={() => {
+                    setActiveTab("style");
+                    setShowViewsPanel(false);
+                  }}
+                >
                   <i
                     className="bi bi-type-bold"
-                    style={{ fontWeight: "bold", fontSize: "33px" }}
+                    // style={{ fontWeight: "bold", fontSize: "33px" }}
                   ></i>
                   <span>Style</span>
                 </button>
 
                 <button
-                  onClick={() => setActiveTab("alignment")}
+                  onClick={() => {
+                    setActiveTab("alignment");
+                    setShowViewsPanel(false);
+                  }}
                   disabled={selectedDesign?.text_shape !== "normal"}
                 >
                   <i
@@ -583,44 +746,72 @@ function MobileDesigner({
                           ? "bi bi-text-center"
                           : "bi bi-text-right"
                     }
-                    style={{ fontWeight: "bold", fontSize: "33px" }}
+                    // style={{ fontWeight: "bold", fontSize: "33px" }}
                   ></i>
                   <span>Alignment</span>
                 </button>
 
-                <button onClick={() => setActiveTab("changeLineSpacing")}>
+                <button
+                  onClick={() => {
+                    setActiveTab("changeLineSpacing");
+                    setShowViewsPanel(false);
+                  }}
+                >
                   <i
                     className="bi bi-arrows-vertical"
-                    style={{ fontWeight: "bold", fontSize: "33px" }}
+                    // style={{ fontWeight: "bold", fontSize: "33px" }}
                   ></i>
                   <span>Spacing</span>
                 </button>
 
-                <button onClick={() => setActiveTab("resize")}>
-                  <i className="bi bi-pip" style={{ fontSize: "33px" }}></i>
+                <button
+                  onClick={() => {
+                    setActiveTab("resize");
+                    setShowViewsPanel(false);
+                  }}
+                >
+                  <i className="bi bi-pip"
+                  //  style={{ fontSize: "33px" }}
+                   ></i>
                   <span>Resize</span>
                 </button>
 
-                <button onClick={() => setActiveTab("rotate")}>
+                <button
+                  onClick={() => {
+                    setActiveTab("rotate");
+                    setShowViewsPanel(false);
+                  }}
+                >
                   <i
                     className="bi bi-arrow-repeat"
-                    style={{ fontSize: "33px" }}
+                    // style={{ fontSize: "33px" }}
                   ></i>
                   <span>Rotate</span>
                 </button>
 
-                <button onClick={() => setActiveTab("layers")}>
+                <button
+                  onClick={() => {
+                    setActiveTab("layers");
+                    setShowViewsPanel(false);
+                  }}
+                >
                   <i className="bi bi-stack" />
                   <span>Order</span>
                 </button>
 
-                <button onClick={() => setActiveTab("flip")}>
+                <button
+                  onClick={() => {
+                    setActiveTab("flip");
+                    setShowViewsPanel(false);
+                  }}
+                >
                   <i className="bi bi-symmetry-vertical"></i>
                   <span>Flip</span>
                 </button>
 
                 <button
-                  onClick={() =>
+                  onClick={() => {
+                    setShowViewsPanel(false);
                     duplicateDesign(
                       selectedDesignId,
                       activePreview,
@@ -629,15 +820,15 @@ function MobileDesigner({
                       regionHeight,
                       setSelectedDesignId,
                       getBoundingBox,
-                    )
-                  }
+                    );
+                  }}
                 >
                   <i class="bi bi-copy"></i>
                   <span>Duplicate</span>
                 </button>
 
                 <button
-                  onClick={() =>
+                  onClick={() => {
                     center(
                       selectedDesignId,
                       updateDesignsByView,
@@ -645,8 +836,9 @@ function MobileDesigner({
                       getBoundingBox,
                       regionWidth,
                       regionHeight,
-                    )
-                  }
+                    );
+                    setShowViewsPanel(false);
+                  }}
                 >
                   <i class="bi bi-arrows-collapse-vertical"></i>
                   <span>Center</span>

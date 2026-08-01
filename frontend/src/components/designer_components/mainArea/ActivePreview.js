@@ -416,9 +416,23 @@ function ActivePreview({
       left = menuRect.width / 2 + 8;
     }
 
-    // overflow bottom → show above design
-    if (top + menuRect.height > wrapperRect.height) {
+    const reservedBottomSpace = isMobile ? 200 : 120;
+
+    const availableBottom = wrapperRect.height - reservedBottomSpace;
+
+    // if it hits navbar, move above design
+    if (top + menuRect.height > availableBottom) {
       top = menuDesign.y * regionHeight - menuRect.height - 10;
+    }
+
+    // still doesn't fit
+    if (top + menuRect.height > availableBottom) {
+      top = availableBottom - menuRect.height - 8;
+    }
+
+    // prevent top overflow
+    if (top < 8) {
+      top = 8;
     }
 
     // top overflow
@@ -437,6 +451,7 @@ function ActivePreview({
     regionWidth,
     regionHeight,
     getBoundingBox,
+    isMobile,
   ]);
   return (
     <div
