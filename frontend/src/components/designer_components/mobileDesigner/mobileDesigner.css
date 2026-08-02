@@ -1,5 +1,5 @@
 .mobile-designer {
-  height: calc(100dvh - 88px);
+  height: calc(100dvh - 80px);
 
   display: flex;
   flex-direction: column;
@@ -174,7 +174,7 @@
   position: absolute;
   inset: auto 0 0 0;
   width: 100%;
-  height: calc(100dvh - 88px);
+  height: calc(100dvh - 80px);
 
   background: white;
 
@@ -507,7 +507,7 @@
 
   inset: auto 0 0 0;
   width: 100%;
-  height: calc(100dvh - 88px);
+  height: calc(100dvh - 80px);
 
   background: white;
   /* padding-top: 10px; */
