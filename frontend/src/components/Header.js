@@ -8,7 +8,7 @@ function Header() {
       <Navbar expand="sm" bg="dark" variant="dark" collapseOnSelect className="navbar-custom">
         <Container fluid className="p-0">
           <LinkContainer to={"/"}>
-            <Navbar.Brand>CustomTeez</Navbar.Brand>
+            <Navbar.Brand className="navbar-brand-custom">CustomTeez</Navbar.Brand>
           </LinkContainer>
           <Navbar.Toggle aria-controls="basic-navbar-nav" className="navbar-toggle" />
           <Navbar.Collapse id="basic-navbar-nav" className="navbar-collapse">

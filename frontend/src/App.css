@@ -65,8 +65,13 @@
   font-size: 0.95em;
 }
 
+.navbar-brand-custom {
+  margin-left: 12px;
+}
+
 .navbar-toggle {
   font-size: 0.95em;
+  margin-right: 15px;
 }
 
 .navbar-collapse {
