@@ -179,6 +179,11 @@ function ActivePreview({
       if (isTyping) {
         return;
       }
+
+      if (!selectedDesignId || isRotating || isResizing) {
+        return;
+      }
+
       if (arrowKeys.includes(e.key)) {
         setKeyboardMoving(true);
       }
@@ -536,8 +541,8 @@ function ActivePreview({
                   lockedDesignId === d.id
                     ? lockedWrapperPos
                     : {
-                        x: d.x * regionWidth,
-                        y: d.y * regionHeight,
+                        x: Math.round(d.x * regionWidth),
+                        y: Math.round(d.y * regionHeight),
                       }
                 }
                 bounds="parent"
@@ -666,16 +671,16 @@ function ActivePreview({
                   }}
                   draggable="false"
                   style={{
-                    width: getBoundingBox(
+                    width: Math.round(getBoundingBox(
                       d.width * Math.min(regionWidth, regionHeight),
                       d.height * Math.min(regionWidth, regionHeight),
                       d.rotation,
-                    ).width,
-                    height: getBoundingBox(
+                    ).width),
+                    height: Math.round(getBoundingBox(
                       d.width * Math.min(regionWidth, regionHeight),
                       d.height * Math.min(regionWidth, regionHeight),
                       d.rotation,
-                    ).height,
+                    ).height),
                   }}
                 >
                   {/* Inner design wrapper */}
@@ -683,12 +688,12 @@ function ActivePreview({
                     className="design-wrapper"
                     draggable="false"
                     style={{
-                      width: d.width * Math.min(regionWidth, regionHeight),
-                      height: d.height * Math.min(regionWidth, regionHeight),
+                      width: Math.round(d.width * Math.min(regionWidth, regionHeight)),
+                      height: Math.round(d.height * Math.min(regionWidth, regionHeight)),
                       transform: `rotate(${d.rotation}rad)
                                               scaleX(${d.horizontalFlip ? -1 : 1})
                                               scaleY(${d.verticalFlip ? -1 : 1})`,
-                      transformOrigin: "center center",
+                      // transformOrigin: "center center",
                     }}
                   >
                     <img
@@ -904,25 +909,25 @@ function ActivePreview({
                     (isRotating || isResizing) &&
                     lockedWrapperPos &&
                     lockedDesignId === d.id
-                      ? lockedWrapperPos.x
-                      : d.x * regionWidth,
+                      ? lockedWrapperPos.x - 3
+                      : Math.round(d.x * regionWidth - 3),
                   top:
                     (isRotating || isResizing) &&
                     lockedWrapperPos &&
                     lockedDesignId === d.id
-                      ? lockedWrapperPos.y
-                      : d.y * regionHeight,
-                  width: getBoundingBox(
+                      ? lockedWrapperPos.y - 3
+                      : Math.round(d.y * regionHeight - 3),
+                  width: Math.round(getBoundingBox(
                     d.width * Math.min(regionWidth, regionHeight),
                     d.height * Math.min(regionWidth, regionHeight),
                     d.rotation,
-                  ).width,
-                  height: getBoundingBox(
+                  ).width + 4),
+                  height: Math.round(getBoundingBox(
                     d.width * Math.min(regionWidth, regionHeight),
                     d.height * Math.min(regionWidth, regionHeight),
                     d.rotation,
-                  ).height,
-                  zIndex: selectedDesignId === d.id ? 999 : d.layer,
+                  ).height + 4),
+                  zIndex: selectedDesignId === d.id ? 9999 : d.layer,
                   border:
                     selectedDesignId === d.id
                       ? "2px solid rgba(0,0,0,0.2)"
@@ -1098,17 +1103,17 @@ function ActivePreview({
                           const deltaX = moveEvent.clientX - startX;
                           const deltaY = moveEvent.clientY - startY;
                           let newWidth = Math.max(
-                            0.05 * regionWidth,
+                            0.15 * regionWidth,
                             startWidth + deltaX,
                           );
                           let newHeight = newWidth / aspectRatio;
                           if (!d.isLocked_aspect_ratio) {
                             newHeight = Math.max(
-                              0.05 * regionHeight,
+                              0.15 * regionHeight,
                               startHeight + deltaY,
                             );
-                          } else if (newHeight < 0.05 * regionHeight) {
-                            newHeight = 0.05 * regionHeight;
+                          } else if (newHeight < 0.15 * regionHeight) {
+                            newHeight = 0.15 * regionHeight;
                             newWidth = newHeight * aspectRatio;
                           }
 

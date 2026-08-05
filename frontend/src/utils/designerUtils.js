@@ -65,12 +65,12 @@ function restoreAspectRatio(item, regionWidth, regionHeight) {
   let newHeightPx = newWidthPx / aspect;
 
   // Enforce minimum size (5% of the smaller dimension)
-  if (newWidthPx / regionWidth < 0.05) {
-    newWidthPx = 0.05 * Math.min(regionWidth, regionHeight);
+  if (newWidthPx / regionWidth < 0.15) {
+    newWidthPx = 0.15 * Math.min(regionWidth, regionHeight);
     newHeightPx = newWidthPx / aspect;
   }
-  if (newHeightPx / regionHeight < 0.05) {
-    newHeightPx = 0.05 * Math.min(regionWidth, regionHeight);
+  if (newHeightPx / regionHeight < 0.15) {
+    newHeightPx = 0.15 * Math.min(regionWidth, regionHeight);
     newWidthPx = newHeightPx * aspect;
   }
 
@@ -682,13 +682,13 @@ export const applyCrop = async (
   let newWidthNorm = selectedDesign.width * widthScale;
   let newHeightNorm = selectedDesign.height * heightScale;
 
-  if (newWidthNorm < 0.05) {
-    newWidthNorm = 0.05;
+  if (newWidthNorm < 0.15) {
+    newWidthNorm = 0.15;
     newHeightNorm = newWidthNorm / newAspect;
   }
 
-  if (newHeightNorm < 0.05) {
-    newHeightNorm = 0.05;
+  if (newHeightNorm < 0.15) {
+    newHeightNorm = 0.15;
     newWidthNorm = newHeightNorm * newAspect;
   }
 
@@ -830,11 +830,11 @@ export async function applyNewTextImg(
       let aspect_ratio = imageData.width / imageData.height;
 
       let finalWidthNorm = item.width;
-      if (finalWidthNorm < 0.05) finalWidthNorm = 0.05;
+      if (finalWidthNorm < 0.15) finalWidthNorm = 0.15;
 
       let finalHeightNorm = finalWidthNorm / aspect_ratio;
-      if (finalHeightNorm < 0.05) {
-        finalHeightNorm = 0.05;
+      if (finalHeightNorm < 0.15) {
+        finalHeightNorm = 0.15;
         finalWidthNorm = finalHeightNorm * aspect_ratio;
       }
 

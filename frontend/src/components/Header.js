@@ -33,7 +33,7 @@ function Header() {
                 </Nav.Link>
               </LinkContainer>
 
-              <LinkContainer to={"/login"}>
+              <LinkContainer to={"/login"} style={{ marginRight: "15px" }}>
                 <Nav.Link>
                   <i className="fas fa-user"></i>Login
                 </Nav.Link>
