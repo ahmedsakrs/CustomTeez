@@ -16,7 +16,7 @@ function App() {
   return (
     <Router>
       <Header />
-      <main className="py-1">
+      <main className="py-0">
         <Routes>
           <Route
             path="/"
