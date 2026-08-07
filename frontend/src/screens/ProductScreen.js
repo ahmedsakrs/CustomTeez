@@ -45,7 +45,7 @@ function ProductScreen() {
                 <ProductImageGallery
                   key={params.color}
                   images={
-                    product.images && Object.values(product.colors[color].images)
+                    Object.values(product.colors[color].viewImages)
                   }
                   colorIndex={true}
                 />

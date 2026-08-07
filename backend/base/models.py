@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -65,28 +67,44 @@ class ProductColorSize(models.Model):
 
 class DesignPlace(models.Model):
     viewName = models.CharField(max_length=30, null=True, unique=True)
-    
+
     def __str__(self) -> str:
-        return (self.viewName.replace(" ", "-"))
+        return self.viewName.replace(" ", "-")
 
 
-class ProductColorImage(models.Model):
+class ProductDesignPlace(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True)
-    color = models.ForeignKey(ProductColor, on_delete=models.CASCADE, null=True)
     viewName = models.ForeignKey(DesignPlace, on_delete=models.CASCADE, null=True)
-    image = models.ImageField(null=True, unique=True)
-    is_designable = models.BooleanField(default=True)
     x_start = models.DecimalField(decimal_places=5, max_digits=5, default=0)
     x_end = models.DecimalField(decimal_places=5, max_digits=5, default=0)
     y_start = models.DecimalField(decimal_places=5, max_digits=5, default=0)
     y_end = models.DecimalField(decimal_places=5, max_digits=5, default=0)
-    _id = models.AutoField(primary_key=True, editable=False)
+
+    _id = models.AutoField(
+        primary_key=True, editable=False, default=datetime.datetime.now
+    )
+
+    def __str__(self) -> str:
+        return (
+            str(self.product).replace(" ", "-")
+            + "_"
+            + str(self.viewName).replace(" ", "-")
+        )
+
+
+class ProductColorImage(models.Model):
+    color = models.ForeignKey(ProductColor, on_delete=models.CASCADE, null=True)
+    viewName = models.ForeignKey(
+        ProductDesignPlace, on_delete=models.CASCADE, null=True
+    )
+    image = models.ImageField(null=True)
+    _id = models.AutoField(primary_key=True, editable=False, default=None)
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["product", "color", "viewName"],
-                name="unique_product_color_viewName",
+                fields=["color", "viewName"],
+                name="unique_color_viewName",
             )
         ]
 
@@ -136,8 +154,12 @@ class VinylColor(models.Model):
 
 
 class Design(models.Model):
-    design_Type = models.ForeignKey(DesignType, on_delete=models.SET_NULL, null=True, default=None)
-    design_Category = models.ForeignKey(DesignCategory, on_delete=models.SET_NULL, null=True, default=None)
+    design_Type = models.ForeignKey(
+        DesignType, on_delete=models.SET_NULL, null=True, default=None
+    )
+    design_Category = models.ForeignKey(
+        DesignCategory, on_delete=models.SET_NULL, null=True, default=None
+    )
     _id = models.AutoField(primary_key=True, editable=False)
     name = models.CharField(max_length=200, null=True, blank=False)
     show = models.BooleanField(default=True)
@@ -149,20 +171,10 @@ class Design(models.Model):
 
 class PickedDesign(models.Model):
     _id = models.AutoField(primary_key=True, editable=False)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, default=None
+    )
     design = models.ForeignKey(Design, on_delete=models.SET_NULL, null=True)
-    
-
-class DesignComponent(models.Model):
-    _id = models.AutoField(primary_key=True, editable=False)
-    image = models.ImageField(null=True)
-    component_color = models.ForeignKey(VinylColor, on_delete=models.SET_NULL, null=True, default=None)
-    x_start = models.DecimalField(decimal_places=5, max_digits=5, default=0)
-    x_end = models.DecimalField(decimal_places=5, max_digits=5, default=0)
-    y_start = models.DecimalField(decimal_places=5, max_digits=5, default=0)
-    y_end = models.DecimalField(decimal_places=5, max_digits=5, default=0)
-    is_color_changeable = models.BooleanField(default=True)
-    pickedDesign = models.ForeignKey(PickedDesign, on_delete=models.CASCADE, null=True)
 
 
 class Order(models.Model):
@@ -185,15 +197,36 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    _id = models.AutoField(primary_key=True, editable=False)
-    productColorSize = models.ForeignKey(
-        ProductColorSize, on_delete=models.SET_NULL, null=True
+    _id = models.AutoField(
+        primary_key=True,
+        editable=False,
     )
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True)
-    quantity = models.DecimalField(default=0, null=True, decimal_places=2, max_digits=7)
 
-    def __str__(self) -> str:
-        return str(self._id)
+    productColorSize = models.ForeignKey(
+        ProductColorSize,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        null=True,
+    )
+
+    quantity = models.DecimalField(
+        default=0,
+        null=True,
+        decimal_places=2,
+        max_digits=7,
+    )
+
+    designSession = models.ForeignKey(
+        "DesignSession",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
 
 
 class ProdDesign(models.Model):
@@ -201,7 +234,7 @@ class ProdDesign(models.Model):
     orderItem = models.ForeignKey(OrderItem, null=True, on_delete=models.CASCADE)
     design = models.ForeignKey(PickedDesign, null=True, on_delete=models.SET_NULL)
     place = models.ForeignKey(DesignPlace, null=True, on_delete=models.SET_NULL)
-    
+
     def __str__(self) -> str:
         return str(self.orderItem) + str(self.design) + str(self.place)
 
@@ -218,3 +251,180 @@ class ShippingAddress(models.Model):
     emailAddress = models.CharField(max_length=50, null=True)
     phoneNo = models.CharField(max_length=20, null=True, blank=True)
     _id = models.AutoField(primary_key=True, editable=False)
+
+
+class DesignSession(models.Model):
+    _id = models.AutoField(
+        primary_key=True,
+        editable=False,
+    )
+
+    owner = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    name = models.CharField(
+        max_length=200,
+        default="Untitled Design",
+    )
+
+    thumbnail = models.ImageField(
+        upload_to="design_sessions/",
+        null=True,
+        blank=True,
+    )
+
+    designData = models.JSONField()
+
+    isTemplate = models.BooleanField(
+        default=False,
+    )
+
+    createdAt = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updatedAt = models.DateTimeField(
+        auto_now=True,
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class CustomizedDesign(models.Model):
+
+    SOURCE_TYPES = (
+        ("catalog", "Catalog"),
+        ("upload", "Upload"),
+        ("text", "Text"),
+    )
+
+    _id = models.AutoField(
+        primary_key=True,
+        editable=False,
+    )
+
+    session = models.ForeignKey(
+        DesignSession,
+        on_delete=models.CASCADE,
+        related_name="designs",
+    )
+
+    place = models.ForeignKey(
+        DesignPlace,
+        on_delete=models.SET_NULL,
+        null=True,
+    )
+
+    sourceType = models.CharField(
+        max_length=20,
+        choices=SOURCE_TYPES,
+        default="catalog",
+    )
+
+    sourceDesign = models.ForeignKey(
+        Design,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    uploadedImage = models.ImageField(
+        upload_to="uploaded_designs/",
+        null=True,
+        blank=True,
+    )
+
+    croppedImage = models.ImageField(
+        upload_to="cropped_designs/",
+        null=True,
+        blank=True,
+    )
+
+    text = models.TextField(
+        null=True,
+        blank=True,
+    )
+
+    x = models.FloatField(default=0)
+    y = models.FloatField(default=0)
+
+    width = models.FloatField(default=0)
+    height = models.FloatField(default=0)
+
+    rotation = models.FloatField(default=0)
+
+    horizontalFlip = models.BooleanField(
+        default=False,
+    )
+
+    verticalFlip = models.BooleanField(
+        default=False,
+    )
+
+    layer = models.IntegerField(
+        default=1,
+    )
+
+    cropX = models.FloatField(default=0)
+    cropY = models.FloatField(default=0)
+
+    cropWidth = models.FloatField(default=1)
+    cropHeight = models.FloatField(default=1)
+
+    fontFamily = models.ForeignKey(
+        Font,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
+
+    isBold = models.BooleanField(
+        default=False,
+    )
+
+    isItalic = models.BooleanField(
+        default=False,
+    )
+
+    textAlignment = models.CharField(
+        max_length=20,
+        default="center",
+    )
+
+    textShape = models.CharField(
+        max_length=30,
+        default="normal",
+    )
+
+    shapeIntensity = models.FloatField(
+        default=0,
+    )
+
+    lineSpacing = models.FloatField(
+        default=1,
+    )
+
+    designColor = models.ForeignKey(
+        VinylColor,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
+
+    outlineColor = models.ForeignKey(
+        VinylColor,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
+
+    outlineWidth = models.FloatField(
+        default=0,
+    )
