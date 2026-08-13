@@ -183,7 +183,7 @@ function TabPanel({
             getBoundingBox={getBoundingBox}
             activePreview={activePreview}
             designsByView={designsByView}
-            setDesignsByView={updateDesignsByView}
+            updateDesignsByView={updateDesignsByView}
             pendingText={pendingText}
             setPendingText={setPendingText}
           />

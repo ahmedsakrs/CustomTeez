@@ -1,86 +1,29 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { listProducts } from "../actions/productActions";
 import "../components/designer_components/mainArea/mainArea.css"; // responsive styles
 import Sidebar from "../components/designer_components/sidebar/Sidebar";
 import HeaderBar from "../components/designer_components/headerBar/HeaderBar";
 import ActivePreview from "../components/designer_components/mainArea/ActivePreview";
 import ViewThumbnails from "../components/designer_components/mainArea/ViewThumbnails";
 import MobileDesigner from "../components/designer_components/mobileDesigner/MobileDesigner";
-
-const productOptions = [
-  {
-    id: "tshirt",
-    name: "T-Shirt",
-    productColors: ["Red", "Blue"],
-    viewImages: {
-      Red: {
-        Front: "/images/tshirt/red_front.png",
-        Back: "/images/tshirt/red_back.png",
-        "L Sleeve": "/images/tshirt/red_left.png",
-        "R Sleeve": "/images/tshirt/red_left.png",
-      },
-      Blue: {
-        Front: "/images/tshirt/blue_front.png",
-        Back: "/images/tshirt/blue_back.png",
-        "L Sleeve": "/images/tshirt/blue_left.png",
-        "R Sleeve": "/images/tshirt/blue_right.png",
-      },
-    },
-    viewRegions: {
-      Front: { xStart: 0.2, yStart: 0.2, xEnd: 0.7, yEnd: 0.8 },
-      Back: { xStart: 0.1, yStart: 0.4, xEnd: 0.8, yEnd: 1 },
-      "L Sleeve": { xStart: 0.1, yStart: 0.2, xEnd: 0.9, yEnd: 0.8 },
-      "R Sleeve": { xStart: 0.1, yStart: 0.2, xEnd: 0.9, yEnd: 0.8 },
-    },
-  },
-  {
-    id: "hoodie",
-    name: "Hoodie",
-    productColors: ["Black", "Gray"],
-    viewImages: {
-      Black: {
-        Front: "/images/hoodie/black_front.png",
-        Back: "/images/hoodie/black_back.png",
-        "L Sleeve": "/images/hoodie/black_left.png",
-        "R Sleeve": "/images/hoodie/black_right.png",
-      },
-      Gray: {
-        Front: "/images/hoodie/gray_front.png",
-        Back: "/images/hoodie/gray_back.png",
-        "L Sleeve": "/images/hoodie/gray_left.png",
-        "R Sleeve": "/images/hoodie/gray_right.png",
-      },
-    },
-    viewRegions: {
-      Front: { xStart: 0, yStart: 0, xEnd: 1, yEnd: 1 },
-      Back: { xStart: 0.25, yStart: 0.3, xEnd: 0.75, yEnd: 0.7 },
-      "L Sleeve": { xStart: 0.15, yStart: 0.25, xEnd: 0.85, yEnd: 0.75 },
-      "R Sleeve": { xStart: 0.15, yStart: 0.25, xEnd: 0.85, yEnd: 0.75 },
-    },
-  },
-];
+import Loader from "../components/Loader";
+import Message from "../components/Message";
 
 const designCategories = {
   Logos: [
     {
       id: "collage-1",
       name: "Cool Logo Collage",
-      src: "/designs/star.png",
+      src: "/designs/vinyl.png",
       designs: [
         {
           id: "element-1",
-          src: "/designs/star.png",
-          x: 0.4,
-          y: 0.5,
-          width: 0.2,
-          height: 0.2,
-        },
-        {
-          id: "element-2",
-          src: "/designs/star.png",
-          x: 0.6,
-          y: 0.5,
-          width: 0.15,
-          height: 0.15,
+          src: "/designs/vinyl.png",
+          x: 0.1,
+          y: 0.1,
+          width: 0.8,
+          height: 0.8,
         },
       ],
     },
@@ -194,8 +137,23 @@ const designCategories = {
 };
 
 function DesignerScreen() {
+  const productList = useSelector((state) => state.productList);
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(listProducts());
+  }, [dispatch]);
+
+  const { loading, error, products } = productList;
+  const productOptions = products || [];
+
   const [allProducts, setAllProducts] = useState([
-    { id: 1, productType: "tshirt", name: "tshirt", color: "Red" },
+    {
+      id: 1,
+      name: "T-shirt",
+      color: "Red",
+      color_hex: "#FF0000",
+      productType: 1,
+    },
   ]);
   const [activeProductId, setActiveProductId] = useState(1);
   const [designsByView, setDesignsByView] = useState({
@@ -453,173 +411,192 @@ function DesignerScreen() {
   }, []);
 
   return !isMobile ? (
-    <div className="designer-container">
-      {/* Sidebar */}
-      <Sidebar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        designCategories={designCategories}
-        panelRef={panelRef}
-        imgRef={imgRef}
-        barRef={barRef}
-        designsByView={designsByView}
-        setDesignsByView={setDesignsByView}
-        activePreview={activePreview}
-        selectedDesignId={selectedDesignId}
-        setSelectedDesignId={setSelectedDesignId}
-        getBoundingBox={getBoundingBox}
-        regionWidth={regionWidth}
-        regionHeight={regionHeight}
-        isCropping={isCropping}
-        setIsCropping={setIsCropping}
-        isHeightZero={isHeightZero}
-        setIsHeightZero={setIsHeightZero}
-        isHeightBlank={isHeightBlank}
-        setIsHeightBlank={setIsHeightBlank}
-        isWidthZero={isWidthZero}
-        setIsWidthZero={setIsWidthZero}
-        isWidthBlank={isWidthBlank}
-        setIsWidthBlank={setIsWidthBlank}
-        pendingText={pendingText}
-        setPendingText={setPendingText}
-        sideRef={sideRef}
-        updateDesignsByView={updateDesignsByView}
-        undo={undo}
-        redo={redo}
-        canUndo={undoStack.length > 0}
-        canRedo={redoStack.length > 0}
-        selectedCategory={selectedCategory}
-        setSelectedCategory={setSelectedCategory}
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
-      />
+    <div>
+      {loading ? (
+        <h2>
+          <Loader />
+        </h2>
+      ) : error ? (
+        <Message variant={"danger"}>{error}</Message>
+      ) : (
+        <div className="designer-container">
+          <Sidebar
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            designCategories={designCategories}
+            panelRef={panelRef}
+            imgRef={imgRef}
+            barRef={barRef}
+            designsByView={designsByView}
+            setDesignsByView={setDesignsByView}
+            activePreview={activePreview}
+            selectedDesignId={selectedDesignId}
+            setSelectedDesignId={setSelectedDesignId}
+            getBoundingBox={getBoundingBox}
+            regionWidth={regionWidth}
+            regionHeight={regionHeight}
+            isCropping={isCropping}
+            setIsCropping={setIsCropping}
+            isHeightZero={isHeightZero}
+            setIsHeightZero={setIsHeightZero}
+            isHeightBlank={isHeightBlank}
+            setIsHeightBlank={setIsHeightBlank}
+            isWidthZero={isWidthZero}
+            setIsWidthZero={setIsWidthZero}
+            isWidthBlank={isWidthBlank}
+            setIsWidthBlank={setIsWidthBlank}
+            pendingText={pendingText}
+            setPendingText={setPendingText}
+            sideRef={sideRef}
+            updateDesignsByView={updateDesignsByView}
+            undo={undo}
+            redo={redo}
+            canUndo={undoStack.length > 0}
+            canRedo={redoStack.length > 0}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          />
 
-      {/* Main content */}
-      <div className="main-content">
-        <HeaderBar
-          allProducts={allProducts}
-          setAllProducts={setAllProducts}
-          productOptions={productOptions}
-          activeProductId={activeProductId}
-          setActiveProductId={setActiveProductId}
-          activeProduct={activeProduct}
-          showColorModal={showColorModal}
-          showProductModal={showProductModal}
-          setShowColorModal={setShowColorModal}
-          setShowProductModal={setShowProductModal}
-          isAddingProduct={isAddingProduct}
-          setIsAddingProduct={setIsAddingProduct}
-        />
+          {/* Main content */}
+          <div className="main-content">
+            <HeaderBar
+              allProducts={allProducts}
+              setAllProducts={setAllProducts}
+              productOptions={productOptions}
+              activeProductId={activeProductId}
+              setActiveProductId={setActiveProductId}
+              activeProduct={activeProduct}
+              showColorModal={showColorModal}
+              showProductModal={showProductModal}
+              setShowColorModal={setShowColorModal}
+              setShowProductModal={setShowProductModal}
+              isAddingProduct={isAddingProduct}
+              setIsAddingProduct={setIsAddingProduct}
+            />
 
-        {/* Right preview area */}
-        <div className="preview-area">
-          <div className="preview-grid">
-            {/* Column 1: Active preview */}
-            <ActivePreview
-              imgRef={imgRef}
-              productOptions={productOptions}
-              regionWidth={regionWidth}
-              regionHeight={regionHeight}
-              setRegionWidth={setRegionWidth}
-              setRegionHeight={setRegionHeight}
-              activeProduct={activeProduct}
-              designsByView={designsByView}
-              setDesignsByView={setDesignsByView}
-              activePreview={activePreview}
-              isRotating={isRotating}
-              isResizing={isResizing}
-              setIsActive={setIsActive}
-              setIsWidthBlank={setIsWidthBlank}
-              setIsWidthZero={setIsWidthZero}
-              setIsHeightBlank={setIsHeightBlank}
-              setIsHeightZero={setIsHeightZero}
-              setSelectedDesignId={setSelectedDesignId}
-              setActiveTab={setActiveTab}
-              setPendingText={setPendingText}
-              getBoundingBox={getBoundingBox}
-              setJustFinishedInteraction={setJustFinishedInteraction}
-              isActive={isActive}
-              selectedDesignId={selectedDesignId}
-              setIsRotating={setIsRotating}
-              setIsResizing={setIsResizing}
-              updateDesignsByView={updateDesignsByView}
-              contextMenu={contextMenu}
-              setContextMenu={setContextMenu}
-              isMobile={false}
-            />
-            {/* Column 2: Thumbnails stacked */}
-            <ViewThumbnails
-              activePreview={activePreview}
-              setActivePreview={setActivePreview}
-              productOptions={productOptions}
-              activeProduct={activeProduct}
-              getBoundingBox={getBoundingBox}
-              designsByView={designsByView}
-            />
+            {/* Right preview area */}
+            <div className="preview-area">
+              <div className="preview-grid">
+                {/* Column 1: Active preview */}
+                <ActivePreview
+                  imgRef={imgRef}
+                  productOptions={productOptions}
+                  regionWidth={regionWidth}
+                  regionHeight={regionHeight}
+                  setRegionWidth={setRegionWidth}
+                  setRegionHeight={setRegionHeight}
+                  activeProduct={activeProduct}
+                  designsByView={designsByView}
+                  setDesignsByView={setDesignsByView}
+                  activePreview={activePreview}
+                  isRotating={isRotating}
+                  isResizing={isResizing}
+                  setIsActive={setIsActive}
+                  setIsWidthBlank={setIsWidthBlank}
+                  setIsWidthZero={setIsWidthZero}
+                  setIsHeightBlank={setIsHeightBlank}
+                  setIsHeightZero={setIsHeightZero}
+                  setSelectedDesignId={setSelectedDesignId}
+                  setActiveTab={setActiveTab}
+                  setPendingText={setPendingText}
+                  getBoundingBox={getBoundingBox}
+                  setJustFinishedInteraction={setJustFinishedInteraction}
+                  isActive={isActive}
+                  selectedDesignId={selectedDesignId}
+                  setIsRotating={setIsRotating}
+                  setIsResizing={setIsResizing}
+                  updateDesignsByView={updateDesignsByView}
+                  contextMenu={contextMenu}
+                  setContextMenu={setContextMenu}
+                  isMobile={false}
+                />
+                {/* Column 2: Thumbnails stacked */}
+                <ViewThumbnails
+                  activePreview={activePreview}
+                  setActivePreview={setActivePreview}
+                  productOptions={productOptions}
+                  activeProduct={activeProduct}
+                  getBoundingBox={getBoundingBox}
+                  designsByView={designsByView}
+                />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   ) : (
-    <MobileDesigner
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-      activePreview={activePreview}
-      setActivePreview={setActivePreview}
-      selectedDesignId={selectedDesignId}
-      setSelectedDesignId={setSelectedDesignId}
-      productOptions={productOptions}
-      activeProduct={activeProduct}
-      imgRef={imgRef}
-      regionWidth={regionWidth}
-      regionHeight={regionHeight}
-      setRegionWidth={setRegionWidth}
-      setRegionHeight={setRegionHeight}
-      designsByView={designsByView}
-      setDesignsByView={setDesignsByView}
-      isRotating={isRotating}
-      isResizing={isResizing}
-      setIsActive={setIsActive}
-      setIsWidthBlank={setIsWidthBlank}
-      setIsWidthZero={setIsWidthZero}
-      setIsHeightBlank={setIsHeightBlank}
-      setIsHeightZero={setIsHeightZero}
-      pendingText={pendingText}
-      setPendingText={setPendingText}
-      getBoundingBox={getBoundingBox}
-      setJustFinishedInteraction={setJustFinishedInteraction}
-      isActive={isActive}
-      setIsRotating={setIsRotating}
-      setIsResizing={setIsResizing}
-      setIsCropping={setIsCropping}
-      isCropping={isCropping}
-      designCategories={designCategories}
-      panelRef={panelRef}
-      updateDesignsByView={updateDesignsByView}
-      allProducts={allProducts}
-      setAllProducts={setAllProducts}
-      activeProductId={activeProductId}
-      setActiveProductId={setActiveProductId}
-      contextMenu={contextMenu}
-      setContextMenu={setContextMenu}
-      showColorModal={showColorModal}
-      setShowColorModal={setShowColorModal}
-      showProductModal={showProductModal}
-      setShowProductModal={setShowProductModal}
-      setIsAddingProduct={setIsAddingProduct}
-      barRef={barRef}
-      selectedCategory={selectedCategory}
-      setSelectedCategory={setSelectedCategory}
-      sideRef={sideRef}
-      canUndo={undoStack.length > 0}
-      canRedo={redoStack.length > 0}
-      undo={undo}
-      redo={redo}
-      showViewsPanel={showViewsPanel}
-      setShowViewsPanel={setShowViewsPanel}
-      viewsRef={viewsRef}
-    />
+    <div>
+      {loading ? (
+        <h2>
+          <Loader />
+        </h2>
+      ) : error ? (
+        <Message variant={"danger"}>{error}</Message>
+      ) : (
+        <MobileDesigner
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          activePreview={activePreview}
+          setActivePreview={setActivePreview}
+          selectedDesignId={selectedDesignId}
+          setSelectedDesignId={setSelectedDesignId}
+          productOptions={productOptions}
+          activeProduct={activeProduct}
+          imgRef={imgRef}
+          regionWidth={regionWidth}
+          regionHeight={regionHeight}
+          setRegionWidth={setRegionWidth}
+          setRegionHeight={setRegionHeight}
+          designsByView={designsByView}
+          setDesignsByView={setDesignsByView}
+          isRotating={isRotating}
+          isResizing={isResizing}
+          setIsActive={setIsActive}
+          setIsWidthBlank={setIsWidthBlank}
+          setIsWidthZero={setIsWidthZero}
+          setIsHeightBlank={setIsHeightBlank}
+          setIsHeightZero={setIsHeightZero}
+          pendingText={pendingText}
+          setPendingText={setPendingText}
+          getBoundingBox={getBoundingBox}
+          setJustFinishedInteraction={setJustFinishedInteraction}
+          isActive={isActive}
+          setIsRotating={setIsRotating}
+          setIsResizing={setIsResizing}
+          setIsCropping={setIsCropping}
+          isCropping={isCropping}
+          designCategories={designCategories}
+          panelRef={panelRef}
+          updateDesignsByView={updateDesignsByView}
+          allProducts={allProducts}
+          setAllProducts={setAllProducts}
+          activeProductId={activeProductId}
+          setActiveProductId={setActiveProductId}
+          contextMenu={contextMenu}
+          setContextMenu={setContextMenu}
+          showColorModal={showColorModal}
+          setShowColorModal={setShowColorModal}
+          showProductModal={showProductModal}
+          setShowProductModal={setShowProductModal}
+          setIsAddingProduct={setIsAddingProduct}
+          barRef={barRef}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          sideRef={sideRef}
+          canUndo={undoStack.length > 0}
+          canRedo={redoStack.length > 0}
+          undo={undo}
+          redo={redo}
+          showViewsPanel={showViewsPanel}
+          setShowViewsPanel={setShowViewsPanel}
+          viewsRef={viewsRef}
+        />
+      )}
+    </div>
   );
 }
 

@@ -1,13 +1,18 @@
-import datetime
-
 from django.db import models
 from django.contrib.auth.models import User
 
 
 class Font(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100, unique=False)
     style = models.CharField(max_length=50, blank=True)
     file = models.FileField(upload_to="fonts/", blank=True, null=True)
+    
+    class Meta:
+            constraints = [
+                models.UniqueConstraint(
+                    fields=["name", "style"], name="unique_font"
+                )
+            ]
 
     def __str__(self):
         return f"{self.name} ({self.style})" if self.style else self.name
@@ -81,7 +86,7 @@ class ProductDesignPlace(models.Model):
     y_end = models.DecimalField(decimal_places=5, max_digits=5, default=0)
 
     _id = models.AutoField(
-        primary_key=True, editable=False, default=datetime.datetime.now
+        primary_key=True, editable=False,
     )
 
     def __str__(self) -> str:

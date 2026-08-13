@@ -39,13 +39,13 @@ function ProductModal({
         <div className="modal-grid">
           {filteredOptions.map((opt) => (
             <div
-              key={opt.id}
-              onClick={() => changeProductType(opt.id)}
-              className={`modal-option ${activeProduct?.productType === opt.id ? "active" : ""}`}
+              key={opt._id}
+              onClick={() => changeProductType(opt._id)}
+              className={`modal-option ${activeProduct?.productType === opt._id ? "active" : ""}`}
             >
               <div className="modal-option-content">
                 <img
-                  src={opt.viewImages[opt.productColors[0]].Front}
+                  src={opt.viewImages[opt.productColors["Red"].color_Name].Front}
                   alt={opt.name}
                   className="modal-option-img"
                 />

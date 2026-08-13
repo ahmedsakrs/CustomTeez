@@ -46,15 +46,15 @@ function ViewThumbnails({
 
   const getThumbRegionSize = (view) => {
     let width =
-      (productOptions.find((opt) => opt.id === activeProduct?.productType)
+      (productOptions.find((opt) => opt._id === activeProduct?.productType)
         ?.viewRegions[view].xEnd -
-        productOptions.find((opt) => opt.id === activeProduct?.productType)
+        productOptions.find((opt) => opt._id === activeProduct?.productType)
           ?.viewRegions[view].xStart) *
       thumbSizes[view].w;
     let height =
-      (productOptions.find((opt) => opt.id === activeProduct?.productType)
+      (productOptions.find((opt) => opt._id === activeProduct?.productType)
         ?.viewRegions[view].yEnd -
-        productOptions.find((opt) => opt.id === activeProduct?.productType)
+        productOptions.find((opt) => opt._id === activeProduct?.productType)
           ?.viewRegions[view].yStart) *
       thumbSizes[view].h;
     return { w: width, h: height };
@@ -72,7 +72,7 @@ function ViewThumbnails({
           <img
             src={
               productOptions.find(
-                (opt) => opt.id === activeProduct?.productType,
+                (opt) => opt._id === activeProduct?.productType,
               )?.viewImages[activeProduct?.color][view]
             }
             alt={`${view} preview`}
@@ -86,11 +86,11 @@ function ViewThumbnails({
               position: "absolute",
               left:
                 productOptions.find(
-                  (opt) => opt.id === activeProduct?.productType,
+                  (opt) => opt._id === activeProduct?.productType,
                 )?.viewRegions[view].xStart * thumbSizes[view].w,
               top:
                 productOptions.find(
-                  (opt) => opt.id === activeProduct?.productType,
+                  (opt) => opt._id === activeProduct?.productType,
                 )?.viewRegions[view].yStart * thumbSizes[view].h,
               width: getThumbRegionSize(view).w,
               height: getThumbRegionSize(view).h,

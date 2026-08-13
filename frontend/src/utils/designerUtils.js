@@ -1,5 +1,6 @@
 import { findFittingFontSize } from "./textRenderer";
 import { textWorker } from "./textWorkerClient";
+import {textToImage} from "./textRenderer";
 
 // ─── Internal helper functions ───────────────────────────────────
 
@@ -808,7 +809,7 @@ export async function applyNewTextImg(
     isItalic,
   );
 
-  const imageData = await textWorker.textToImage({
+  const imageData = await textToImage({
     text: newText,
     fontSizePx: maxFontSizePx,
     fontFamily: newFontFamily,

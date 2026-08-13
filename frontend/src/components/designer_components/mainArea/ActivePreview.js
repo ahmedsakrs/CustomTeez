@@ -56,6 +56,7 @@ function ActivePreview({
   const copiedCollageRef = useRef(null);
   const touchHoldTimerRef = useRef(null);
 
+
   useEffect(() => {
     if (!previewRef.current) return;
 
@@ -204,7 +205,7 @@ function ActivePreview({
 
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, []);
+  }, [isResizing, isRotating, selectedDesignId]);
 
   const copyDesign = useCallback(
     (designID, copied = true) => {
@@ -469,7 +470,7 @@ function ActivePreview({
       <img
         ref={imgRef}
         src={
-          productOptions.find((opt) => opt.id === activeProduct?.productType)
+          productOptions.find((opt) => opt._id === activeProduct?.productType)
             ?.viewImages[activeProduct?.color][activePreview]
         }
         alt={`${activeProduct?.name} ${activePreview}`}
@@ -481,7 +482,7 @@ function ActivePreview({
       {/* Region overlay aligned to the image */}
       {(() => {
         const product = productOptions.find(
-          (opt) => opt.id === activeProduct?.productType,
+          (opt) => opt._id === activeProduct?.productType,
         );
         const region = product?.viewRegions[activePreview];
         if (!imgRef.current || !region) return null;

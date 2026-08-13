@@ -3,7 +3,6 @@ from django.shortcuts import render
 # from .products import products
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from django.db.models.query import QuerySet
 
 from .serializers import *
 from .models import *
@@ -17,7 +16,12 @@ def getRoutes(request):
 @api_view(["GET"])
 def getProducts(request):
     products = Product.objects.filter(show=True)
-    serializer = ProductSerializer(products, many=True)
+
+    serializer = DesignerProductListSerializer(
+        products,
+        many=True,
+    )
+
     return Response(serializer.data)
 
 
@@ -99,18 +103,18 @@ def getDetailedDesign(
 
 @api_view(["GET"])
 def getFonts(request):
-
     fonts = Font.objects.all()
 
-    return Response(
-        [
-            {
-                "name": f.name,
-                "style": f.style,
-            }
-            for f in fonts
-        ]
-    )
+    result = {}
+
+    for font in fonts:
+        result[font.name + " " + font.style] = {
+            "name": font.name,
+            "file": (font.file.url if font.file else None),
+            "style": font.style,
+        }
+
+    return Response(result)
 
 
 @api_view(["GET"])

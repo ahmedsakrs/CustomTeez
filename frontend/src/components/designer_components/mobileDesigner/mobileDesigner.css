@@ -365,12 +365,15 @@
   cursor: pointer;
 }
 
-.mobile-color-swatch:disabled {
-  cursor: not-allowed;
-}
-
 .mobile-color-swatch:hover {
   border: 2px solid #555;
+}
+
+.mobile-color-swatch:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+  transform: none;
+  border: 2px solid rgb(0, 100, 200);
 }
 
 .mobile-color-swatch.active {

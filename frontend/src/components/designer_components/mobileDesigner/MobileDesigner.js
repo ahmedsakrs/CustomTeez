@@ -388,7 +388,7 @@ function MobileDesigner({
             selectedDesign={selectedDesign}
             pendingText={selectedDesign.text}
             setActiveTab={setActiveTab}
-            setDesignsByView={updateDesignsByView}
+            updateDesignsByView={updateDesignsByView}
             activePreview={activePreview}
             regionWidth={regionWidth}
             regionHeight={regionHeight}

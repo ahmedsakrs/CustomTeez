@@ -74,8 +74,9 @@ function HeaderBar({
       const newProduct = {
         id: newId,
         productType: pendingProductType,
-        name: pendingProductType,
-        color: newColor,
+        name: productOptions.find((opt) => opt._id === pendingProductType)?.name,
+        color: newColor.color_Name,
+        color_hex: newColor.color_RGB
       };
       setAllProducts([...allProducts, newProduct]);
       setActiveProductId(newId);
@@ -88,8 +89,9 @@ function HeaderBar({
             ? {
                 ...p,
                 productType: pendingProductType,
-                color: newColor,
-                name: pendingProductType,
+                color: newColor.color_Name,
+                color_hex: newColor.color_RGB,
+                name: productOptions.find((opt) => opt._id === pendingProductType)?.name,
               }
             : p,
         ),
@@ -98,7 +100,7 @@ function HeaderBar({
     } else {
       setAllProducts(
         allProducts.map((p) =>
-          p.id === activeProductId ? { ...p, color: newColor } : p,
+          p.id === activeProductId ? { ...p, color: newColor.color_Name, color_hex: newColor.color_RGB } : p,
         ),
       );
     }
@@ -155,7 +157,7 @@ function HeaderBar({
                 )}
                 <img
                   src={
-                    productOptions.find((opt) => opt.id === p.productType)
+                    productOptions.find((opt) => opt._id === p.productType)
                       ?.viewImages[p.color]["Front"]
                   }
                   alt={p.name}

@@ -211,3 +211,94 @@ class DetailedDesignSerializer(serializers.ModelSerializer):
 
     def get_image(self, obj):
         return obj.image.url
+
+
+class DesignerProductListSerializer(serializers.ModelSerializer):
+    productColors = serializers.SerializerMethodField()
+    viewImages = serializers.SerializerMethodField()
+    viewRegions = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+
+        fields = [
+            "_id",
+            "name",
+            "description",
+            "price",
+            "material",
+            "productColors",
+            "viewImages",
+            "viewRegions",
+            "image",
+        ]
+
+    def get_productColors(self, product):
+
+        result = {}
+
+        colors = ProductColor.objects.filter(
+            product=product,
+            show=True,
+        )
+
+        for color in colors:
+
+            result[color.color_Name] = {
+                "color_Name": color.color_Name,
+                "color_RGB": color.color_RGB,
+            }
+
+        return result
+
+    def get_viewImages(self, product):
+
+        result = {}
+
+        for color in ProductColor.objects.filter(
+            product=product,
+            show=True,
+        ):
+            result[color.color_Name] = {}
+
+            images = ProductColorImage.objects.filter(
+                color=color,
+            ).select_related(
+                "viewName",
+                "viewName__viewName",
+            )
+
+            for image in images:
+                view_name = image.viewName.viewName.viewName
+
+                result[color.color_Name][view_name] = (
+                    image.image.url if image.image else None
+                )
+
+        return result
+
+    def get_viewRegions(self, product):
+
+        regions = {}
+
+        places = ProductDesignPlace.objects.filter(
+            product=product,
+        ).select_related(
+            "viewName",
+        )
+
+        for place in places:
+            regions[place.viewName.viewName] = {
+                "xStart": float(place.x_start),
+                "xEnd": float(place.x_end),
+                "yStart": float(place.y_start),
+                "yEnd": float(place.y_end),
+            }
+
+        return regions
+
+
+class FontSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Font
+        fields = "__all__"

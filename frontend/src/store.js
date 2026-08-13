@@ -3,6 +3,7 @@ import {productListReducer, productDetailsReducer} from "./reducers/productReduc
 import {designListReducer, categoryListReducer, designDetailsReducer} from './reducers/designReducer'
 import {cartReducer} from './reducers/cartReducers'
 import {appliedDesignReducer} from './reducers/designerReducers'
+import { fontListReducer } from "./reducers/fontReducer";
  
 export const store = configureStore({
   reducer: {
@@ -13,5 +14,6 @@ export const store = configureStore({
     designDetails: designDetailsReducer,
     appliedDesign: appliedDesignReducer,
     cart: cartReducer,
+    fontList: fontListReducer,
   },
 });

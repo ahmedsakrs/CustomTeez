@@ -94,7 +94,7 @@ function ProductScreen() {
                             color={params.color}
                             size={productSize}
                             available={
-                              product.colors[params.color].sizes[productSize].availableInStock
+                              product.colors[params.color].sizes[productSize].countInStock > 0
                             }
                           />
                         </Col>

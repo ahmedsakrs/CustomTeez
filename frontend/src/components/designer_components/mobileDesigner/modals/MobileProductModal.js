@@ -18,7 +18,7 @@ function MobileProductModal({
 }) {
   const [mobileProductView, setMobileProductView] = useState("main");
   const [searchTerm, setSearchTerm] = useState("");
-  const [pendingProductType, setPendingProductType] = useState(null);
+  const [pendingProductType, setPendingProductType] = useState(activeProduct?.productType);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
 
   const deleteProduct = (id) => {
@@ -41,8 +41,9 @@ function MobileProductModal({
       const newProduct = {
         id: newId,
         productType: pendingProductType,
-        name: pendingProductType,
-        color: newColor,
+        name: productOptions.find((opt) => opt._id === pendingProductType)?.name,
+        color: newColor.color_Name,
+        color_hex: newColor.color_RGB
       };
 
       setAllProducts([...allProducts, newProduct]);
@@ -59,8 +60,9 @@ function MobileProductModal({
             ? {
                 ...p,
                 productType: pendingProductType,
-                color: newColor,
-                name: pendingProductType,
+                color: newColor.color_Name,
+                color_hex: newColor.color_RGB,
+                name: productOptions.find((opt) => opt._id === pendingProductType)?.name,
               }
             : p,
         ),
@@ -126,7 +128,7 @@ function MobileProductModal({
 
                   <img
                     src={
-                      productOptions.find((opt) => opt.id === p.productType)
+                      productOptions.find((opt) => opt._id === p.productType)
                         ?.viewImages[p.color]["Front"]
                     }
                     alt={p.name}
@@ -253,18 +255,20 @@ function MobileProductModal({
               )
               .map((opt) => (
                 <div
-                  key={opt.id}
+                  key={opt._id}
                   className={`mobile-product-option ${
-                    activeProduct?.productType === opt.id && !isAddingProduct
+                    activeProduct?.productType === opt._id && !isAddingProduct
                       ? "active"
                       : ""
                   }`}
                   onClick={() => {
-                    changeProductType(opt.id);
+                    changeProductType(opt._id);
                   }}
                 >
                   <img
-                    src={opt.viewImages[opt.productColors[0]].Front}
+                    src={
+                      opt.viewImages[opt.productColors["Red"].color_Name].Front
+                    }
                     alt={opt.name}
                     className="preview-image"
                   />
@@ -281,12 +285,12 @@ function MobileProductModal({
           <div className="mobile-product-tabbar">
             <button
               className="back-btn"
-              style={{ paddingTop: "0px", width:"25px", height:"25px" }}
+              style={{ paddingTop: "0px", width: "25px", height: "25px" }}
               onClick={() =>
                 setMobileProductView(isAddingProduct ? "selectProduct" : "main")
               }
             >
-              <i className="fas fa-angle-left" style={{ fontSize: "25px" }}/>
+              <i className="fas fa-angle-left" style={{ fontSize: "25px" }} />
             </button>
 
             <h2>Select Color</h2>
@@ -304,37 +308,36 @@ function MobileProductModal({
           </div>
 
           <div className="mobile-color-grid">
-            {productOptions
-              .find(
-                (opt) =>
-                  opt.id === (pendingProductType || activeProduct?.productType),
-              )
-              ?.productColors.map((c) => {
-                const isDuplicate = allProducts.some(
-                  (p) =>
-                    p.productType ===
-                      (pendingProductType || activeProduct?.productType) &&
-                    p.color === c,
-                );
+            {pendingProductType && Object.values(
+              productOptions.find(
+                (opt) => opt._id === pendingProductType,
+              )?.productColors,
+            ).map((c) => {
+              const isDuplicate = allProducts.some(
+                (p) =>
+                  p.productType ===
+                    (pendingProductType || activeProduct?.productType) &&
+                  p.color === c.color_Name,
+              );
 
-                return (
-                  <button
-                    key={c}
-                    disabled={isDuplicate}
-                    className={`mobile-color-swatch
+              return (
+                <button
+                  key={c.color_Name}
+                  disabled={isDuplicate}
+                  className={`mobile-color-swatch
                 ${isDuplicate ? "disabled" : ""}
                 ${activeProduct?.color === c ? "active" : ""}`}
-                    style={{
-                      backgroundColor: c.toLowerCase(),
-                    }}
-                    onClick={() => {
-                      if (!isDuplicate) {
-                        changeProductColor(c);
-                      }
-                    }}
-                  />
-                );
-              })}
+                  style={{
+                    backgroundColor: c.color_RGB,
+                  }}
+                  onClick={() => {
+                    if (!isDuplicate) {
+                      changeProductColor(c);
+                    }
+                  }}
+                />
+              );
+            })}
           </div>
         </>
       )}

@@ -564,6 +564,10 @@
   background-color: #bbb;
 }
 
+.font-preview.active {
+  border: 2px solid rgb(0, 100, 200);
+}
+
 .font-shape-tab {
   display: flex;
   flex-direction: column;

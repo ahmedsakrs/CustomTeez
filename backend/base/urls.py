@@ -9,4 +9,6 @@ urlpatterns = [
     path('designCategories/', views.getDesignCategories, name='categories'),
     path('designCategories/<str:category>/', views.getDesignCategory, name='category'),
     path('designs/<str:id>/', views.getDesign, name='design'),
+    
+    path('fonts/', views.getFonts, name='fonts'),
 ]

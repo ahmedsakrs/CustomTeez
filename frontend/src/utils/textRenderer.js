@@ -525,6 +525,7 @@ export async function textToImage({
     if (shapeIntensity < 0) {
       shapeIntensity = -shapeIntensity;
       reverseCurve = true;
+      lines.reverse();
     }
     const canvas = new OffscreenCanvas(1, 1);
 
